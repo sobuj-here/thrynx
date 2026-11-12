@@ -220,6 +220,59 @@ class TimelineEngine(initialProject: ProjectModel) {
         return currentProject
     }
 
+    fun addKeyframeToClip(trackId: String, clipId: String, keyframe: com.thrynx.app.core.model.KeyframeModel): ProjectModel {
+        pushState()
+        val updatedTracks = currentProject.tracks.map { track ->
+            if (track.id == trackId) {
+                val updatedClips = track.clips.map { clip ->
+                    if (clip.id == clipId) {
+                        val existingWithoutCurrentTime = clip.keyframes.filter { Math.abs(it.timestampMs - keyframe.timestampMs) > 50L }
+                        clip.copy(keyframes = (existingWithoutCurrentTime + keyframe).sortedBy { it.timestampMs })
+                    } else clip
+                }
+                track.copy(clips = updatedClips)
+            } else {
+                track
+            }
+        }
+        currentProject = currentProject.copy(tracks = updatedTracks, updatedAt = System.currentTimeMillis())
+        return currentProject
+    }
+
+    fun updateClipVolume(trackId: String, clipId: String, volume: Float): ProjectModel {
+        pushState()
+        val updatedTracks = currentProject.tracks.map { track ->
+            if (track.id == trackId) {
+                val updatedClips = track.clips.map { clip ->
+                    if (clip.id == clipId) clip.copy(volume = volume) else clip
+                }
+                track.copy(clips = updatedClips)
+            } else {
+                track
+            }
+        }
+        currentProject = currentProject.copy(tracks = updatedTracks, updatedAt = System.currentTimeMillis())
+        return currentProject
+    }
+
+    fun toggleTrackMute(trackId: String): ProjectModel {
+        pushState()
+        val updatedTracks = currentProject.tracks.map { track ->
+            if (track.id == trackId) track.copy(isMuted = !track.isMuted) else track
+        }
+        currentProject = currentProject.copy(tracks = updatedTracks, updatedAt = System.currentTimeMillis())
+        return currentProject
+    }
+
+    fun toggleTrackLock(trackId: String): ProjectModel {
+        pushState()
+        val updatedTracks = currentProject.tracks.map { track ->
+            if (track.id == trackId) track.copy(isLocked = !track.isLocked) else track
+        }
+        currentProject = currentProject.copy(tracks = updatedTracks, updatedAt = System.currentTimeMillis())
+        return currentProject
+    }
+
     private fun recalculateProjectDuration(project: ProjectModel): ProjectModel {
         val maxDuration = project.tracks.maxOfOrNull { track ->
             track.clips.maxOfOrNull { it.timelineEndMs } ?: 0L

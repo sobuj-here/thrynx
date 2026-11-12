@@ -40,7 +40,6 @@ fun HomeScreen(
     onOpenProject: (ProjectModel) -> Unit,
     onNewProject: () -> Unit,
     onNewSlideshow: () -> Unit,
-    onNavigateToMusic: () -> Unit,
     onNavigateToLibrary: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -157,10 +156,10 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                     QuickActionButton(
-                        title = stringResource(id = R.string.nav_music),
-                        icon = Icons.Default.MusicNote,
+                        title = stringResource(id = R.string.nav_library),
+                        icon = Icons.Default.Folder,
                         accentColor = ThrynxPurple,
-                        onClick = onNavigateToMusic,
+                        onClick = onNavigateToLibrary,
                         modifier = Modifier.weight(1f)
                     )
                 }

@@ -40,12 +40,13 @@ The latest production release is pre-compiled, tested, and ready to install on A
 **THRYNX** is an independent, professional native Android multimedia power-station and creative studio developed with modern **Kotlin**, **Jetpack Compose (Material 3)**, and **AndroidX Media3**. 
 
 Designed as a single unified application, THRYNX combines:
-1. **Advanced Video Player**: Multi-track audio switching (English, বাংলা, Hindi, etc.), subtitle customization, gesture controls, PiP, and audio-only background mode.
-2. **Professional Video Editor**: CapCut-grade non-destructive multi-track timeline, keyframe animation, split/trim/speed (0.25x–4x), transitions, and OpenGL ES color grading.
-3. **Music Player Studio**: Local library indexing, live animated waveform visualizer, queue manager, sleep timer, and background playback via `MediaSessionService`.
-4. **Photo-to-Video Slideshow Maker**: Cinematic Ken Burns zoom effect, transition engine, soundtrack synchronization, and multi-ratio exports.
-5. **Project Management System**: Room SQLite database persistence, auto-saving drafts, non-destructive editing, and project recovery.
-6. **100% Offline-First Privacy**: No telemetry, no ads, and no cloud uploads. All media and projects stay strictly on your local device.
+1. **Advanced Multimedia Player**: Seamless video and audio playback, multi-track audio switching (English, বাংলা, Hindi, etc.), subtitle customization, gesture controls (brightness & volume swipes, double-tap seek), PiP, screen rotation, background audio mode with vinyl visualizer and lockscreen controls.
+2. **CapCut-Grade Multi-Track Video Editor**: Multi-track timeline, keyframe animation, frame-accurate clip splitting/trimming/speed (0.25x–4x), transitions, and OpenGL ES color grading.
+3. **Integrated Audio Studio**: Live microphone voice-over recording directly into the timeline, hardware-accelerated audio extraction from video files, volume envelopes, and audio track management.
+4. **Media Library & Discovery Engine**: Unified media discovery with sorting (Date, Name, Size, Duration), duration filtering, folder browsing, SAF file import, and metadata inspection.
+5. **Photo-to-Video Slideshow Maker**: Cinematic Ken Burns zoom effect, transition engine, soundtrack synchronization, and multi-ratio exports.
+6. **Project Management System**: Room SQLite database persistence, auto-saving drafts, non-destructive editing, and project recovery.
+7. **100% Offline-First Privacy**: No telemetry, no ads, and no cloud uploads. All media and projects stay strictly on your local device.
 
 ---
 
@@ -81,16 +82,18 @@ Designed as a single unified application, THRYNX combines:
   - `Undo/Redo History Stack`: Full state recovery for every editing action.
   - **Bangla & English Typography**: Native text layers with full support for Bengali unicode characters without text clipping.
 
-### 🎵 3. Music Studio & Audio Visualizer
-- **Complete Local Media Library**: Browse by Songs, Albums, Artists, Folders, Playlists, and Favorites.
-- **Live Amplitude Visualizer**: Real-time animated waveform bars responsive to playing audio.
-- **Sleep Timer**: Auto-pause playback after 15, 30, 45, or 60 minutes.
-- **MediaSessionService**: Notification playback controls, headphone disconnect auto-pause (`AUDIO_BECOMING_NOISY`), and lockscreen artwork.
+### 📂 3. Media Library & Discovery Engine
+- **Universal Media Discovery**: Automatically discovers videos and audio across accessible storage with thumbnail caching and metadata extraction.
+- **Multi-Factor Sorting & Filtering**: Sort by Date, Name (A-Z), File Size, and Duration; filter by duration categories (< 2m, 2–10m, > 10m).
+- **Folder Navigation**: Intuitive folder view grouping media by directory with instant drill-down.
+- **Storage Access Framework (SAF) Import**: Import any video, audio, or subtitle file on your device with full metadata resolution.
+- **Metadata Inspector**: Detailed inspection dialog showing resolution, duration, bitrate, file size, codec format, and exact file path.
 
-### 🎙️ 4. Audio Studio & Voice-Over Recording
-- **Microphone Voice-Over**: Record voice narration directly onto the editing timeline using Android's native `MediaRecorder` in AAC/M4A format.
-- **Extract Audio from Video**: Built-in hardware `MediaExtractor` + `MediaMuxer` tool to strip video frames and extract lossless audio tracks.
-- **Volume Envelope & Mixing**: Fade-in and fade-out audio transitions with multi-track balance.
+### 🎙️ 4. Integrated Audio Studio & Extraction
+- **Timeline Voice-Over Recording**: Record microphone narration directly onto the editing timeline with live elapsed timer.
+- **Hardware-Accelerated Audio Extraction**: Extract lossless audio streams from any video file using native Android `MediaExtractor` and `MediaMuxer` directly inside the editor.
+- **Integrated Audio Player Experience**: Audio visualizer with animated equalizer waveform, rotating vinyl disc, shuffle, repeat, and lockscreen controls.
+- **Volume Envelope & Mixing**: Multi-track volume envelopes, mute controls, and clip-level volume adjustment (0%–200%).
 
 ### 🖼️ 5. Photo-to-Video Slideshow Creator
 - Multi-photo picker with slide duration sliders (1.0s to 8.0s per photo).

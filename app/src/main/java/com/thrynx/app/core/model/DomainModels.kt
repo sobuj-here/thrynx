@@ -20,7 +20,9 @@ data class MediaItemModel(
     val folderName: String = "",
     val isFavorite: Boolean = false,
     val lastPositionMs: Long = 0L,
-    val isVideo: Boolean = true
+    val isVideo: Boolean = true,
+    val width: Int = 0,
+    val height: Int = 0
 )
 
 /**

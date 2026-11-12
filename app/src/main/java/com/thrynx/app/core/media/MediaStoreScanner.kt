@@ -2,9 +2,11 @@ package com.thrynx.app.core.media
 
 import android.content.ContentUris
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import com.thrynx.app.core.model.MediaItemModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,7 +29,9 @@ class MediaStoreScanner(private val context: Context) {
             MediaStore.Video.Media.SIZE,
             MediaStore.Video.Media.MIME_TYPE,
             MediaStore.Video.Media.DATA,
-            MediaStore.Video.Media.DATE_ADDED
+            MediaStore.Video.Media.DATE_ADDED,
+            MediaStore.Video.Media.WIDTH,
+            MediaStore.Video.Media.HEIGHT
         )
 
         val sortOrder = "${MediaStore.Video.Media.DATE_ADDED} DESC"
@@ -41,6 +45,8 @@ class MediaStoreScanner(private val context: Context) {
                 val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.MIME_TYPE)
                 val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
                 val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)
+                val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
+                val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
@@ -50,6 +56,8 @@ class MediaStoreScanner(private val context: Context) {
                     val mime = cursor.getString(mimeColumn) ?: "video/mp4"
                     val path = cursor.getString(dataColumn) ?: ""
                     val dateAdded = cursor.getLong(dateColumn)
+                    val width = if (widthColumn >= 0) cursor.getInt(widthColumn) else 0
+                    val height = if (heightColumn >= 0) cursor.getInt(heightColumn) else 0
                     val contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
                     val folder = try {
@@ -69,7 +77,9 @@ class MediaStoreScanner(private val context: Context) {
                             mimeType = mime,
                             dateAdded = dateAdded,
                             folderName = folder,
-                            isVideo = true
+                            isVideo = true,
+                            width = width,
+                            height = height
                         )
                     )
                 }
@@ -216,5 +226,61 @@ class MediaStoreScanner(private val context: Context) {
             e.printStackTrace()
         }
         images
+    }
+
+    suspend fun resolveMetadataFromUri(uri: Uri): MediaItemModel? = withContext(Dispatchers.IO) {
+        try {
+            var displayName = "Imported Media"
+            var sizeBytes = 0L
+
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                if (cursor.moveToFirst()) {
+                    if (nameIndex >= 0) displayName = cursor.getString(nameIndex) ?: displayName
+                    if (sizeIndex >= 0) sizeBytes = cursor.getLong(sizeIndex)
+                }
+            }
+
+            val mimeType = context.contentResolver.getType(uri) ?: "video/mp4"
+            val isVideo = mimeType.startsWith("video/") || displayName.endsWith(".mp4", true) || displayName.endsWith(".mkv", true)
+
+            var durationMs = 0L
+            var width = 0
+            var height = 0
+            var artist = ""
+            var album = ""
+
+            try {
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(context, uri)
+                durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+                height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+                artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
+                album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) ?: ""
+                retriever.release()
+            } catch (ignored: Exception) {}
+
+            MediaItemModel(
+                id = System.currentTimeMillis(),
+                title = displayName,
+                uri = uri,
+                path = uri.toString(),
+                durationMs = durationMs,
+                sizeBytes = sizeBytes,
+                mimeType = mimeType,
+                artist = artist,
+                album = album,
+                dateAdded = System.currentTimeMillis() / 1000,
+                folderName = "Imported",
+                isVideo = isVideo,
+                width = width,
+                height = height
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

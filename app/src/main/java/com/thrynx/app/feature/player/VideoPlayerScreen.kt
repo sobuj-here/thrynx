@@ -3,12 +3,18 @@ package com.thrynx.app.feature.player
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.media.AudioManager
+import android.net.Uri
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -20,12 +26,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -34,10 +45,12 @@ import com.thrynx.app.R
 import com.thrynx.app.core.designsystem.*
 import com.thrynx.app.core.model.AudioTrackInfo
 import com.thrynx.app.core.model.PlaybackState
-import com.thrynx.app.core.model.SubtitleStyle
 import com.thrynx.app.core.model.SubtitleTrackInfo
 import com.thrynx.app.core.player.ThrynxPlayerManager
 import com.thrynx.app.feature.home.formatDuration
+import com.thrynx.app.feature.library.formatFileSize
+import kotlinx.coroutines.delay
+import kotlin.math.sin
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -48,6 +61,9 @@ fun VideoPlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
+    val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+
     val playbackState by playerManager.playbackState.collectAsState()
     val subtitleStyle by playerManager.subtitleStyle.collectAsState()
 
@@ -56,21 +72,54 @@ fun VideoPlayerScreen(
     var showSubtitleDialog by remember { mutableStateOf(false) }
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showAspectRatioDialog by remember { mutableStateOf(false) }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
     var resizeMode by remember { mutableStateOf(AspectRatioFrameLayout.RESIZE_MODE_FIT) }
+    var isLandscape by remember { mutableStateOf(false) }
+
+    // Gesture HUD overlay state
+    var hudText by remember { mutableStateOf<String?>(null) }
+    var hudIcon by remember { mutableStateOf<androidx.compose.ui.graphics.vector.ImageVector?>(null) }
+
+    fun showHud(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+        hudText = text
+        hudIcon = icon
+    }
+
+    LaunchedEffect(hudText) {
+        if (hudText != null) {
+            delay(1200)
+            hudText = null
+            hudIcon = null
+        }
+    }
 
     // Auto-hide controls
     LaunchedEffect(showControls, playbackState.isPlaying) {
         if (showControls && playbackState.isPlaying && !playbackState.isControlsLocked) {
-            kotlinx.coroutines.delay(4000)
+            delay(4500)
             showControls = false
         }
     }
+
+    // External Subtitle Picker
+    val subtitlePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            playerManager.loadExternalSubtitle(uri)
+            showSubtitleDialog = false
+            showHud("External Subtitle Loaded", Icons.Default.Subtitles)
+        }
+    }
+
+    val isAudioContent = playbackState.currentMedia?.isVideo == false || playbackState.isAudioOnly
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Black)
+            // Gesture handling: Tap for controls, Double tap for seek, Vertical drag for volume/brightness
             .pointerInput(playbackState.isControlsLocked) {
                 detectTapGestures(
                     onTap = {
@@ -80,45 +129,117 @@ fun VideoPlayerScreen(
                         if (!playbackState.isControlsLocked) {
                             if (offset.x < size.width / 2) {
                                 playerManager.seekBackward(10_000L)
+                                showHud("-10s", Icons.Default.Replay10)
                             } else {
                                 playerManager.seekForward(10_000L)
+                                showHud("+10s", Icons.Default.Forward10)
                             }
                         }
                     }
                 )
             }
-    ) {
-        // Video Surface via AndroidView
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    player = playerManager.exoPlayer
-                    useController = false
-                    this.resizeMode = resizeMode
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
+            .pointerInput(playbackState.isControlsLocked) {
+                if (!playbackState.isControlsLocked) {
+                    var totalDragY = 0f
+                    detectDragGestures(
+                        onDragStart = { totalDragY = 0f },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            totalDragY += dragAmount.y
+                            val isLeftSide = change.position.x < size.width / 2
+
+                            if (isLeftSide) {
+                                // Brightness adjustment
+                                activity?.let { act ->
+                                    val lp = act.window.attributes
+                                    var currentBrightness = lp.screenBrightness
+                                    if (currentBrightness < 0f) currentBrightness = 0.5f
+                                    val delta = -dragAmount.y / (size.height * 0.7f)
+                                    val newBrightness = (currentBrightness + delta).coerceIn(0.02f, 1.0f)
+                                    lp.screenBrightness = newBrightness
+                                    act.window.attributes = lp
+                                    showHud("Brightness: ${(newBrightness * 100).toInt()}%", Icons.Default.BrightnessMedium)
+                                }
+                            } else {
+                                // Volume adjustment
+                                val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                                val delta = -dragAmount.y / (size.height / maxVol)
+                                if (Math.abs(delta) >= 1f) {
+                                    val targetVol = (currentVol + delta.toInt()).coerceIn(0, maxVol)
+                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
+                                    val pct = ((targetVol.toFloat() / maxVol) * 100).toInt()
+                                    showHud(
+                                        "Volume: $pct%",
+                                        if (targetVol == 0) Icons.Default.VolumeOff else Icons.Default.VolumeUp
+                                    )
+                                }
+                            }
+                        }
                     )
                 }
-            },
-            update = { view ->
-                view.resizeMode = resizeMode
             }
-        )
+    ) {
+        if (!isAudioContent) {
+            // Video Surface via AndroidView
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        player = playerManager.exoPlayer
+                        useController = false
+                        this.resizeMode = resizeMode
+                        layoutParams = FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                },
+                update = { view ->
+                    view.resizeMode = resizeMode
+                }
+            )
+        } else {
+            // Integrated Audio Player Experience
+            AudioPlayerVisualizerView(
+                playbackState = playbackState,
+                onTogglePlayPause = { playerManager.togglePlayPause() },
+                onSeekBackward = { playerManager.seekBackward(10_000L) },
+                onSeekForward = { playerManager.seekForward(10_000L) },
+                onToggleShuffle = { playerManager.toggleShuffle() },
+                onToggleRepeat = { playerManager.toggleRepeatMode() },
+                onSwitchBackToVideo = if (playbackState.isAudioOnly) {
+                    { playerManager.setAudioOnlyMode(false) }
+                } else null
+            )
+        }
 
-        // Subtitle Overlay (if custom styling applied)
-        if (playbackState.selectedSubtitleTrack != null) {
+        // Gesture Feedback HUD Badge
+        hudText?.let { text ->
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = if (showControls) 80.dp else 30.dp, start = 20.dp, end = 20.dp)
+                    .align(Alignment.Center)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.Black.copy(alpha = 0.75f))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                // Media3 player handles subtitle rendering internally on PlayerView, custom styling applied via subtitleStyle
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    hudIcon?.let { icon ->
+                        Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(36.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
-        // Overlay Controls
+        // Overlay Controls (Top & Bottom)
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn(),
@@ -128,7 +249,7 @@ fun VideoPlayerScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
+                    .background(Color.Black.copy(alpha = 0.45f))
             ) {
                 // Top Action Bar
                 Row(
@@ -147,6 +268,7 @@ fun VideoPlayerScreen(
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp)
@@ -154,12 +276,22 @@ fun VideoPlayerScreen(
 
                     // Audio Track Selector
                     IconButton(onClick = { showAudioTrackDialog = true }) {
-                        Icon(Icons.Default.Audiotrack, contentDescription = "Audio Track", tint = ThrynxCyan)
+                        Icon(
+                            Icons.Default.Audiotrack,
+                            contentDescription = "Audio Track",
+                            tint = if (playbackState.audioTracks.size > 1) ThrynxCyan else Color.White
+                        )
                     }
 
                     // Subtitle Selector
-                    IconButton(onClick = { showSubtitleDialog = true }) {
-                        Icon(Icons.Default.Subtitles, contentDescription = "Subtitles", tint = Color.White)
+                    if (!isAudioContent) {
+                        IconButton(onClick = { showSubtitleDialog = true }) {
+                            Icon(
+                                Icons.Default.Subtitles,
+                                contentDescription = "Subtitles",
+                                tint = if (playbackState.selectedSubtitleTrack != null) ThrynxCyan else Color.White
+                            )
+                        }
                     }
 
                     // Playback Speed
@@ -167,9 +299,34 @@ fun VideoPlayerScreen(
                         Icon(Icons.Default.Speed, contentDescription = "Speed", tint = Color.White)
                     }
 
-                    // Aspect Ratio
-                    IconButton(onClick = { showAspectRatioDialog = true }) {
-                        Icon(Icons.Default.AspectRatio, contentDescription = "Aspect Ratio", tint = Color.White)
+                    // Aspect Ratio (Video only)
+                    if (!isAudioContent) {
+                        IconButton(onClick = { showAspectRatioDialog = true }) {
+                            Icon(Icons.Default.AspectRatio, contentDescription = "Aspect Ratio", tint = Color.White)
+                        }
+                    }
+
+                    // Media Information
+                    IconButton(onClick = { showInfoDialog = true }) {
+                        Icon(Icons.Default.Info, contentDescription = "Information", tint = Color.White)
+                    }
+
+                    // Screen Rotation Toggle
+                    IconButton(onClick = {
+                        activity?.let { act ->
+                            isLandscape = !isLandscape
+                            act.requestedOrientation = if (isLandscape) {
+                                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            } else {
+                                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                            }
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (isLandscape) Icons.Default.ScreenRotation else Icons.Default.ScreenLockPortrait,
+                            contentDescription = "Rotate",
+                            tint = Color.White
+                        )
                     }
 
                     // PiP Button
@@ -178,15 +335,18 @@ fun VideoPlayerScreen(
                     }
                 }
 
-                // Center Play/Pause & Skip Controls
-                if (!playbackState.isControlsLocked) {
+                // Center Play/Pause & Skip Controls (for Video mode overlay)
+                if (!isAudioContent && !playbackState.isControlsLocked) {
                     Row(
                         modifier = Modifier.align(Alignment.Center),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(28.dp)
                     ) {
                         IconButton(
-                            onClick = { playerManager.seekBackward(10_000L) },
+                            onClick = {
+                                playerManager.seekBackward(10_000L)
+                                showHud("-10s", Icons.Default.Replay10)
+                            },
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
@@ -211,7 +371,10 @@ fun VideoPlayerScreen(
                         }
 
                         IconButton(
-                            onClick = { playerManager.seekForward(10_000L) },
+                            onClick = {
+                                playerManager.seekForward(10_000L)
+                                showHud("+10s", Icons.Default.Forward10)
+                            },
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
@@ -242,22 +405,24 @@ fun VideoPlayerScreen(
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Audio-Only Mode Toggle
-                            TextButton(
-                                onClick = { playerManager.setAudioOnlyMode(!playbackState.isAudioOnly) }
-                            ) {
-                                Icon(
-                                    imageVector = if (playbackState.isAudioOnly) Icons.Default.Headphones else Icons.Default.HeadsetOff,
-                                    contentDescription = null,
-                                    tint = if (playbackState.isAudioOnly) ThrynxCyan else Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = stringResource(id = R.string.player_audio_only),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (playbackState.isAudioOnly) ThrynxCyan else Color.White
-                                )
+                            // Audio-Only Mode Toggle (for video content)
+                            if (playbackState.currentMedia?.isVideo == true) {
+                                TextButton(
+                                    onClick = { playerManager.setAudioOnlyMode(!playbackState.isAudioOnly) }
+                                ) {
+                                    Icon(
+                                        imageVector = if (playbackState.isAudioOnly) Icons.Default.Headphones else Icons.Default.HeadsetOff,
+                                        contentDescription = null,
+                                        tint = if (playbackState.isAudioOnly) ThrynxCyan else Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = stringResource(id = R.string.player_audio_only),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (playbackState.isAudioOnly) ThrynxCyan else Color.White
+                                    )
+                                }
                             }
 
                             // Lock Screen Controls
@@ -386,6 +551,18 @@ fun VideoPlayerScreen(
                                 Text(track.displayLanguage)
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Load External Subtitle File Button
+                        OutlinedButton(
+                            onClick = { subtitlePicker.launch("*/*") },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(id = R.string.player_load_external_subtitle))
+                        }
                     }
                 },
                 confirmButton = {
@@ -479,6 +656,216 @@ fun VideoPlayerScreen(
                     }
                 }
             )
+        }
+
+        // Video Information Dialog
+        if (showInfoDialog) {
+            val currentMedia = playbackState.currentMedia
+            AlertDialog(
+                onDismissRequest = { showInfoDialog = false },
+                title = { Text("Playback Details") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Title: ${currentMedia?.title ?: "Unknown"}", fontWeight = FontWeight.Bold)
+                        Text("Duration: ${formatDuration(playbackState.durationMs)}")
+                        if (currentMedia != null && currentMedia.width > 0 && currentMedia.height > 0) {
+                            Text("Resolution: ${currentMedia.width} x ${currentMedia.height}")
+                        }
+                        if (currentMedia != null && currentMedia.sizeBytes > 0) {
+                            Text("File Size: ${formatFileSize(currentMedia.sizeBytes)}")
+                        }
+                        Text("Audio Tracks: ${playbackState.audioTracks.size}")
+                        Text("Subtitle Tracks: ${playbackState.subtitleTracks.size}")
+                        Text("Speed: ${playbackState.playbackSpeed}x")
+                        if (currentMedia?.path?.isNotBlank() == true) {
+                            Text("Path: ${currentMedia.path}", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showInfoDialog = false }) {
+                        Text(stringResource(id = R.string.action_close))
+                    }
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Integrated Audio Visualizer and Disc view for audio files and audio-only video playback.
+ */
+@Composable
+fun AudioPlayerVisualizerView(
+    playbackState: PlaybackState,
+    onTogglePlayPause: () -> Unit,
+    onSeekBackward: () -> Unit,
+    onSeekForward: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onToggleRepeat: () -> Unit,
+    onSwitchBackToVideo: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 12000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    val currentMedia = playbackState.currentMedia
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        ThrynxPurple.copy(alpha = 0.35f),
+                        ThrynxBgDark,
+                        Color.Black
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Rotating Vinyl Disc representation
+            Box(
+                modifier = Modifier
+                    .size(240.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF141923))
+                    .rotate(if (playbackState.isPlaying) rotation else 0f),
+                contentAlignment = Alignment.Center
+            ) {
+                // Outer Grooves
+                Box(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1E2433)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Center Album Label
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(ThrynxCyan, ThrynxPurple)
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(44.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Title & Artist
+            Text(
+                text = currentMedia?.title ?: "Audio Track",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = currentMedia?.artist?.ifBlank { "Unknown Artist" } ?: "THRYNX Audio",
+                style = MaterialTheme.typography.bodyMedium,
+                color = ThrynxTextSecondaryDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Audio Equalizer Waveform Visualization
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                val barCount = 24
+                for (i in 0 until barCount) {
+                    val phase = (i * 0.25f)
+                    val baseHeight = if (playbackState.isPlaying) {
+                        (sin((rotation * 0.05f) + phase) * 0.5f + 0.5f).coerceIn(0.15f, 1.0f)
+                    } else {
+                        0.15f
+                    }
+                    Box(
+                        modifier = Modifier
+                            .width(6.dp)
+                            .fillMaxHeight(baseHeight)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(ThrynxCyan, ThrynxPurple)
+                                )
+                            )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Quick Playback Mode Actions (Shuffle, Repeat, Switch to Video)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onToggleShuffle) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "Shuffle",
+                        tint = if (playbackState.isShuffle) ThrynxCyan else Color.Gray
+                    )
+                }
+
+                if (onSwitchBackToVideo != null) {
+                    OutlinedButton(
+                        onClick = onSwitchBackToVideo,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Show Video", fontSize = 12.sp)
+                    }
+                }
+
+                IconButton(onClick = onToggleRepeat) {
+                    Icon(
+                        imageVector = if (playbackState.isRepeatOne) Icons.Default.RepeatOne else Icons.Default.Repeat,
+                        contentDescription = "Repeat",
+                        tint = if (playbackState.isRepeatOne) ThrynxCyan else Color.Gray
+                    )
+                }
+            }
         }
     }
 }

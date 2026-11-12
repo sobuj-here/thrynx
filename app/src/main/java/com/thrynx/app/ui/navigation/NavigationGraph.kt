@@ -32,7 +32,6 @@ import com.thrynx.app.feature.editor.EditorScreen
 import com.thrynx.app.feature.home.HomeScreen
 import com.thrynx.app.feature.home.formatDuration
 import com.thrynx.app.feature.library.LibraryScreen
-import com.thrynx.app.feature.music.MusicPlayerScreen
 import com.thrynx.app.feature.online.OnlineScreen
 import com.thrynx.app.feature.photomaker.PhotoMakerScreen
 import com.thrynx.app.feature.player.VideoPlayerScreen
@@ -80,8 +79,8 @@ fun ThrynxNavigationApp(
     val bottomNavItems = listOf(
         Screen.Home,
         Screen.Editor,
-        Screen.Music,
         Screen.Library,
+        Screen.Projects,
         Screen.Settings
     )
 
@@ -96,11 +95,7 @@ fun ThrynxNavigationApp(
                             playbackState = playbackState,
                             onTogglePlayPause = { playerManager.togglePlayPause() },
                             onClick = {
-                                if (current.isVideo) {
-                                    navController.navigate(Screen.Player.route)
-                                } else {
-                                    navController.navigate(Screen.Music.route)
-                                }
+                                navController.navigate(Screen.Player.route)
                             }
                         )
                     }
@@ -155,13 +150,8 @@ fun ThrynxNavigationApp(
                     recentMedia = (videos + audios).sortedByDescending { it.dateAdded },
                     lastWatchedHistory = lastWatched,
                     onOpenMedia = { media ->
-                        if (media.isVideo) {
-                            playerManager.playMedia(media, media.lastPositionMs)
-                            navController.navigate(Screen.Player.route)
-                        } else {
-                            playerManager.playMedia(media, 0L)
-                            navController.navigate(Screen.Music.route)
-                        }
+                        playerManager.playMedia(media, media.lastPositionMs)
+                        navController.navigate(Screen.Player.route)
                     },
                     onOpenProject = { proj ->
                         activeEditingProject = proj
@@ -173,9 +163,6 @@ fun ThrynxNavigationApp(
                     },
                     onNewSlideshow = {
                         navController.navigate(Screen.PhotoMaker.route)
-                    },
-                    onNavigateToMusic = {
-                        navController.navigate(Screen.Music.route)
                     },
                     onNavigateToLibrary = {
                         navController.navigate(Screen.Library.route)
@@ -192,10 +179,10 @@ fun ThrynxNavigationApp(
             }
 
             composable(Screen.Music.route) {
-                MusicPlayerScreen(
+                VideoPlayerScreen(
                     playerManager = playerManager,
-                    songs = audios,
-                    onToggleFavorite = { /* toggle favorite */ }
+                    onBack = { navController.popBackStack() },
+                    onEnterPiP = onEnterPiP
                 )
             }
 
@@ -225,13 +212,8 @@ fun ThrynxNavigationApp(
                     videos = videos,
                     audios = audios,
                     onOpenMedia = { media ->
-                        if (media.isVideo) {
-                            playerManager.playMedia(media)
-                            navController.navigate(Screen.Player.route)
-                        } else {
-                            playerManager.playMedia(media)
-                            navController.navigate(Screen.Music.route)
-                        }
+                        playerManager.playMedia(media)
+                        navController.navigate(Screen.Player.route)
                     }
                 )
             }
