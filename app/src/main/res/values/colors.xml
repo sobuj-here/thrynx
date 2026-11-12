@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark & Obsidian Theme Palettes -->
+    <color name="thrynx_bg_dark">#0A0E17</color>
+    <color name="thrynx_surface_dark">#121824</color>
+    <color name="thrynx_card_dark">#182030</color>
+    <color name="thrynx_card_stroke_dark">#26334D</color>
+    
+    <!-- Light Palettes -->
+    <color name="thrynx_bg_light">#F5F7FB</color>
+    <color name="thrynx_surface_light">#FFFFFF</color>
+    <color name="thrynx_card_light">#EEF2F8</color>
+    <color name="thrynx_card_stroke_light">#D4DCE8</color>
+
+    <!-- Brand Accents -->
+    <color name="thrynx_cyan">#00E5FF</color>
+    <color name="thrynx_cobalt">#2979FF</color>
+    <color name="thrynx_purple">#7C4DFF</color>
+    <color name="thrynx_coral">#FF3366</color>
+    <color name="thrynx_amber">#FFD600</color>
+    <color name="thrynx_emerald">#00E676</color>
+
+    <!-- Translucent Overlay Tints -->
+    <color name="thrynx_overlay_black">#B3000000</color>
+    <color name="thrynx_timeline_track">#161E2E</color>
+    <color name="thrynx_playhead">#00E5FF</color>
+</resources>

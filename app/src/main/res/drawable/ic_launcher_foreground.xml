@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Glow Polygon -->
+    <path
+        android:fillColor="#1500E5FF"
+        android:pathData="M54,20 L86,40 L86,76 L54,94 L22,76 L22,40 Z" />
+
+    <!-- Left Wing / T Bar Left in Electric Cyan -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M32,34 L54,34 L40,54 L26,46 Z" />
+
+    <!-- Center Play Vertex / Core Diamond -->
+    <path
+        android:fillColor="#2979FF"
+        android:pathData="M48,32 L68,32 L58,74 L42,66 Z" />
+
+    <!-- Dynamic Editing Blade / Creative Studio Accent in Cyan -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M60,42 L80,54 L62,78 L52,70 Z" />
+
+    <!-- Center Pulse Dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>

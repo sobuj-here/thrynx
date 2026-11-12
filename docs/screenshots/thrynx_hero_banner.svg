@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0E1626"/>
+      <stop offset="100%" stop-color="#060910"/>
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00E5FF"/>
+      <stop offset="100%" stop-color="#2979FF"/>
+    </linearGradient>
+    <linearGradient id="phoneCardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#182236"/>
+      <stop offset="100%" stop-color="#0F1726"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="480" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle Grid Accent -->
+  <g opacity="0.05" stroke="#00E5FF" stroke-width="1">
+    <line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="480"/>
+    <line x1="400" y1="0" x2="400" y2="480"/>
+    <line x1="600" y1="0" x2="600" y2="480"/>
+    <line x1="800" y1="0" x2="800" y2="480"/>
+    <line x1="1000" y1="0" x2="1000" y2="480"/>
+  </g>
+
+  <!-- Left Side: Branding, Tagline, Badges -->
+  <g transform="translate(80, 100)">
+    <!-- Brand Crest Symbol -->
+    <g transform="translate(0, 0)">
+      <polygon points="0,0 60,0 45,30 15,30" fill="#00E5FF" filter="url(#glow)"/>
+      <polygon points="20,28 60,28 40,70 15,50" fill="#2979FF"/>
+      <polygon points="35,32 65,50 48,80 30,62" fill="#00E5FF"/>
+      <circle cx="36" cy="40" r="5" fill="#FFFFFF"/>
+    </g>
+
+    <text x="80" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" letter-spacing="4">THRYNX</text>
+    <text x="84" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00E5FF" letter-spacing="6">PLAY • CREATE • EDIT</text>
+
+    <!-- Tagline description -->
+    <text x="0" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
+      All-in-One Multimedia Player, CapCut-Grade Video Editor
+    </text>
+    <text x="0" y="170" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
+      &amp; Creative Studio for Android
+    </text>
+    <text x="0" y="205" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="500" fill="#94A3B8">
+      Dual Language: English &amp; বাংলা • Media3 ExoPlayer • Multi-Track Timeline • 100% Offline
+    </text>
+
+    <!-- Download Badge / CTA Button -->
+    <g transform="translate(0, 240)">
+      <rect width="240" height="52" rx="26" fill="url(#cyanGlow)" filter="url(#glow)"/>
+      <text x="35" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#070B14" letter-spacing="1">⚡ DOWNLOAD APK</text>
+      <!-- Arrow Icon -->
+      <path d="M195 26 L187 20 L187 32 Z" fill="#070B14"/>
+    </g>
+    
+    <g transform="translate(260, 240)">
+      <rect width="210" height="52" rx="26" fill="#141E30" stroke="#25354F" stroke-width="1.5"/>
+      <text x="32" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E2E8F0">v1.0.0 Stable (21 MB)</text>
+    </g>
+  </g>
+
+  <!-- Right Side: 3 Isometric/Layered Device Mockups -->
+  <!-- Device 1: Video Player & Audio Track Sheet -->
+  <g transform="translate(710, 50)">
+    <rect width="210" height="380" rx="24" fill="url(#phoneCardGrad)" stroke="#223048" stroke-width="3"/>
+    <!-- Top Bar Notch -->
+    <rect x="70" y="12" width="70" height="12" rx="6" fill="#0A0E17"/>
+    <!-- Video Player Preview Header -->
+    <rect x="15" y="36" width="180" height="110" rx="10" fill="#080D18"/>
+    <!-- Video Playback Indicator -->
+    <circle cx="105" cy="91" r="22" fill="#00E5FF" opacity="0.9"/>
+    <polygon points="101,83 113,91 101,99" fill="#070B14"/>
+    <!-- Multi-Audio Track Sheet -->
+    <rect x="15" y="160" width="180" height="200" rx="12" fill="#111A2C" stroke="#24344E" stroke-width="1"/>
+    <text x="28" y="185" font-family="sans-serif" font-size="12" font-weight="700" fill="#00E5FF">AUDIO TRACKS</text>
+    
+    <rect x="25" y="198" width="160" height="28" rx="6" fill="#00E5FF" opacity="0.15"/>
+    <circle cx="38" cy="212" r="5" fill="#00E5FF"/>
+    <text x="50" y="216" font-family="sans-serif" font-size="10" font-weight="700" fill="#00E5FF">English (Original - 5.1)</text>
+
+    <rect x="25" y="232" width="160" height="28" rx="6" fill="#182338"/>
+    <circle cx="38" cy="246" r="5" fill="#64748B"/>
+    <text x="50" y="250" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">বাংলা (Bangla Audio)</text>
+
+    <rect x="25" y="266" width="160" height="28" rx="6" fill="#182338"/>
+    <circle cx="38" cy="280" r="5" fill="#64748B"/>
+    <text x="50" y="284" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">Hindi (Audio Track #3)</text>
+    
+    <!-- Gesture Hints -->
+    <rect x="25" y="304" width="160" height="42" rx="6" fill="#0A0F1D"/>
+    <text x="32" y="322" font-family="sans-serif" font-size="9" fill="#94A3B8">Brightness ⮞ Swipe Left</text>
+    <text x="32" y="336" font-family="sans-serif" font-size="9" fill="#94A3B8">Volume ⮞ Swipe Right</text>
+  </g>
+
+  <!-- Device 2: Video Editor Multi-Track Timeline (Front Focus) -->
+  <g transform="translate(940, 70)">
+    <rect width="220" height="370" rx="24" fill="url(#phoneCardGrad)" stroke="#00E5FF" stroke-width="2.5" filter="url(#glow)"/>
+    <!-- Top Notch -->
+    <rect x="75" y="12" width="70" height="12" rx="6" fill="#0A0E17"/>
+    <!-- Studio Header -->
+    <text x="20" y="44" font-family="sans-serif" font-size="13" font-weight="800" fill="#FFFFFF">Video Studio</text>
+    <rect x="155" y="32" width="45" height="18" rx="9" fill="#00E5FF"/>
+    <text x="162" y="45" font-family="sans-serif" font-size="9" font-weight="800" fill="#070B14">EXPORT</text>
+
+    <!-- Composition Canvas -->
+    <rect x="18" y="58" width="184" height="110" rx="8" fill="#060A12" stroke="#1D2A40"/>
+    <text x="70" y="112" font-family="sans-serif" font-size="11" font-weight="600" fill="#00E5FF">16:9 Canvas</text>
+    <text x="50" y="132" font-family="sans-serif" font-size="10" fill="#E2E8F0">বাংলা টাইটেল / Text</text>
+
+    <!-- Multi-Track Timeline -->
+    <rect x="18" y="178" width="184" height="125" rx="8" fill="#0A101C" stroke="#223048"/>
+    <!-- Track 1: Video -->
+    <text x="24" y="196" font-family="sans-serif" font-size="9" font-weight="700" fill="#64748B">VID</text>
+    <rect x="48" y="186" width="60" height="16" rx="4" fill="#2979FF"/>
+    <rect x="112" y="186" width="75" height="16" rx="4" fill="#00E5FF"/>
+    <!-- Track 2: Audio -->
+    <text x="24" y="222" font-family="sans-serif" font-size="9" font-weight="700" fill="#64748B">AUD</text>
+    <rect x="48" y="212" width="140" height="16" rx="4" fill="#7C4DFF"/>
+    <!-- Track 3: Text -->
+    <text x="24" y="248" font-family="sans-serif" font-size="9" font-weight="700" fill="#64748B">TXT</text>
+    <rect x="68" y="238" width="80" height="16" rx="4" fill="#00E676"/>
+    <!-- Playhead Needle -->
+    <line x1="110" y1="178" x2="110" y2="303" stroke="#FF3366" stroke-width="2"/>
+    <circle cx="110" cy="180" r="4" fill="#FF3366"/>
+
+    <!-- Tool Buttons -->
+    <rect x="18" y="314" width="38" height="24" rx="6" fill="#162236"/>
+    <text x="26" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#E2E8F0">Split</text>
+    <rect x="62" y="314" width="38" height="24" rx="6" fill="#162236"/>
+    <text x="70" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#E2E8F0">Trim</text>
+    <rect x="106" y="314" width="42" height="24" rx="6" fill="#162236"/>
+    <text x="111" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#00E5FF">Filter</text>
+    <rect x="154" y="314" width="48" height="24" rx="6" fill="#162236"/>
+    <text x="159" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#E2E8F0">Speed</text>
+  </g>
+</svg>

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="app_name">THRYNX</string>
+    <string name="app_tagline">প্লে • ক্রিয়েট • এডিট</string>
+    <string name="app_description">অল-ইন-ওয়ান মাল্টিমিডিয়া প্লেয়ার, ভিডিও এডিটর ও ক্রিয়েটিভ স্টুডিও</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">হোম</string>
+    <string name="nav_player">প্লেয়ার</string>
+    <string name="nav_music">মিউজিক</string>
+    <string name="nav_library">লাইব্রেরি</string>
+    <string name="nav_editor">এডিটর</string>
+    <string name="nav_photo_maker">ফটো মেকার</string>
+    <string name="nav_projects">প্রজেক্টসমূহ</string>
+    <string name="nav_online">অনলাইন</string>
+    <string name="nav_downloads">ডাউনলোডসমূহ</string>
+    <string name="nav_settings">সেটিংস</string>
+
+    <!-- Home Screen -->
+    <string name="home_greeting">THRYNX-এ স্বাগতম</string>
+    <string name="home_search_hint">ভিডিও, গান বা প্রজেক্ট খুঁজুন…</string>
+    <string name="home_quick_actions">কুইক স্টুডিও</string>
+    <string name="home_new_project">নতুন প্রজেক্ট</string>
+    <string name="home_create_slideshow">ফটো স্লাইডশো</string>
+    <string name="home_extract_audio">অডিও আলাদা করুন</string>
+    <string name="home_continue_watching">দেখা চালিয়ে যান</string>
+    <string name="home_continue_editing">সম্পাদনা চালিয়ে যান</string>
+    <string name="home_recent_media">সাম্প্রতিক মিডিয়া</string>
+    <string name="home_recent_projects">সাম্প্রতিক প্রজেক্ট</string>
+    <string name="home_recent_downloads">সাম্প্রতিক ডাউনলোড</string>
+    <string name="home_no_recents">এখনও কোনো সাম্প্রতিক তথ্য নেই। প্লে বা এডিট শুরু করুন!</string>
+
+    <!-- Video Player -->
+    <string name="player_title">ভিডিও প্লেয়ার</string>
+    <string name="player_play">প্লে করুন</string>
+    <string name="player_pause">বিরতি দিন</string>
+    <string name="player_previous">পূর্ববর্তী</string>
+    <string name="player_next">পরবর্তী</string>
+    <string name="player_forward_10s">+১০ সে.</string>
+    <string name="player_rewind_10s">-১০ সে.</string>
+    <string name="player_audio_track">অডিও ট্র্যাক</string>
+    <string name="player_subtitle_track">সাবটাইটেল</string>
+    <string name="player_speed">প্লেব্যাক গতি</string>
+    <string name="player_aspect_ratio">অ্যাসপেক্ট রেশিও</string>
+    <string name="player_pip">পিকচার ইন পিকচার</string>
+    <string name="player_audio_only">কেবল অডিও মোড</string>
+    <string name="player_audio_only_desc">স্ক্রিন বন্ধ রেখে ব্যাকগ্রাউন্ডে অডিও শুনুন</string>
+    <string name="player_lock_controls">স্ক্রিন নিয়ন্ত্রণ লক করুন</string>
+    <string name="player_unlock_controls">নিয়ন্ত্রণ আনলক করা হয়েছে</string>
+    <string name="player_repeat">পুনরাবৃত্তি</string>
+    <string name="player_repeat_one">বর্তমান গান/ভিডিও পুনরাবৃত্তি</string>
+    <string name="player_resume_prompt">%s থেকে পুনরায় শুরু করবেন?</string>
+    <string name="player_resume">চালিয়ে যান</string>
+    <string name="player_restart">প্রথম থেকে শুরু করুন</string>
+    <string name="player_no_audio_tracks">একটিমাত্র অডিও ট্র্যাক</string>
+    <string name="player_no_subtitles">কোনো সাবটাইটেল নেই</string>
+    <string name="player_subtitles_off">সাবটাইটেল বন্ধ</string>
+    <string name="player_load_external_subtitle">এক্সটার্নাল সাবটাইটেল যুক্ত করুন (.srt, .vtt)</string>
+    <string name="player_load_external_audio">এক্সটার্নাল অডিও ট্র্যাক যোগ করুন</string>
+    <string name="player_subtitle_delay">সাবটাইটেল বিলম্ব: %d মিলি সেকেন্ড</string>
+    <string name="player_subtitle_styling">সাবটাইটেল শৈলী</string>
+    <string name="player_subtitle_font_size">লেখার আকার</string>
+    <string name="player_subtitle_color">লেখার রঙ</string>
+    <string name="player_subtitle_background">ব্যাকগ্রাউন্ড স্বচ্ছতা</string>
+    <string name="player_ratio_fit">পর্দায় ফিট করুন</string>
+    <string name="player_ratio_fill">পূর্ণ পর্দা (ফিল/ক্রপ)</string>
+    <string name="player_ratio_16_9">১৬:৯ ওয়াইডস্ক্রিন</string>
+    <string name="player_ratio_4_3">৪:৩ সাধারণ</string>
+    <string name="player_ratio_1_1">১:১ বর্গাকার</string>
+
+    <!-- Music Player -->
+    <string name="music_title">মিউজিক স্টুডিও</string>
+    <string name="music_songs">সকল গান</string>
+    <string name="music_albums">অ্যালবাম</string>
+    <string name="music_artists">শিল্পী</string>
+    <string name="music_playlists">প্লেলিস্টসমূহ</string>
+    <string name="music_favorites">পছন্দের গান</string>
+    <string name="music_folders">ফোল্ডার</string>
+    <string name="music_queue">পরবর্তী তালিকা</string>
+    <string name="music_shuffle">এলোমেলো (শাফল)</string>
+    <string name="music_sleep_timer">স্লিপ টাইমার</string>
+    <string name="music_sleep_timer_off">স্লিপ টাইমার বন্ধ</string>
+    <string name="music_sleep_timer_active">%d মিনিট পর বন্ধ হবে</string>
+    <string name="music_visualizer">অডিও ভিজ্যুয়ালাইজার</string>
+    <string name="music_create_playlist">নতুন প্লেলিস্ট তৈরি করুন</string>
+    <string name="music_add_to_playlist">প্লেলিস্টে যুক্ত করুন</string>
+    <string name="music_playlist_name">প্লেলিস্টের নাম</string>
+    <string name="music_no_songs">আপনার ডিভাইসে কোনো গান পাওয়া যায়নি</string>
+    <string name="music_empty_queue">প্লেলিস্ট বা কিউ খালি</string>
+
+    <!-- Video Editor -->
+    <string name="editor_title">ভিডিও ক্রিয়েটিভ স্টুডিও</string>
+    <string name="editor_tracks">টাইমলাইন ট্র্যাকসমূহ</string>
+    <string name="editor_video_track">ভিডিও ট্র্যাক</string>
+    <string name="editor_audio_track">অডিও ট্র্যাক</string>
+    <string name="editor_text_track">টেক্সট ও টাইটেল</string>
+    <string name="editor_overlay_track">ওভারলে ট্র্যাক</string>
+    <string name="editor_add_clip">ক্লিপ যুক্ত করুন</string>
+    <string name="editor_trim">ট্রিম করুন</string>
+    <string name="editor_split">বর্তমান স্থানে ভাগ করুন</string>
+    <string name="editor_merge">ক্লিপ একত্রিত করুন</string>
+    <string name="editor_crop">ক্রপ করুন</string>
+    <string name="editor_rotate">৯০° ঘোরান</string>
+    <string name="editor_flip">উল্টান (ফ্লিপ)</string>
+    <string name="editor_duplicate">অনুলিপি তৈরি করুন</string>
+    <string name="editor_delete">মুছে ফেলুন</string>
+    <string name="editor_speed">গতি</string>
+    <string name="editor_reverse">বিপরীতমুখী (রিভার্স)</string>
+    <string name="editor_freeze">ফ্রেম স্থির করুন</string>
+    <string name="editor_transitions">ট্রানজিশনসমূহ</string>
+    <string name="editor_transition_fade">ফেড</string>
+    <string name="editor_transition_dissolve">ডিজলভ</string>
+    <string name="editor_transition_slide">স্লাইড</string>
+    <string name="editor_transition_zoom">জুম ইন</string>
+    <string name="editor_transition_wipe">ওয়াইপ</string>
+    <string name="editor_transition_blur">ব্লার পুশ</string>
+    <string name="editor_filters">ফিল্টার ও ইফেক্টসমূহ</string>
+    <string name="editor_filter_original">আসল (অরিজিনাল)</string>
+    <string name="editor_filter_vibrant">উজ্জ্বল</string>
+    <string name="editor_filter_cinematic">সিনেমাটিক টিল</string>
+    <string name="editor_filter_vintage">ভিন্টেজ ফিল্ম</string>
+    <string name="editor_filter_bnw">সাদা-কালো</string>
+    <string name="editor_filter_warm">উষ্ণ (ওয়ার্ম)</string>
+    <string name="editor_filter_cool">শীতল (কুল)</string>
+    <string name="editor_brightness">উজ্জ্বলতা</string>
+    <string name="editor_contrast">কনট্রাস্ট</string>
+    <string name="editor_saturation">স্যাচুরেশন</string>
+    <string name="editor_vignette">ভিগনেট</string>
+    <string name="editor_keyframes">কিফ্রেম অ্যানিমেশন</string>
+    <string name="editor_add_keyframe">কিফ্রেম যোগ করুন</string>
+    <string name="editor_remove_keyframe">কিফ্রেম সরান</string>
+    <string name="editor_undo">পূর্বাবস্থায় ফেরান (আনডু)</string>
+    <string name="editor_redo">পুনরায় করুন (রিডু)</string>
+    <string name="editor_canvas_ratio">ক্যানভাস রেশিও</string>
+    <string name="editor_export_button">ভিডিও এক্সপোর্ট করুন</string>
+    <string name="editor_project_autosaved">প্রজেক্ট স্বয়ংক্রিয়ভাবে সংরক্ষিত হয়েছে</string>
+
+    <!-- Audio Editing Studio -->
+    <string name="audio_studio_title">অডিও স্টুডিও</string>
+    <string name="audio_bgm">ব্যাকগ্রাউন্ড মিউজিক</string>
+    <string name="audio_voiceover">ভয়েস-ওভার রেকর্ড করুন</string>
+    <string name="audio_recording">রেকর্ড হচ্ছে…</string>
+    <string name="audio_tap_to_record">ভয়েস রেকর্ড করতে ট্যাপ করুন</string>
+    <string name="audio_stop_record">রেকর্ডিং বন্ধ করুন</string>
+    <string name="audio_fade_in">ফেড ইন</string>
+    <string name="audio_fade_out">ফেড আউট</string>
+    <string name="audio_volume">শব্দের মাত্রা</string>
+    <string name="audio_mute_original">মূল ভিডিওর শব্দ বন্ধ করুন</string>
+    <string name="audio_waveform">ওয়েভফর্ম দৃশ্য</string>
+
+    <!-- Photo-to-Video Maker -->
+    <string name="photo_maker_title">ফটো স্লাইডশো মেকার</string>
+    <string name="photo_select_images">ছবি নির্বাচন করুন</string>
+    <string name="photo_slide_duration">প্রতি ছবির সময়কাল: %s সেকেন্ড</string>
+    <string name="photo_ken_burns">কেন বার্নস জুম ইফেক্ট</string>
+    <string name="photo_reorder_hint">ক্রম পরিবর্তন করতে কার্ড টেনে আনুন</string>
+    <string name="photo_add_music">সাউন্ডট্র্যাক যুক্ত করুন</string>
+    <string name="photo_add_caption">ছবির ক্যাপশন দিন</string>
+    <string name="photo_generate_video">ভিডিও তৈরি করুন</string>
+    <string name="photo_minimum_photos">অনুগ্রহ করে অন্তত ২টি ছবি নির্বাচন করুন</string>
+
+    <!-- Export & Rendering -->
+    <string name="export_title">এক্সপোর্ট স্টুডিও</string>
+    <string name="export_resolution">রেজোলিউশন</string>
+    <string name="export_fps">ফ্রেম রেট</string>
+    <string name="export_bitrate">বিটরেট</string>
+    <string name="export_codec">ভিডিও কোডেক</string>
+    <string name="export_render_progress">ভিডিও রেন্ডারিং হচ্ছে: %d%%</string>
+    <string name="export_status_encoding">ভিডিও ফ্রেম এনকোড করা হচ্ছে…</string>
+    <string name="export_status_muxing">অডিও ও ভিডিও একত্রিত করা হচ্ছে…</string>
+    <string name="export_cancel">এক্সপোর্ট বাতিল করুন</string>
+    <string name="export_success">ভিডিও সফলভাবে এক্সপোর্ট সম্পন্ন হয়েছে!</string>
+    <string name="export_open_video">ভিডিও খুলুন</string>
+    <string name="export_share">শেয়ার করুন</string>
+    <string name="export_est_size">আনুমানিক আকার: %s</string>
+    <string name="export_storage_available">উপলব্ধ স্টোরেজ: %s</string>
+
+    <!-- Project Management -->
+    <string name="projects_title">সংরক্ষিত প্রজেক্টসমূহ</string>
+    <string name="projects_empty">এখনও কোনো সংরক্ষিত প্রজেক্ট নেই। তৈরি শুরু করুন!</string>
+    <string name="projects_rename">নাম পরিবর্তন করুন</string>
+    <string name="projects_duplicate">অনুলিপি তৈরি করুন</string>
+    <string name="projects_delete">প্রজেক্ট মুছুন</string>
+    <string name="projects_delete_confirm">এই প্রজেক্টটি মুছে ফেলতে চান? আপনার মূল মিডিয়া ফাইল অক্ষত থাকবে।</string>
+    <string name="projects_last_modified">সর্বশেষ পরিবর্তন: %s</string>
+
+    <!-- Online Media -->
+    <string name="online_title">অনলাইন মিডিয়া</string>
+    <string name="online_youtube_tab">ইউটিউব</string>
+    <string name="online_facebook_tab">ফেসবুক</string>
+    <string name="online_search_placeholder">ভিডিও খুঁজুন অথবা লিংক পেস্ট করুন…</string>
+    <string name="online_search_button">অনুসন্ধান</string>
+    <string name="online_open_external">অফিসিয়াল অ্যাপে খুলুন</string>
+    <string name="online_play_web">প্রিভিউ চালান</string>
+    <string name="online_fb_paste_link">শেয়ার করা ফেসবুক ভিডিও লিংক পেস্ট করুন</string>
+    <string name="online_policy_notice">THRYNX সম্পূর্ণভাবে ইউটিউব ও ফেসবুকের নিয়মাবলী মেনে চলে। সংরক্ষিত অনলাইন কন্টেন্ট অনুমতি ছাড়া সরাসরি ডাউনলোড করা নিষিদ্ধ।</string>
+
+    <!-- Download Manager -->
+    <string name="downloads_title">ডাউনলোড ম্যানেজার</string>
+    <string name="downloads_active">চলমান ডাউনলোড</string>
+    <string name="downloads_completed">সম্পন্ন ফাইলসমূহ</string>
+    <string name="downloads_empty">ডাউনলোড তালিকায় কিছু নেই</string>
+    <string name="downloads_pause">বিরতি</string>
+    <string name="downloads_resume">পুনরায় চালু</string>
+    <string name="downloads_retry">আবার চেষ্টা করুন</string>
+    <string name="downloads_cancel">বাতিল</string>
+    <string name="downloads_storage_used">ব্যবহৃত স্টোরেজ: %s</string>
+    <string name="downloads_storage_free">খালি স্টোরেজ: %s</string>
+
+    <!-- Settings -->
+    <string name="settings_title">সেটিংস</string>
+    <string name="settings_section_appearance">চেহারা ও থিম</string>
+    <string name="settings_theme">অ্যাপ থিম</string>
+    <string name="settings_theme_system">সিস্টেম ডিফল্ট</string>
+    <string name="settings_theme_dark">ডার্ক থিম</string>
+    <string name="settings_theme_light">লাইট থিম</string>
+    <string name="settings_accent_color">অ্যাকসেন্ট রঙ</string>
+    <string name="settings_section_language">ভাষা / Language</string>
+    <string name="settings_language">অ্যাপের ভাষা</string>
+    <string name="settings_lang_en">English (ইংরেজি)</string>
+    <string name="settings_lang_bn">বাংলা (Bangla)</string>
+    <string name="settings_section_player">প্লেয়ারের পছন্দসমূহ</string>
+    <string name="settings_default_speed">ডিফল্ট প্লেব্যাক গতি</string>
+    <string name="settings_remember_position">শেষ দেখা স্থান মনে রাখুন</string>
+    <string name="settings_auto_background_audio">স্বয়ংক্রিয় ব্যাকগ্রাউন্ড অডিও</string>
+    <string name="settings_section_editor">এডিটর পছন্দসমূহ</string>
+    <string name="settings_editor_resolution">ডিফল্ট প্রজেক্ট রেজোলিউশন</string>
+    <string name="settings_editor_fps">ডিফল্ট ফ্রেম রেট</string>
+    <string name="settings_editor_autosave">স্বয়ংক্রিয় সংরক্ষণ ব্যবধান</string>
+    <string name="settings_section_privacy">গোপনীয়তা ও লোকাল স্টোরেজ</string>
+    <string name="settings_clear_history">প্লেব্যাক হিস্ট্রি মুছুন</string>
+    <string name="settings_history_cleared">হিস্ট্রি মুছে ফেলা হয়েছে</string>
+    <string name="settings_offline_first_badge">১০০% অফলাইন ও নিরাপদ — ক্লাউডে কোনো ফাইল পাঠানো হয় না</string>
+    <string name="settings_section_about">THRYNX সম্পর্কে</string>
+    <string name="settings_version">ভার্সন %s</string>
+    <string name="settings_licenses">ওপেন সোর্স লাইসেন্স</string>
+    <string name="settings_copyright">© ২০২৬ THRYNX। সর্বস্বত্ব সংরক্ষিত।</string>
+
+    <!-- Common Actions & Errors -->
+    <string name="action_save">সংরক্ষণ করুন</string>
+    <string name="action_cancel">বাতিল</string>
+    <string name="action_delete">মুছুন</string>
+    <string name="action_confirm">নিশ্চিত করুন</string>
+    <string name="action_apply">প্রয়োগ করুন</string>
+    <string name="action_close">বন্ধ করুন</string>
+    <string name="action_ok">ঠিক আছে</string>
+    <string name="action_grant_permissions">অনুমতি দিন</string>
+    <string name="error_storage_permission">মিডিয়া ফাইল ব্রাউজ এবং প্লে করার জন্য স্টোরেজ পারমিশন প্রয়োজন।</string>
+    <string name="error_record_permission">ভয়েস-ওভার রেকর্ড করতে মাইক্রোফোন পারমিশন প্রয়োজন।</string>
+    <string name="error_file_not_found">মিডিয়া ফাইলটি পাওয়া যায়নি বা স্থানান্তরিত হয়েছে।</string>
+    <string name="error_unsupported_format">এই ডিভাইসে এই ফাইল ফরম্যাটটি সমর্থিত নয়।</string>
+    <string name="error_render_failed">রেন্ডারিং ব্যর্থ হয়েছে। স্টোরেজ খালি আছে কিনা দেখে আবার চেষ্টা করুন।</string>
+    <string name="error_no_network">ইন্টারনেট সংযোগ উপলব্ধ নেই।</string>
+</resources>
