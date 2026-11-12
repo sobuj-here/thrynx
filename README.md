@@ -5,28 +5,23 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
-    <img src="https://img.shields.io/badge/⚡%20Download-THRYNX%20v1.0.0%20APK%20(22%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
-  </a>
   <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0">
-    <img src="https://img.shields.io/badge/Release-v1.0.0%20Official-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
+    <img src="https://img.shields.io/badge/Release-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
   </a>
-  <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-green?style=for-the-badge" alt="Platform" />
+  <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-green?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Languages-English%20%7C%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-orange?style=for-the-badge" alt="Languages" />
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge" alt="License" />
 </p>
 
 ---
 
 ## 📥 Download & Installation
 
-The latest production release is pre-compiled, tested, and ready to install on Android devices running **Android 8.0 (API 26)** or higher.
+The latest production release is pre-compiled, verified, and ready to install on Android devices running **Android 8.0 (API 26)** or higher.
 
 <p align="center">
   <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
-    <img src="https://img.shields.io/badge/Download%20APK-v1.0.0%20(Latest)-00E5FF?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
-  </a>
-  <a href="https://github.com/sobuj-here/thrynx/releases">
-    <img src="https://img.shields.io/badge/Release%20Notes-v1.0.0-181717?style=for-the-badge&logo=github&logoColor=white" alt="Release Notes" />
+    <img src="https://img.shields.io/badge/⚡%20Download-THRYNX%20v1.0.0%20APK%20(21.9%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
   </a>
 </p>
 
