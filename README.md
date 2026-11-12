@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
-    <img src="https://img.shields.io/badge/⚡%20Download-THRYNX%20v1.0.0%20APK%20(21%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
+    <img src="https://img.shields.io/badge/⚡%20Download-THRYNX%20v1.0.0%20APK%20(22%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
   </a>
   <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0">
     <img src="https://img.shields.io/badge/Release-v1.0.0%20Official-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
@@ -31,7 +31,7 @@ The latest production release is pre-compiled, tested, and ready to install on A
 </p>
 
 ### Direct Installation
-1. Tap the **Download APK** button above to download `app-debug.apk` (~21.7 MB).
+1. Tap the **Download APK** button above to download `app-debug.apk` (~21.9 MB).
 2. Open the downloaded file on your Android device and confirm installation.
 
 ---
