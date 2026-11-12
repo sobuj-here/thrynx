@@ -116,4 +116,81 @@ class TimelineEngineTest {
         assertNotNull(redone)
         assertEquals(0, redone!!.tracks.first().clips.size)
     }
+
+    @Test
+    fun testMoveClipAndSnapping() {
+        // Move clip to 1,500ms
+        val moved = engine.moveClip("track_v1", "clip_1", 1_500L)
+        val clip = moved.tracks.first().clips.first()
+        assertEquals(1_500L, clip.timelineStartMs)
+        assertEquals(11_500L, moved.durationMs)
+
+        // Snapping: moving close to 0ms (e.g. 50ms <= snapTolerance 150ms) should snap to 0
+        val snapped = engine.moveClip("track_v1", "clip_1", 50L)
+        assertEquals(0L, snapped.tracks.first().clips.first().timelineStartMs)
+    }
+
+    @Test
+    fun testMoveClipBetweenTracks() {
+        val projectWithTwoTracks = project.copy(
+            tracks = project.tracks + TimelineTrackModel(id = "track_v2", type = TrackType.VIDEO, index = 1)
+        )
+        val eng = TimelineEngine(projectWithTwoTracks)
+        val result = eng.moveClipBetweenTracks("track_v1", "track_v2", "clip_1", 2000L)
+
+        val track1 = result.tracks.first { it.id == "track_v1" }
+        val track2 = result.tracks.first { it.id == "track_v2" }
+
+        assertTrue(track1.clips.isEmpty())
+        assertEquals(1, track2.clips.size)
+        assertEquals(2000L, track2.clips.first().timelineStartMs)
+    }
+
+    @Test
+    fun testTransformOperations() {
+        // Rotate 90
+        val rotated = engine.rotateClip90("track_v1", "clip_1")
+        assertEquals(90f, rotated.tracks.first().clips.first().transform.rotation, 0.01f)
+
+        // Flip Horizontal
+        val flippedH = engine.flipClipHorizontal("track_v1", "clip_1")
+        assertEquals(-1f, flippedH.tracks.first().clips.first().transform.scaleX, 0.01f)
+
+        // Flip Vertical
+        val flippedV = engine.flipClipVertical("track_v1", "clip_1")
+        assertEquals(-1f, flippedV.tracks.first().clips.first().transform.scaleY, 0.01f)
+
+        // Opacity
+        val withOpacity = engine.updateClipOpacity("track_v1", "clip_1", 0.65f)
+        assertEquals(0.65f, withOpacity.tracks.first().clips.first().transform.opacity, 0.01f)
+    }
+
+    @Test
+    fun testAudioFadeAndMute() {
+        val withFade = engine.updateAudioFade("track_v1", "clip_1", 1000L, 2000L)
+        val clip = withFade.tracks.first().clips.first()
+        assertEquals(1000L, clip.fadeInMs)
+        assertEquals(2000L, clip.fadeOutMs)
+
+        val muted = engine.toggleClipMute("track_v1", "clip_1")
+        assertTrue(muted.tracks.first().clips.first().isMuted)
+    }
+
+    @Test
+    fun testTextPropertiesUpdate() {
+        val updatedText = engine.updateTextProperties(
+            trackId = "track_v1",
+            clipId = "clip_1",
+            text = "বাংলা সাবটাইটেল",
+            colorHex = "#00F0FF",
+            bgHex = "#000000",
+            fontSizeSp = 28f,
+            isSubtitle = true
+        )
+        val clip = updatedText.tracks.first().clips.first()
+        assertEquals("বাংলা সাবটাইটেল", clip.textContent)
+        assertEquals("#00F0FF", clip.textColorHex)
+        assertEquals(28f, clip.textFontSizeSp, 0.01f)
+        assertTrue(clip.isSubtitle)
+    }
 }

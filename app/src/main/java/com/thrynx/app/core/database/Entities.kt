@@ -105,3 +105,17 @@ data class PlaylistItemEntity(
     val durationMs: Long,
     val orderIndex: Int
 )
+
+@Entity(tableName = "export_history")
+data class ExportHistoryEntity(
+    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    val projectName: String,
+    val filePath: String,
+    val thumbnailUri: String = "",
+    val resolution: String,
+    val fps: Int,
+    val durationMs: Long,
+    val fileSizeBytes: Long,
+    val exportedAt: Long = System.currentTimeMillis(),
+    val status: String = "COMPLETED"
+)

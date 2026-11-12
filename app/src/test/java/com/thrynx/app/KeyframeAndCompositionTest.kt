@@ -88,4 +88,36 @@ class KeyframeAndCompositionTest {
         assertEquals(1, snapshotAt4500.activeVideoClips.size)
         assertEquals(0, snapshotAt4500.activeTextClips.size)
     }
+
+    @Test
+    fun testAudioFadeInOutEvaluation() {
+        val audioClip = TimelineClipModel(
+            id = "a_clip_1",
+            timelineStartMs = 0L,
+            durationMs = 10_000L,
+            volume = 1.0f,
+            fadeInMs = 2_000L,
+            fadeOutMs = 2_000L
+        )
+
+        val project = ProjectModel(
+            durationMs = 10_000L,
+            tracks = listOf(
+                TimelineTrackModel(id = "t_audio", type = TrackType.AUDIO, clips = listOf(audioClip))
+            )
+        )
+
+        // At 1,000ms (halfway through 2,000ms fade-in): volume should be 0.5f
+        val snapAt1s = CompositionEngine.evaluate(project, 1_000L)
+        assertEquals(1, snapAt1s.activeAudioClips.size)
+        assertEquals(0.5f, snapAt1s.activeAudioClips[0].activeVolume, 0.05f)
+
+        // At 5,000ms (middle): volume should be 1.0f
+        val snapAt5s = CompositionEngine.evaluate(project, 5_000L)
+        assertEquals(1.0f, snapAt5s.activeAudioClips[0].activeVolume, 0.05f)
+
+        // At 9,000ms (halfway through 2,000ms fade-out, 1s remaining): volume should be 0.5f
+        val snapAt9s = CompositionEngine.evaluate(project, 9_000L)
+        assertEquals(0.5f, snapAt9s.activeAudioClips[0].activeVolume, 0.05f)
+    }
 }

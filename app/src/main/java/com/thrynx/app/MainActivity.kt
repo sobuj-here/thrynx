@@ -28,9 +28,11 @@ import com.thrynx.app.core.database.PlaybackHistoryEntity
 import com.thrynx.app.core.database.ProjectEntity
 import com.thrynx.app.core.designsystem.ThrynxTheme
 import com.thrynx.app.core.editor.export.ExportConfiguration
+import com.thrynx.app.core.editor.export.ExportStage
 import com.thrynx.app.core.localization.LocaleHelper
 import com.thrynx.app.core.model.MediaItemModel
 import com.thrynx.app.core.model.ProjectModel
+import com.thrynx.app.feature.editor.export.ExportProgressDialog
 import com.thrynx.app.ui.navigation.ThrynxNavigationApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -95,6 +97,9 @@ class MainActivity : ComponentActivity() {
                 // Export state
                 var isExporting by remember { mutableStateOf(false) }
                 var exportProgress by remember { mutableIntStateOf(0) }
+                var exportStage by remember { mutableStateOf(ExportStage.PREPARING) }
+                var exportingProject by remember { mutableStateOf<ProjectModel?>(null) }
+                var exportingConfig by remember { mutableStateOf(ExportConfiguration()) }
 
                 LaunchedEffect(Unit) {
                     loadMediaLibrary { v, a, img ->
@@ -138,20 +143,27 @@ class MainActivity : ComponentActivity() {
                                 app.database.projectDao().insertOrUpdate(ProjectEntity.fromDomain(dup))
                             }
                         },
-                        onExportProject = { proj ->
+                        onExportProject = { proj, config ->
                             isExporting = true
                             exportProgress = 0
-                            val outputFile = File(getExternalFilesDir(null), "THRYNX_${proj.name}_${System.currentTimeMillis()}.mp4")
+                            exportStage = ExportStage.PREPARING
+                            exportingProject = proj
+                            exportingConfig = config
+
+                            val exportDir = File(getExternalFilesDir(null), "Exports").also { it.mkdirs() }
+                            val outputFile = File(exportDir, "THRYNX_${proj.name.replace(" ", "_")}_${System.currentTimeMillis()}.mp4")
+
                             lifecycleScope.launch {
                                 val result = app.exportEngine.exportProject(
                                     project = proj,
-                                    config = ExportConfiguration(),
+                                    config = config,
                                     outputFile = outputFile,
+                                    onStageChanged = { stage -> exportStage = stage },
                                     onProgress = { p -> exportProgress = p }
                                 )
                                 isExporting = false
                                 result.onSuccess { file ->
-                                    Toast.makeText(this@MainActivity, getString(R.string.export_success), Toast.LENGTH_LONG).show()
+                                    Toast.makeText(this@MainActivity, "${getString(R.string.export_success)} (${file.name})", Toast.LENGTH_LONG).show()
                                 }.onFailure { err ->
                                     Toast.makeText(this@MainActivity, "${getString(R.string.error_render_failed)}: ${err.message}", Toast.LENGTH_LONG).show()
                                 }
@@ -170,34 +182,16 @@ class MainActivity : ComponentActivity() {
                         }
                     )
 
-                    // Export Progress Dialog
-                    if (isExporting) {
-                        AlertDialog(
-                            onDismissRequest = {},
-                            title = { Text(stringResource(id = R.string.export_title)) },
-                            text = {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(stringResource(id = R.string.export_render_progress, exportProgress))
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    LinearProgressIndicator(
-                                        progress = (exportProgress / 100f).coerceIn(0f, 1f),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = stringResource(id = R.string.export_status_encoding),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            },
-                            confirmButton = {
-                                TextButton(onClick = { app.exportEngine.cancelExport() }) {
-                                    Text(stringResource(id = R.string.export_cancel))
-                                }
+                    // Export Progress Dialog (Phase 3 Verified Pipeline)
+                    if (isExporting && exportingProject != null) {
+                        ExportProgressDialog(
+                            project = exportingProject!!,
+                            config = exportingConfig,
+                            stage = exportStage,
+                            progress = exportProgress,
+                            onCancelExport = {
+                                app.exportEngine.cancelExport()
+                                isExporting = false
                             }
                         )
                     }

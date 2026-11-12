@@ -41,6 +41,7 @@ fun HomeScreen(
     onNewProject: () -> Unit,
     onNewSlideshow: () -> Unit,
     onNavigateToLibrary: () -> Unit,
+    onNavigateToOnline: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -139,7 +140,7 @@ fun HomeScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     QuickActionButton(
                         title = stringResource(id = R.string.home_new_project),
@@ -160,6 +161,13 @@ fun HomeScreen(
                         icon = Icons.Default.Folder,
                         accentColor = ThrynxPurple,
                         onClick = onNavigateToLibrary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    QuickActionButton(
+                        title = stringResource(id = R.string.nav_online),
+                        icon = Icons.Default.Language,
+                        accentColor = ThrynxAmber,
+                        onClick = onNavigateToOnline,
                         modifier = Modifier.weight(1f)
                     )
                 }

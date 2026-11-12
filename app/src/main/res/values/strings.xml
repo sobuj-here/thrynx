@@ -210,6 +210,7 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
+    <string name="settings_section_general">General</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_theme">App Theme</string>
     <string name="settings_theme_system">System Default</string>
@@ -220,21 +221,55 @@
     <string name="settings_language">App Language</string>
     <string name="settings_lang_en">English</string>
     <string name="settings_lang_bn">বাংলা (Bangla)</string>
+    <string name="settings_startup_screen">Startup Screen</string>
+    <string name="settings_startup_home">Home</string>
+    <string name="settings_startup_library">Library</string>
+    <string name="settings_startup_editor">Creative Studio</string>
+
     <string name="settings_section_player">Player Preferences</string>
     <string name="settings_default_speed">Default Playback Speed</string>
     <string name="settings_remember_position">Remember Last Position</string>
+    <string name="settings_remember_position_desc">Automatically resumes video from last watched point</string>
     <string name="settings_auto_background_audio">Enable Background Audio</string>
+    <string name="settings_background_audio_desc">Continue playing audio when app is minimized or screen turns off</string>
+    <string name="settings_default_orientation">Default Orientation</string>
+    <string name="settings_orientation_auto">Auto Rotate</string>
+    <string name="settings_orientation_landscape">Landscape</string>
+    <string name="settings_orientation_portrait">Portrait</string>
+    <string name="settings_default_resize_mode">Default Video Fit</string>
+    <string name="settings_resize_fit">Fit to Screen</string>
+    <string name="settings_resize_fill">Fill &amp; Crop</string>
+    <string name="settings_gestures_enabled">Player Swipe Gestures</string>
+    <string name="settings_gestures_desc">Brightness, volume gestures &amp; double-tap seek</string>
+    <string name="settings_subtitle_styling">Subtitle Appearance</string>
+
     <string name="settings_section_editor">Editor Preferences</string>
     <string name="settings_editor_resolution">Default Project Resolution</string>
     <string name="settings_editor_fps">Default Project Frame Rate</string>
     <string name="settings_editor_autosave">Autosave Interval</string>
-    <string name="settings_section_privacy">Privacy &amp; Local Storage</string>
+    <string name="settings_export_location">Export Directory</string>
+
+    <string name="settings_section_storage">Storage &amp; Cache</string>
+    <string name="settings_cache_size">Cache Memory Used</string>
+    <string name="settings_clear_cache">Clear App Cache</string>
+    <string name="settings_clear_cache_desc">Deletes temporary frame cache and preview files</string>
+    <string name="settings_cache_cleared">App cache successfully cleared</string>
     <string name="settings_clear_history">Clear Playback History</string>
+    <string name="settings_clear_history_desc">Deletes all local video and music playback history</string>
     <string name="settings_history_cleared">Playback history cleared</string>
+
+    <string name="settings_section_privacy">Privacy &amp; Permissions</string>
     <string name="settings_offline_first_badge">100% Offline &amp; Private — No Cloud Uploads</string>
+    <string name="settings_offline_first_desc">All media playback, editing, and exports run strictly on your local device. Zero telemetry, zero cloud tracking, and zero AI models.</string>
+    <string name="settings_perm_storage">Media Storage Access</string>
+    <string name="settings_perm_mic">Microphone Voice-Over Access</string>
+    <string name="settings_perm_granted">Granted</string>
+    <string name="settings_perm_denied">Not Granted</string>
+
     <string name="settings_section_about">About THRYNX</string>
     <string name="settings_version">Version %s</string>
     <string name="settings_licenses">Open Source Licenses</string>
+    <string name="settings_github">Source Code &amp; Releases</string>
     <string name="settings_copyright">© 2026 THRYNX. All rights reserved.</string>
 
     <!-- Common Actions & Errors -->

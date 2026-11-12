@@ -210,6 +210,7 @@
 
     <!-- Settings -->
     <string name="settings_title">সেটিংস</string>
+    <string name="settings_section_general">সাধারণ</string>
     <string name="settings_section_appearance">চেহারা ও থিম</string>
     <string name="settings_theme">অ্যাপ থিম</string>
     <string name="settings_theme_system">সিস্টেম ডিফল্ট</string>
@@ -220,21 +221,55 @@
     <string name="settings_language">অ্যাপের ভাষা</string>
     <string name="settings_lang_en">English (ইংরেজি)</string>
     <string name="settings_lang_bn">বাংলা (Bangla)</string>
+    <string name="settings_startup_screen">প্রারম্ভিক স্ক্রিন</string>
+    <string name="settings_startup_home">হোম</string>
+    <string name="settings_startup_library">লাইব্রেরি</string>
+    <string name="settings_startup_editor">ক্রিয়েটিভ স্টুডিও</string>
+
     <string name="settings_section_player">প্লেয়ারের পছন্দসমূহ</string>
     <string name="settings_default_speed">ডিফল্ট প্লেব্যাক গতি</string>
     <string name="settings_remember_position">শেষ দেখা স্থান মনে রাখুন</string>
+    <string name="settings_remember_position_desc">ভিডিও শেষ দেখা জায়গা থেকে স্বয়ংক্রিয়ভাবে চালু হবে</string>
     <string name="settings_auto_background_audio">স্বয়ংক্রিয় ব্যাকগ্রাউন্ড অডিও</string>
+    <string name="settings_background_audio_desc">স্ক্রিন বন্ধ থাকলেও বা অন্য অ্যাপে গেলেও অডিও চালু থাকবে</string>
+    <string name="settings_default_orientation">ডিফল্ট ওরিয়েন্টেশন</string>
+    <string name="settings_orientation_auto">স্বয়ংক্রিয় ঘূর্ণন</string>
+    <string name="settings_orientation_landscape">ল্যান্ডস্কেপ (আড়াআড়ি)</string>
+    <string name="settings_orientation_portrait">পোর্ট্রেট (খাড়া)</string>
+    <string name="settings_default_resize_mode">ডিফল্ট ভিডিও ভিউ</string>
+    <string name="settings_resize_fit">পর্দায় ফিট</string>
+    <string name="settings_resize_fill">পূর্ণ পর্দা (ফিল ও ক্রপ)</string>
+    <string name="settings_gestures_enabled">প্লেয়ার সুইপ জেসচার</string>
+    <string name="settings_gestures_desc">উজ্জ্বলতা, ভলিউম জেসচার ও ডাবল-ট্যাপ ১০ সে. সিক</string>
+    <string name="settings_subtitle_styling">সাবটাইটেল শৈলী</string>
+
     <string name="settings_section_editor">এডিটর পছন্দসমূহ</string>
     <string name="settings_editor_resolution">ডিফল্ট প্রজেক্ট রেজোলিউশন</string>
     <string name="settings_editor_fps">ডিফল্ট ফ্রেম রেট</string>
     <string name="settings_editor_autosave">স্বয়ংক্রিয় সংরক্ষণ ব্যবধান</string>
-    <string name="settings_section_privacy">গোপনীয়তা ও লোকাল স্টোরেজ</string>
+    <string name="settings_export_location">এক্সপোর্ট ডিরেক্টরি</string>
+
+    <string name="settings_section_storage">স্টোরেজ ও ক্যাশ</string>
+    <string name="settings_cache_size">ব্যবহৃত ক্যাশ মেমরি</string>
+    <string name="settings_clear_cache">অ্যাপ ক্যাশ খালি করুন</string>
+    <string name="settings_clear_cache_desc">অস্থায়ী ফ্রেম ক্যাশ এবং প্রিভিউ ফাইল মুছে ফেলে</string>
+    <string name="settings_cache_cleared">অ্যাপ ক্যাশ সফলভাবে খালি করা হয়েছে</string>
     <string name="settings_clear_history">প্লেব্যাক হিস্ট্রি মুছুন</string>
+    <string name="settings_clear_history_desc">ডিভাইসের সকল ভিডিও এবং মিউজিক প্লেব্যাক ইতিহাস মুছে ফেলে</string>
     <string name="settings_history_cleared">হিস্ট্রি মুছে ফেলা হয়েছে</string>
+
+    <string name="settings_section_privacy">গোপনীয়তা ও পারমিশন</string>
     <string name="settings_offline_first_badge">১০০% অফলাইন ও নিরাপদ — ক্লাউডে কোনো ফাইল পাঠানো হয় না</string>
+    <string name="settings_offline_first_desc">সমস্ত মিডিয়া প্লেব্যাক, এডিটিং এবং এক্সপোর্ট আপনার ডিভাইসেই সম্পূর্ণ অফলাইনে সম্পন্ন হয়। কোনো টেলিমেট্রি, ক্লাউড ট্র্যাকিং বা এআই মডেল ব্যবহৃত হয় না।</string>
+    <string name="settings_perm_storage">মিডিয়া স্টোরেজ অনুমতি</string>
+    <string name="settings_perm_mic">মাইক্রোফোন ভয়েস-ওভার অনুমতি</string>
+    <string name="settings_perm_granted">অনুমোদিত</string>
+    <string name="settings_perm_denied">অনুমোদন নেই</string>
+
     <string name="settings_section_about">THRYNX সম্পর্কে</string>
     <string name="settings_version">ভার্সন %s</string>
     <string name="settings_licenses">ওপেন সোর্স লাইসেন্স</string>
+    <string name="settings_github">সোর্স কোড ও রিলিজ</string>
     <string name="settings_copyright">© ২০২৬ THRYNX। সর্বস্বত্ব সংরক্ষিত।</string>
 
     <!-- Common Actions & Errors -->

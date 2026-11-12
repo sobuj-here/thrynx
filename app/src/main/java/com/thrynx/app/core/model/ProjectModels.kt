@@ -7,6 +7,7 @@ enum class TrackType {
     AUDIO,
     IMAGE,
     TEXT,
+    SUBTITLE,
     OVERLAY
 }
 
@@ -84,6 +85,9 @@ data class TimelineClipModel(
     val durationMs: Long = 5000L,
     val speedFactor: Float = 1.0f,
     val volume: Float = 1.0f,
+    val isMuted: Boolean = false,
+    val fadeInMs: Long = 0L,
+    val fadeOutMs: Long = 0L,
     val transform: ClipTransform = ClipTransform(),
     val keyframes: List<KeyframeModel> = emptyList(),
     val effects: List<EffectModel> = emptyList(),
@@ -94,7 +98,8 @@ data class TimelineClipModel(
     val textColorHex: String = "#FFFFFF",
     val textBackgroundColorHex: String = "#00000000",
     val textFontSizeSp: Float = 24f,
-    val textFontName: String = "Default"
+    val textFontName: String = "Default",
+    val isSubtitle: Boolean = false
 ) {
     val timelineEndMs: Long
         get() = timelineStartMs + durationMs

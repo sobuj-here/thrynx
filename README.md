@@ -5,10 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0">
+  <a href="https://github.com/sobuj-here/thrynx/releases/latest">
     <img src="https://img.shields.io/badge/Release-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
   </a>
   <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-green?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
+  <img src="https://img.shields.io/badge/Privacy-100%25%20Offline--First-00E5FF?style=for-the-badge" alt="Privacy" />
   <img src="https://img.shields.io/badge/Languages-English%20%7C%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-orange?style=for-the-badge" alt="Languages" />
   <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge" alt="License" />
 </p>
@@ -17,17 +18,16 @@
 
 ## 📥 Download & Installation
 
-The latest production release is pre-compiled, verified, and ready to install on Android devices running **Android 8.0 (API 26)** or higher.
+Pre-compiled production binaries for Android 8.0+ (API 26–34) are available on [GitHub Releases](https://github.com/sobuj-here/thrynx/releases/latest).
 
-<p align="center">
-  <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
-    <img src="https://img.shields.io/badge/⚡%20Download-THRYNX%20v1.0.0%20APK%20(21.9%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=black" alt="Download APK" />
-  </a>
-</p>
+| Package | Target Architecture | File Size | Direct Download |
+| :--- | :--- | :--- | :--- |
+| **THRYNX v1.0.0 APK** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | ~22.1 MB | [**Download APK (`app-debug.apk`)**](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk) |
 
-### Direct Installation
-1. Tap the **Download APK** button above to download `app-debug.apk` (~21.9 MB).
-2. Open the downloaded file on your Android device and confirm installation.
+### Quick Installation Steps
+1. Download `app-debug.apk` directly on your device or transfer from PC.
+2. Open the downloaded APK and confirm installation (allow "Install Unknown Apps" if prompted).
+3. Launch **THRYNX** (`PLAY • CREATE • EDIT`).
 
 ---
 
@@ -107,25 +107,26 @@ Designed as a single unified application, THRYNX combines:
 ```
 com.thrynx.app
 ├── core/
-│   ├── model/         # Domain entities, Timeline clips, Keyframes, Effects
-│   ├── database/      # SQLite Room database (Projects, History, Downloads)
+│   ├── model/         # Domain entities, Timeline clips, Keyframes, Export config
+│   ├── database/      # SQLite Room database v2 (Projects, ExportHistory, Downloads)
 │   ├── datastore/     # Jetpack DataStore Preferences
 │   ├── localization/  # Dynamic Locale Context Wrapper (LocaleHelper)
 │   ├── player/        # Media3 ExoPlayer Engine & Track Selector
 │   ├── service/       # MediaSessionService, Notifications & Lockscreen
-│   ├── editor/        # Custom Editing Engine (Timeline, Shaders, Keyframes)
+│   ├── editor/        # Custom Editing Engine (Timeline, Composition, Shaders, Keyframes)
+│   │   └── export/    # Media3 Transformer Export Engine, Compiler & Verifier
 │   ├── media/         # MediaStore Scanner & AudioExtractor
 │   ├── download/      # Background Download Manager Service
-│   └── designsystem/  # Modern Obsidian/Cyan Theme & Glassmorphism UI
-├── feature/           # 10 Screen modules (Home, Player, Music, Editor, etc.)
+│   └── designsystem/  # Modern Obsidian/Cyan Theme & Design System Tokens
+├── feature/           # 12 Modules (Home, Player, Editor, Library, Online, Slideshow, etc.)
 └── ui/navigation/     # Jetpack Compose Navigation Graph & Mini-Player
 ```
 
 - **Kotlin**: 1.9.22
 - **Jetpack Compose**: Compose BOM 2024.02.00, Material 3
 - **Media Engine**: AndroidX Media3 ExoPlayer & Transformer 1.2.1
-- **Persistence**: Room SQLite 2.6.1 & DataStore Preferences 1.0.0
-- **Rendering**: OpenGL ES 2.0 Shaders & Hardware MediaCodec H.264/AAC
+- **Persistence**: Room SQLite 2.6.1 (Schema v2) & DataStore Preferences 1.0.0
+- **Rendering**: Media3 Composition, OpenGL ES 2.0 Shaders & Hardware MediaCodec H.264/AAC
 
 ---
 
@@ -136,7 +137,7 @@ com.thrynx.app
 git clone https://github.com/sobuj-here/thrynx.git
 cd thrynx
 
-# Run Automated Unit Tests (10/10 Tests Passed)
+# Run Automated Unit Tests (All Test Suites Passed)
 .\gradlew.bat testDebugUnitTest
 
 # Assemble Debug APK
@@ -152,15 +153,18 @@ cd thrynx
 ---
 
 ## 🧪 Automated Test Verification
-THRYNX includes verified JUnit test suites testing core editing mathematics:
-- `TimelineEngineTest`: Verifies clip trimming, splitting at playhead, duplication, deletion, and undo/redo stacks.
+THRYNX includes verified JUnit test suites testing core editing mathematics and export pipelines:
+- `TimelineEngineTest`: Verifies clip trimming, splitting at playhead, snap movements, duplication, deletion, and undo/redo stacks.
 - `KeyframeAndCompositionTest`: Verifies linear and bezier keyframe interpolations, volume curves, transition states, and multi-track compositing.
+- `ExportEngineTest`: Verifies export configurations (480p–1080p, 24–60fps, bitrate presets), timeline compilation into Media3 sequences, error handling, and output metadata verification.
 
 ---
 
 ## 🔒 Privacy & Local-First Commitment
-- **Zero Cloud Uploads**: All video rendering, audio mixing, and project storage happen 100% locally on your device.
+- **100% Offline-First**: All video playback, timeline editing, audio mixing, and video rendering happen strictly on your local device.
+- **Zero AI / Cloud Dependencies**: No remote servers or AI LLM backends required for creative workflows.
 - **No Trackers**: Zero telemetry, analytics SDKs, or third-party ad networks.
+- **Authorized Online Integrations**: YouTube and Facebook features use official platform handoffs and authorized embedded web views.
 
 ---
 

@@ -1,77 +1,59 @@
 package com.thrynx.app.core.editor.export
 
 import android.content.Context
-import android.net.Uri
-import android.os.Handler
-import android.os.Looper
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
 import androidx.media3.transformer.*
+import com.thrynx.app.core.database.ExportHistoryEntity
+import com.thrynx.app.core.database.ThrynxDatabase
 import com.thrynx.app.core.model.ProjectModel
-import com.thrynx.app.core.model.TrackType
 import kotlinx.coroutines.*
 import java.io.File
 
-data class ExportConfiguration(
-    val resolutionWidth: Int = 1920,
-    val resolutionHeight: Int = 1080,
-    val fps: Int = 30,
-    val bitrateMbps: Int = 10,
-    val videoCodec: String = MimeTypes.VIDEO_H264,
-    val audioCodec: String = MimeTypes.AUDIO_AAC
-)
+enum class ExportStage(val displayTitle: String) {
+    PREPARING("Preparing project…"),
+    VALIDATING("Validating media references & storage…"),
+    COMPOSITING("Compiling multi-track composition…"),
+    ENCODING("Encoding video frames & mixing audio…"),
+    FINALIZING("Finalizing MP4 container…"),
+    VERIFYING("Verifying file integrity & streams…"),
+    COMPLETED("Export completed successfully!")
+}
 
 class VideoExportEngine(private val context: Context) {
 
     private var currentTransformer: Transformer? = null
+    private var activeJob: Job? = null
     private var isCancelled = false
+    private var currentOutputFile: File? = null
 
     suspend fun exportProject(
         project: ProjectModel,
         config: ExportConfiguration,
         outputFile: File,
+        onStageChanged: (ExportStage) -> Unit = {},
         onProgress: (Int) -> Unit
     ): Result<File> = withContext(Dispatchers.IO) {
         isCancelled = false
-        val mainTrack = project.tracks.firstOrNull { it.type == TrackType.VIDEO }
-        val clips = mainTrack?.clips ?: emptyList()
-
-        if (clips.isEmpty()) {
-            return@withContext Result.failure(Exception("Cannot export an empty project without video clips."))
-        }
+        currentOutputFile = outputFile
 
         try {
-            val editedMediaItems = mutableListOf<EditedMediaItem>()
+            // Stage 1 & 2: Validating & Compiling
+            onStageChanged(ExportStage.VALIDATING)
+            onProgress(0)
 
-            for (clip in clips) {
-                if (clip.mediaUri.isBlank()) continue
-                val uri = Uri.parse(clip.mediaUri)
+            val plan = TimelineCompiler.compileAndValidate(
+                context = context,
+                project = project,
+                config = config,
+                outputFile = outputFile
+            )
 
-                val mediaItem = MediaItem.Builder()
-                    .setUri(uri)
-                    .setClippingConfiguration(
-                        MediaItem.ClippingConfiguration.Builder()
-                            .setStartPositionMs(clip.sourceStartMs)
-                            .setEndPositionMs(clip.sourceEndMs)
-                            .build()
-                    )
-                    .build()
+            if (isCancelled) throw ExportException.ExportCancelledException()
 
-                val editedItem = EditedMediaItem.Builder(mediaItem)
-                    .setRemoveAudio(mainTrack?.isMuted == true)
-                    .build()
+            onStageChanged(ExportStage.COMPOSITING)
+            onProgress(5)
 
-                editedMediaItems.add(editedItem)
-            }
-
-            if (editedMediaItems.isEmpty()) {
-                return@withContext Result.failure(Exception("No valid media clips found for export."))
-            }
-
-            val composition = Composition.Builder(
-                EditedMediaItemSequence(editedMediaItems)
-            ).build()
-
+            // Stage 3: Encoding with Media3 Transformer
+            onStageChanged(ExportStage.ENCODING)
             val progressHolder = ProgressHolder()
             val completer = CompletableDeferred<File>()
 
@@ -87,7 +69,7 @@ class VideoExportEngine(private val context: Context) {
                         override fun onError(
                             composition: Composition,
                             exportResult: ExportResult,
-                            exportException: ExportException
+                            exportException: androidx.media3.transformer.ExportException
                         ) {
                             completer.completeExceptionally(exportException)
                         }
@@ -95,18 +77,21 @@ class VideoExportEngine(private val context: Context) {
                     .build()
 
                 currentTransformer = transformer
-                transformer.start(composition, outputFile.absolutePath)
+                transformer.start(plan.composition, outputFile.absolutePath)
             }
 
-            // Polling progress loop
+            // Real progress polling loop
             val progressJob = launch {
                 while (!completer.isCompleted && !isCancelled) {
-                    delay(250)
+                    delay(200)
                     withContext(Dispatchers.Main) {
                         currentTransformer?.let { trans ->
                             val progressState = trans.getProgress(progressHolder)
                             if (progressState == Transformer.PROGRESS_STATE_AVAILABLE) {
-                                onProgress(progressHolder.progress)
+                                // Scale encoding progress from 5% to 90%
+                                val rawProgress = progressHolder.progress
+                                val scaled = 5 + ((rawProgress / 100f) * 85f).toInt()
+                                onProgress(scaled.coerceIn(5, 90))
                             }
                         }
                     }
@@ -115,20 +100,72 @@ class VideoExportEngine(private val context: Context) {
 
             val resultFile = completer.await()
             progressJob.cancel()
+
+            if (isCancelled) {
+                outputFile.delete()
+                throw ExportException.ExportCancelledException()
+            }
+
+            // Stage 4: Finalizing Output
+            onStageChanged(ExportStage.FINALIZING)
+            onProgress(92)
+            delay(150)
+
+            // Stage 5: Verifying Output
+            onStageChanged(ExportStage.VERIFYING)
+            onProgress(95)
+
+            val verification = ExportVerifier.verifyExportedFile(
+                file = resultFile,
+                expectedAudio = config.isAudioEnabled
+            )
+
+            if (!verification.isValid) {
+                resultFile.delete()
+                throw ExportException.VerificationFailedException(verification.errorMessage ?: "Unknown error")
+            }
+
+            onStageChanged(ExportStage.COMPLETED)
             onProgress(100)
+
+            // Save to Export History in Room
+            try {
+                val historyEntity = ExportHistoryEntity(
+                    projectName = project.name,
+                    filePath = resultFile.absolutePath,
+                    resolution = "${verification.width}x${verification.height}",
+                    fps = config.fps,
+                    durationMs = verification.durationMs,
+                    fileSizeBytes = verification.fileSizeBytes,
+                    status = "COMPLETED"
+                )
+                ThrynxDatabase.getInstance(context).exportDao().insertExport(historyEntity)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             Result.success(resultFile)
         } catch (e: Exception) {
             e.printStackTrace()
             outputFile.delete()
             Result.failure(e)
+        } finally {
+            currentTransformer = null
+            currentOutputFile = null
         }
     }
 
     fun cancelExport() {
         isCancelled = true
-        Handler(Looper.getMainLooper()).post {
+        try {
             currentTransformer?.cancel()
-            currentTransformer = null
+            currentOutputFile?.let { file ->
+                if (file.exists()) file.delete()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+        currentTransformer = null
+        activeJob?.cancel()
     }
 }

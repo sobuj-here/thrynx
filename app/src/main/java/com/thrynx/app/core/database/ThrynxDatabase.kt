@@ -13,9 +13,10 @@ import androidx.room.TypeConverters
         FavoriteMediaEntity::class,
         DownloadEntity::class,
         PlaylistEntity::class,
-        PlaylistItemEntity::class
+        PlaylistItemEntity::class,
+        ExportHistoryEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -25,6 +26,7 @@ abstract class ThrynxDatabase : RoomDatabase() {
     abstract fun favoriteDao(): FavoriteDao
     abstract fun downloadDao(): DownloadDao
     abstract fun playlistDao(): PlaylistDao
+    abstract fun exportDao(): ExportDao
 
     companion object {
         @Volatile

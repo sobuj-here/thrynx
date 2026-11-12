@@ -46,12 +46,20 @@ object CompositionEngine {
                         clip.transform,
                         offsetInClipMs
                     )
-                    val baseVolume = if (track.isMuted) 0f else clip.volume
-                    val volume = KeyframeInterpolator.interpolateVolume(
+                    val baseVolume = if (track.isMuted || clip.isMuted) 0f else clip.volume
+                    var volume = KeyframeInterpolator.interpolateVolume(
                         clip.keyframes,
                         baseVolume,
                         offsetInClipMs
                     )
+                    // Apply Audio Fade In / Fade Out
+                    if (clip.fadeInMs > 0 && offsetInClipMs < clip.fadeInMs) {
+                        volume *= (offsetInClipMs.toFloat() / clip.fadeInMs.toFloat()).coerceIn(0f, 1f)
+                    }
+                    val remainMs = clip.durationMs - offsetInClipMs
+                    if (clip.fadeOutMs > 0 && remainMs < clip.fadeOutMs) {
+                        volume *= (remainMs.toFloat() / clip.fadeOutMs.toFloat()).coerceIn(0f, 1f)
+                    }
 
                     // Check transition at clip edges
                     var transitionState: TransitionFrameState? = null
@@ -75,6 +83,7 @@ object CompositionEngine {
                         TrackType.VIDEO -> activeVideos.add(renderable)
                         TrackType.AUDIO -> activeAudios.add(renderable)
                         TrackType.TEXT -> activeTexts.add(renderable)
+                        TrackType.SUBTITLE -> activeTexts.add(renderable)
                         TrackType.OVERLAY -> activeOverlays.add(renderable)
                         TrackType.IMAGE -> activeVideos.add(renderable)
                     }

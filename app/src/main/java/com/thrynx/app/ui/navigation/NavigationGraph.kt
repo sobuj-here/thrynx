@@ -64,7 +64,7 @@ fun ThrynxNavigationApp(
     onSaveProject: (ProjectModel) -> Unit,
     onDeleteProject: (ProjectModel) -> Unit,
     onDuplicateProject: (ProjectModel) -> Unit,
-    onExportProject: (ProjectModel) -> Unit,
+    onExportProject: (ProjectModel, com.thrynx.app.core.editor.export.ExportConfiguration) -> Unit,
     onEnterPiP: () -> Unit,
     onLanguageChanged: (String) -> Unit,
     onClearHistory: () -> Unit,
@@ -75,6 +75,15 @@ fun ThrynxNavigationApp(
     val playbackState by playerManager.playbackState.collectAsState()
 
     var activeEditingProject by remember { mutableStateOf<ProjectModel?>(null) }
+
+    val startupScreenPref by com.thrynx.app.ThrynxApplication.instance.preferencesManager.startupScreenFlow.collectAsState(initial = "home")
+    val initialRoute = remember {
+        when (startupScreenPref) {
+            "library" -> Screen.Library.route
+            "editor" -> Screen.Editor.route
+            else -> Screen.Home.route
+        }
+    }
 
     val bottomNavItems = listOf(
         Screen.Home,
@@ -90,12 +99,14 @@ fun ThrynxNavigationApp(
             if (currentRoute != Screen.Player.route && currentRoute != Screen.Editor.route) {
                 Column {
                     // Persistent Mini-Player Bar
-                    playbackState.currentMedia?.let { current ->
+                    playbackState.currentMedia?.let {
                         MiniPlayerBar(
                             playbackState = playbackState,
                             onTogglePlayPause = { playerManager.togglePlayPause() },
                             onClick = {
-                                navController.navigate(Screen.Player.route)
+                                navController.navigate(Screen.Player.route) {
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }
@@ -141,7 +152,7 @@ fun ThrynxNavigationApp(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = initialRoute,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Home.route) {
@@ -151,7 +162,9 @@ fun ThrynxNavigationApp(
                     lastWatchedHistory = lastWatched,
                     onOpenMedia = { media ->
                         playerManager.playMedia(media, media.lastPositionMs)
-                        navController.navigate(Screen.Player.route)
+                        navController.navigate(Screen.Player.route) {
+                            launchSingleTop = true
+                        }
                     },
                     onOpenProject = { proj ->
                         activeEditingProject = proj
@@ -166,6 +179,9 @@ fun ThrynxNavigationApp(
                     },
                     onNavigateToLibrary = {
                         navController.navigate(Screen.Library.route)
+                    },
+                    onNavigateToOnline = {
+                        navController.navigate(Screen.Online.route)
                     }
                 )
             }
@@ -173,7 +189,13 @@ fun ThrynxNavigationApp(
             composable(Screen.Player.route) {
                 VideoPlayerScreen(
                     playerManager = playerManager,
-                    onBack = { navController.popBackStack() },
+                    onBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    },
                     onEnterPiP = onEnterPiP
                 )
             }
@@ -181,7 +203,13 @@ fun ThrynxNavigationApp(
             composable(Screen.Music.route) {
                 VideoPlayerScreen(
                     playerManager = playerManager,
-                    onBack = { navController.popBackStack() },
+                    onBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    },
                     onEnterPiP = onEnterPiP
                 )
             }
@@ -213,7 +241,9 @@ fun ThrynxNavigationApp(
                     audios = audios,
                     onOpenMedia = { media ->
                         playerManager.playMedia(media)
-                        navController.navigate(Screen.Player.route)
+                        navController.navigate(Screen.Player.route) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -246,7 +276,9 @@ fun ThrynxNavigationApp(
                     onCancelDownload = {},
                     onPlayCompletedMedia = { media ->
                         playerManager.playMedia(media)
-                        navController.navigate(Screen.Player.route)
+                        navController.navigate(Screen.Player.route) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }

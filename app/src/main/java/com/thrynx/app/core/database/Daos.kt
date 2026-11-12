@@ -83,3 +83,18 @@ interface PlaylistDao {
     @Query("DELETE FROM playlists WHERE id = :playlistId")
     suspend fun deletePlaylist(playlistId: Long)
 }
+
+@Dao
+interface ExportDao {
+    @Query("SELECT * FROM export_history ORDER BY exportedAt DESC")
+    fun getAllExports(): Flow<List<ExportHistoryEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExport(export: ExportHistoryEntity)
+
+    @Query("DELETE FROM export_history WHERE id = :id")
+    suspend fun deleteExportById(id: String)
+
+    @Query("DELETE FROM export_history")
+    suspend fun clearExportHistory()
+}
