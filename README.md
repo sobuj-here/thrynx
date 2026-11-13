@@ -33,8 +33,6 @@ Get the latest official APK build directly on your Android device:
 
 [![Download THRYNX APK](https://img.shields.io/badge/⚡_Download_THRYNX_APK-v1.0.0-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/THRYNX-v1.0.0.apk)
 
-**Direct Package**: [`THRYNX-v1.0.0.apk`](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/THRYNX-v1.0.0.apk) &bull; **Compatibility**: Android 8.0 (Oreo) to Android 14 (API 26–34) &bull; **Architecture**: Universal
-
 </div>
 
 ### Installation Steps:
