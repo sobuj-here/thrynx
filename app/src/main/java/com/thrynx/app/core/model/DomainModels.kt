@@ -193,6 +193,8 @@ data class PlaybackState(
     val queueIndex: Int = 0,
     val aspectRatioMode: AspectRatioMode = AspectRatioMode.FIT,
     val subtitleDelayMs: Long = 0L,
+    val rotationDegrees: Int = 0,
+    val zoomScale: Float = 1.0f,
     val isPipActive: Boolean = false
 ) {
     val hasNext: Boolean get() = queueIndex < queue.size - 1

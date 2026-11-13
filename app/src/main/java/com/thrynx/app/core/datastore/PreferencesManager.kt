@@ -19,6 +19,9 @@ class PreferencesManager(private val context: Context) {
         val KEY_DEFAULT_SPEED = floatPreferencesKey("key_default_playback_speed")
         val KEY_DOUBLE_TAP_SEEK_SEC = intPreferencesKey("key_double_tap_seek_sec")
         val KEY_RESUME_PLAYBACK = booleanPreferencesKey("key_resume_playback")
+        val KEY_RESUME_MODE = stringPreferencesKey("key_resume_mode") // "ask", "resume", "beginning"
+        val KEY_SHOW_PLAYER_INFO_HUD = booleanPreferencesKey("key_show_player_info_hud")
+        val KEY_HIDDEN_FOLDERS = stringSetPreferencesKey("key_hidden_folders")
         val KEY_BACKGROUND_AUDIO = booleanPreferencesKey("key_background_audio")
         val KEY_DEFAULT_RESIZE_MODE = stringPreferencesKey("key_default_resize_mode")
         val KEY_DEFAULT_ORIENTATION = stringPreferencesKey("key_default_orientation")
@@ -60,6 +63,18 @@ class PreferencesManager(private val context: Context) {
     val resumePlaybackFlow: Flow<Boolean> = context.dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_RESUME_PLAYBACK] ?: true }
+
+    val resumeModeFlow: Flow<String> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_RESUME_MODE] ?: "ask" }
+
+    val showPlayerInfoHudFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_SHOW_PLAYER_INFO_HUD] ?: true }
+
+    val hiddenFoldersFlow: Flow<Set<String>> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_HIDDEN_FOLDERS] ?: emptySet() }
 
     val backgroundAudioFlow: Flow<Boolean> = context.dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
@@ -132,6 +147,37 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun setResumePlayback(enabled: Boolean) {
         context.dataStore.edit { it[KEY_RESUME_PLAYBACK] = enabled }
+    }
+
+    suspend fun setResumeMode(mode: String) {
+        context.dataStore.edit { 
+            it[KEY_RESUME_MODE] = mode
+            it[KEY_RESUME_PLAYBACK] = (mode != "beginning")
+        }
+    }
+
+    suspend fun setShowPlayerInfoHud(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_SHOW_PLAYER_INFO_HUD] = enabled }
+    }
+
+    suspend fun setHiddenFolders(folders: Set<String>) {
+        context.dataStore.edit { it[KEY_HIDDEN_FOLDERS] = folders }
+    }
+
+    suspend fun hideFolder(folderName: String) {
+        context.dataStore.edit {
+            val current = it[KEY_HIDDEN_FOLDERS]?.toMutableSet() ?: mutableSetOf()
+            current.add(folderName)
+            it[KEY_HIDDEN_FOLDERS] = current
+        }
+    }
+
+    suspend fun unhideFolder(folderName: String) {
+        context.dataStore.edit {
+            val current = it[KEY_HIDDEN_FOLDERS]?.toMutableSet() ?: mutableSetOf()
+            current.remove(folderName)
+            it[KEY_HIDDEN_FOLDERS] = current
+        }
     }
 
     suspend fun setBackgroundAudio(enabled: Boolean) {

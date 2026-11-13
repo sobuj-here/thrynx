@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -82,6 +83,7 @@ fun VideoPlayerScreen(
     val defaultOrientationPref by preferencesManager.defaultOrientationFlow.collectAsState(initial = "auto")
     val gesturesEnabledPref by preferencesManager.gesturesEnabledFlow.collectAsState(initial = true)
     val doubleTapSeekSec by preferencesManager.doubleTapSeekSecFlow.collectAsState(initial = 10)
+    val showPlayerInfoHud by preferencesManager.showPlayerInfoHudFlow.collectAsState(initial = true)
 
     var showControls by remember { mutableStateOf(true) }
     var showAudioTrackDialog by remember { mutableStateOf(false) }
@@ -94,6 +96,51 @@ fun VideoPlayerScreen(
 
     var isLandscape by remember { mutableStateOf(false) }
     var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+
+    // Battery and Clock Status for MX-style Player Top Bar
+    var batteryPercentage by remember { mutableIntStateOf(100) }
+    var isCharging by remember { mutableStateOf(false) }
+    var currentTimeString by remember { mutableStateOf("") }
+
+    DisposableEffect(context) {
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: android.content.Intent?) {
+                if (intent?.action == android.content.Intent.ACTION_BATTERY_CHANGED) {
+                    val level = intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1)
+                    val scale = intent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1)
+                    val status = intent.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1)
+                    if (level >= 0 && scale > 0) {
+                        batteryPercentage = (level * 100) / scale
+                    }
+                    isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                            status == android.os.BatteryManager.BATTERY_STATUS_FULL
+                }
+            }
+        }
+        val filter = android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
+        val initialIntent = context.registerReceiver(receiver, filter)
+        initialIntent?.let { intent ->
+            val level = intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1)
+            val scale = intent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1)
+            val status = intent.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1)
+            if (level >= 0 && scale > 0) {
+                batteryPercentage = (level * 100) / scale
+            }
+            isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == android.os.BatteryManager.BATTERY_STATUS_FULL
+        }
+        onDispose {
+            try { context.unregisterReceiver(receiver) } catch (ignored: Exception) {}
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val timeFormat = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        while (true) {
+            currentTimeString = timeFormat.format(java.util.Date())
+            delay(10_000)
+        }
+    }
 
     // Resize Mode
     var currentResizeMode by remember(playbackState.aspectRatioMode, defaultResizePref) {
@@ -151,10 +198,19 @@ fun VideoPlayerScreen(
         setFullscreen(isLandscape)
     }
 
+    // Gesture HUD overlay state
+    var hudText by remember { mutableStateOf<String?>(null) }
+    var hudIcon by remember { mutableStateOf<ImageVector?>(null) }
+
+    fun showHud(text: String, icon: ImageVector) {
+        hudText = text
+        hudIcon = icon
+    }
+
     // Unified Back Navigation Handler
     val handleBackPress = {
         if (playbackState.isControlsLocked) {
-            playerManager.setControlsLocked(false)
+            showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
         } else if (isLandscape) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             isLandscape = false
@@ -168,15 +224,6 @@ fun VideoPlayerScreen(
 
     BackHandler(enabled = true) {
         handleBackPress()
-    }
-
-    // Gesture HUD overlay state
-    var hudText by remember { mutableStateOf<String?>(null) }
-    var hudIcon by remember { mutableStateOf<ImageVector?>(null) }
-
-    fun showHud(text: String, icon: ImageVector) {
-        hudText = text
-        hudIcon = icon
     }
 
     LaunchedEffect(hudText) {
@@ -347,7 +394,13 @@ fun VideoPlayerScreen(
     ) {
         // Video Surface via AndroidView
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    rotationZ = playbackState.rotationDegrees.toFloat()
+                    scaleX = playbackState.zoomScale
+                    scaleY = playbackState.zoomScale
+                },
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     player = playerManager.exoPlayer
@@ -390,9 +443,33 @@ fun VideoPlayerScreen(
             }
         }
 
-        // Overlay Controls (Top, Center, Bottom)
+        // Dedicated Floating Unlock Button when screen is locked
+        if (playbackState.isControlsLocked) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(24.dp),
+                contentAlignment = Alignment.TopStart
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        playerManager.setControlsLocked(false)
+                        showHud(context.getString(R.string.player_unlock_controls), Icons.Default.LockOpen)
+                    },
+                    containerColor = Color.Black.copy(alpha = 0.7f),
+                    contentColor = ThrynxCyan,
+                    shape = CircleShape,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Icon(Icons.Default.Lock, contentDescription = "Unlock", modifier = Modifier.size(28.dp))
+                }
+            }
+        }
+
+        // Overlay Controls (Top, Center, Bottom) - Hidden completely when locked
         AnimatedVisibility(
-            visible = showControls,
+            visible = showControls && !playbackState.isControlsLocked,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.fillMaxSize()
@@ -412,6 +489,41 @@ fun VideoPlayerScreen(
                 ) {
                     IconButton(onClick = handleBackPress) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+
+                    // MX-style Player Status: Clock & Battery Info Chip
+                    if (showPlayerInfoHud && currentTimeString.isNotBlank()) {
+                        Surface(
+                            color = Color.Black.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = currentTimeString,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = if (isCharging) Icons.Default.BatteryChargingFull else Icons.Default.BatteryStd,
+                                    contentDescription = null,
+                                    tint = if (batteryPercentage <= 15) Color.Red else ThrynxCyan,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text(
+                                    text = "$batteryPercentage%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     Text(
@@ -443,6 +555,65 @@ fun VideoPlayerScreen(
                         )
                     }
 
+                    // Video Canvas Rotation (0°, 90°, 180°, 270°)
+                    IconButton(onClick = {
+                        playerManager.rotateVideo()
+                        showHud("${playbackState.rotationDegrees}° Video Rotation", Icons.Default.RotateRight)
+                    }) {
+                        Icon(
+                            Icons.Default.RotateRight,
+                            contentDescription = stringResource(id = R.string.player_rotate_video),
+                            tint = if (playbackState.rotationDegrees != 0) ThrynxCyan else Color.White
+                        )
+                    }
+
+                    // Video Zoom (1x, 1.25x, 1.5x, 2x)
+                    IconButton(onClick = {
+                        playerManager.cycleZoom()
+                        val zoomText = when (playbackState.zoomScale) {
+                            1.0f -> "Zoom: 100%"
+                            1.25f -> "Zoom: 125%"
+                            1.5f -> "Zoom: 150%"
+                            2.0f -> "Zoom: 200%"
+                            else -> "Zoom: ${(playbackState.zoomScale * 100).toInt()}%"
+                        }
+                        showHud(zoomText, Icons.Default.ZoomIn)
+                    }) {
+                        Icon(
+                            Icons.Default.ZoomIn,
+                            contentDescription = stringResource(id = R.string.player_zoom_video),
+                            tint = if (playbackState.zoomScale > 1.05f) ThrynxCyan else Color.White
+                        )
+                    }
+
+                    // Screen Orientation Toggle (Landscape ⟷ Portrait ⟷ Auto)
+                    IconButton(onClick = {
+                        activity?.let { act ->
+                            val (nextOrient, label) = when (act.requestedOrientation) {
+                                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                                    isLandscape = false
+                                    Pair(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, "Portrait")
+                                }
+                                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> {
+                                    isLandscape = true
+                                    Pair(ActivityInfo.SCREEN_ORIENTATION_SENSOR, "Auto-Rotate")
+                                }
+                                else -> {
+                                    isLandscape = true
+                                    Pair(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, "Landscape")
+                                }
+                            }
+                            act.requestedOrientation = nextOrient
+                            showHud(label, Icons.Default.ScreenRotation)
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.ScreenRotation,
+                            contentDescription = stringResource(id = R.string.player_screen_orientation),
+                            tint = if (isLandscape) ThrynxCyan else Color.White
+                        )
+                    }
+
                     // Playback Speed
                     IconButton(onClick = { showSpeedDialog = true }) {
                         Icon(Icons.Default.Speed, contentDescription = stringResource(id = R.string.player_speed), tint = Color.White)
@@ -470,24 +641,6 @@ fun VideoPlayerScreen(
                     // Media Information
                     IconButton(onClick = { showInfoDialog = true }) {
                         Icon(Icons.Default.Info, contentDescription = stringResource(id = R.string.player_info), tint = Color.White)
-                    }
-
-                    // Screen Rotation (Portrait ⟷ Landscape)
-                    IconButton(onClick = {
-                        activity?.let { act ->
-                            isLandscape = !isLandscape
-                            act.requestedOrientation = if (isLandscape) {
-                                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                            } else {
-                                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                            }
-                        }
-                    }) {
-                        Icon(
-                            imageVector = if (isLandscape) Icons.Default.ScreenRotation else Icons.Default.ScreenLockPortrait,
-                            contentDescription = "Rotate",
-                            tint = Color.White
-                        )
                     }
 
                     // PiP Button

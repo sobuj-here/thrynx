@@ -51,40 +51,26 @@ enum class FolderSortOption(val label: String) {
 fun FoldersScreen(
     folders: List<FolderItemModel>,
     videos: List<MediaItemModel>,
-    privateVideos: List<PrivateVideoEntity>,
-    customFolders: List<CustomFolderEntity> = emptyList(),
-    vaultPin: String,
     hasStoragePermission: Boolean = true,
-    canUseBiometric: Boolean = false,
     onRequestPermission: () -> Unit = {},
-    onSetVaultPin: (String) -> Unit,
-    onUnhidePrivateVideo: (PrivateVideoEntity) -> Unit,
-    onAddCustomFolder: (Uri) -> Unit,
-    onRemoveCustomFolder: (String) -> Unit = {},
     onOpenMedia: (MediaItemModel) -> Unit,
     onPlayAll: (List<MediaItemModel>) -> Unit,
-    onLaunchBiometric: (onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit = { _, _ -> },
+    onHideFolder: (FolderItemModel) -> Unit = {},
+    onDeleteFolder: (FolderItemModel) -> Unit = {},
+    onHideMultipleFolders: (List<FolderItemModel>) -> Unit = {},
+    onDeleteMultipleFolders: (List<FolderItemModel>) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var selectedFolder by remember { mutableStateOf<FolderItemModel?>(null) }
-    var isVaultUnlocked by remember { mutableStateOf(false) }
-    var showVaultDialog by remember { mutableStateOf(false) }
-    var pinInput by remember { mutableStateOf("") }
-    var pinError by remember { mutableStateOf(false) }
-    var isSettingNewPin by remember { mutableStateOf(false) }
     var sortOption by remember { mutableStateOf(FolderSortOption.NAME_ASC) }
     var showSortMenu by remember { mutableStateOf(false) }
 
-    // SAF Folder Picker Launcher
-    val folderPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            onAddCustomFolder(uri)
-            Toast.makeText(context, "Folder added to library", Toast.LENGTH_SHORT).show()
-        }
-    }
+    // Multi-select & Folder Action States
+    var isSelectMode by remember { mutableStateOf(false) }
+    var selectedFolderPaths by remember { mutableStateOf(setOf<String>()) }
+    var folderToDelete by remember { mutableStateOf<FolderItemModel?>(null) }
+    var showBulkDeleteConfirm by remember { mutableStateOf(false) }
 
     // Process and sort folders
     val processedFolders = remember(folders, sortOption) {
@@ -96,66 +82,23 @@ fun FoldersScreen(
         }
     }
 
-    val customFolderUris = remember(customFolders) {
-        customFolders.map { it.folderUri }.toSet()
-    }
-
-    // Handle back button when inside a folder or vault
-    BackHandler(enabled = selectedFolder != null || isVaultUnlocked) {
-        if (isVaultUnlocked) {
-            isVaultUnlocked = false
+    // Handle back button when inside a folder or in selection mode
+    BackHandler(enabled = selectedFolder != null || isSelectMode) {
+        if (isSelectMode) {
+            isSelectMode = false
+            selectedFolderPaths = emptySet()
         } else {
             selectedFolder = null
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            if (selectedFolder == null && !isVaultUnlocked) {
-                FloatingActionButton(
-                    onClick = { folderPickerLauncher.launch(null) },
-                    containerColor = ThrynxCyan,
-                    contentColor = ThrynxBgDark,
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.CreateNewFolder, contentDescription = stringResource(id = R.string.folders_add_custom))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(id = R.string.folders_add_custom), fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            if (isVaultUnlocked) {
-                // Inside Private Vault View
-                VaultContentView(
-                    privateVideos = privateVideos,
-                    onBack = { isVaultUnlocked = false },
-                    onOpenVideo = { pv ->
-                        onOpenMedia(
-                            MediaItemModel(
-                                title = pv.title,
-                                uri = Uri.parse(pv.mediaUri),
-                                path = pv.originalPath,
-                                durationMs = pv.durationMs,
-                                sizeBytes = pv.sizeBytes,
-                                isVideo = true
-                            )
-                        )
-                    },
-                    onUnhide = onUnhidePrivateVideo
-                )
-            } else if (selectedFolder != null) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (selectedFolder != null) {
                 // Inside Specific Video Folder View
                 val folder = selectedFolder!!
                 val folderVideos = remember(videos, folder) {
@@ -178,43 +121,78 @@ fun FoldersScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
-                        Text(
-                            text = stringResource(id = R.string.folders_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = ThrynxCyan
-                        )
-                        Text(
-                            text = "${processedFolders.size} video folders",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Sort Folders Menu
-                    Box {
-                        IconButton(onClick = { showSortMenu = true }) {
-                            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort Folders", tint = Color.White)
+                    if (isSelectMode) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = {
+                                isSelectMode = false
+                                selectedFolderPaths = emptySet()
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(id = R.string.folders_selected_count, selectedFolderPaths.size),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ThrynxCyan
+                            )
                         }
-                        DropdownMenu(
-                            expanded = showSortMenu,
-                            onDismissRequest = { showSortMenu = false }
-                        ) {
-                            FolderSortOption.values().forEach { option ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = option.label,
-                                            fontWeight = if (sortOption == option) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (sortOption == option) ThrynxCyan else MaterialTheme.colorScheme.onSurface
+
+                        IconButton(onClick = {
+                            selectedFolderPaths = if (selectedFolderPaths.size == processedFolders.size) {
+                                emptySet()
+                            } else {
+                                processedFolders.map { it.path }.toSet()
+                            }
+                        }) {
+                            Icon(Icons.Default.SelectAll, contentDescription = "Select All", tint = ThrynxCyan)
+                        }
+                    } else {
+                        Column {
+                            Text(
+                                text = stringResource(id = R.string.folders_title),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ThrynxCyan
+                            )
+                            Text(
+                                text = "${processedFolders.size} video folders",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Select Folders Mode Button
+                            IconButton(onClick = { isSelectMode = true }) {
+                                Icon(Icons.Default.Checklist, contentDescription = stringResource(id = R.string.folders_select_mode), tint = Color.White)
+                            }
+
+                            // Sort Folders Menu
+                            Box {
+                                IconButton(onClick = { showSortMenu = true }) {
+                                    Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort Folders", tint = Color.White)
+                                }
+                                DropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismissRequest = { showSortMenu = false }
+                                ) {
+                                    FolderSortOption.values().forEach { option ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = option.label,
+                                                    fontWeight = if (sortOption == option) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (sortOption == option) ThrynxCyan else MaterialTheme.colorScheme.onSurface
+                                                )
+                                            },
+                                            onClick = {
+                                                sortOption = option
+                                                showSortMenu = false
+                                            }
                                         )
-                                    },
-                                    onClick = {
-                                        sortOption = option
-                                        showSortMenu = false
                                     }
-                                )
+                                }
                             }
                         }
                     }
@@ -258,131 +236,116 @@ fun FoldersScreen(
                     }
                 }
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // 1. Private Vault Card Banner
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (vaultPin.isBlank()) {
-                                        isSettingNewPin = true
-                                        pinInput = ""
-                                        pinError = false
-                                        showVaultDialog = true
-                                    } else {
-                                        if (canUseBiometric) {
-                                            onLaunchBiometric(
-                                                { isVaultUnlocked = true },
-                                                {
-                                                    // Fallback to PIN dialog on biometric error/cancel
-                                                    isSettingNewPin = false
-                                                    pinInput = ""
-                                                    pinError = false
-                                                    showVaultDialog = true
-                                                }
-                                            )
-                                        } else {
-                                            isSettingNewPin = false
-                                            pinInput = ""
-                                            pinError = false
-                                            showVaultDialog = true
-                                        }
-                                    }
-                                },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = ThrynxCardDark),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, ThrynxCyan.copy(alpha = 0.35f))
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(CircleShape)
-                                        .background(ThrynxCyan.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.Lock,
-                                        contentDescription = null,
-                                        tint = ThrynxCyan,
-                                        modifier = Modifier.size(26.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(id = R.string.folders_private_vault),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = if (vaultPin.isBlank()) "Tap to setup secure 4-digit PIN"
-                                        else "${privateVideos.size} hidden videos protected",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = ThrynxCyan
-                                    )
-                                }
-                                Icon(
-                                    Icons.Default.ChevronRight,
-                                    contentDescription = null,
-                                    tint = ThrynxCyan
-                                )
-                            }
+                // Folder List
+                if (processedFolders.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.FolderOpen,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(id = R.string.folders_empty),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
-
-                    // 2. Folder List
-                    if (processedFolders.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 48.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        Icons.Default.FolderOpen,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                        modifier = Modifier.size(64.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text(
-                                        text = stringResource(id = R.string.folders_empty),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    } else {
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = if (isSelectMode) 140.dp else 100.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         items(processedFolders) { folder ->
-                            val isCustom = customFolderUris.contains(folder.path) || customFolderUris.any { folder.path.startsWith(it) }
                             FolderRowCard(
                                 folder = folder,
-                                isCustom = isCustom,
-                                onRemoveCustom = {
-                                    val customEntity = customFolders.firstOrNull { it.folderUri == folder.path || folder.path.startsWith(it.folderUri) }
-                                    if (customEntity != null) {
-                                        onRemoveCustomFolder(customEntity.folderUri)
-                                        Toast.makeText(context, "Folder removed from app", Toast.LENGTH_SHORT).show()
+                                isSelectMode = isSelectMode,
+                                isSelected = selectedFolderPaths.contains(folder.path),
+                                onToggleSelect = {
+                                    selectedFolderPaths = if (selectedFolderPaths.contains(folder.path)) {
+                                        selectedFolderPaths - folder.path
+                                    } else {
+                                        selectedFolderPaths + folder.path
                                     }
                                 },
-                                onClick = { selectedFolder = folder }
+                                onHide = { onHideFolder(folder) },
+                                onDelete = { folderToDelete = folder },
+                                onEnterSelectMode = {
+                                    isSelectMode = true
+                                    selectedFolderPaths = setOf(folder.path)
+                                },
+                                onClick = {
+                                    if (isSelectMode) {
+                                        selectedFolderPaths = if (selectedFolderPaths.contains(folder.path)) {
+                                            selectedFolderPaths - folder.path
+                                        } else {
+                                            selectedFolderPaths + folder.path
+                                        }
+                                    } else {
+                                        selectedFolder = folder
+                                    }
+                                }
                             )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sticky Bottom Bar for Multi-select Actions
+        if (isSelectMode && selectedFolderPaths.isNotEmpty()) {
+            val selectedItems = remember(processedFolders, selectedFolderPaths) {
+                processedFolders.filter { selectedFolderPaths.contains(it.path) }
+            }
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
+                color = ThrynxCardDark,
+                tonalElevation = 12.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.folders_selected_count, selectedFolderPaths.size),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                onHideMultipleFolders(selectedItems)
+                                isSelectMode = false
+                                selectedFolderPaths = emptySet()
+                            }
+                        ) {
+                            Icon(Icons.Default.FolderOff, contentDescription = null, modifier = Modifier.size(16.dp), tint = ThrynxCyan)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(stringResource(id = R.string.folders_hide_selected), color = ThrynxCyan)
+                        }
+                        Button(
+                            onClick = { showBulkDeleteConfirm = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(stringResource(id = R.string.folders_delete_selected))
                         }
                     }
                 }
@@ -390,100 +353,61 @@ fun FoldersScreen(
         }
     }
 
-    // Vault PIN Dialog (Unlock or Setup)
-    if (showVaultDialog) {
+    // Single Folder Delete Confirmation Dialog
+    folderToDelete?.let { folder ->
         AlertDialog(
-            onDismissRequest = { showVaultDialog = false },
-            title = {
-                Text(
-                    text = if (isSettingNewPin) stringResource(id = R.string.folders_vault_set_pin)
-                    else stringResource(id = R.string.folders_vault_unlock)
-                )
-            },
+            onDismissRequest = { folderToDelete = null },
+            title = { Text(stringResource(id = R.string.folders_delete)) },
             text = {
-                Column {
-                    Text(
-                        text = if (isSettingNewPin) "Create a 4-digit security PIN to protect your private vault."
-                        else "Enter your 4-digit PIN to access private hidden videos.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    OutlinedTextField(
-                        value = pinInput,
-                        onValueChange = {
-                            if (it.length <= 4 && it.all { char -> char.isDigit() }) {
-                                pinInput = it
-                                pinError = false
-                            }
-                        },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        isError = pinError,
-                        placeholder = { Text("••••") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (pinError) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = stringResource(id = R.string.folders_vault_wrong_pin),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    if (canUseBiometric && !isSettingNewPin) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedButton(
-                            onClick = {
-                                showVaultDialog = false
-                                onLaunchBiometric(
-                                    { isVaultUnlocked = true },
-                                    { pinError = true }
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Fingerprint, contentDescription = null, tint = ThrynxCyan)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Use Biometric Unlock", color = ThrynxCyan)
-                        }
-                    }
-                }
+                Text(stringResource(id = R.string.folders_delete_confirm, folder.videoCount, folder.name))
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        if (isSettingNewPin) {
-                            if (pinInput.length == 4) {
-                                onSetVaultPin(pinInput)
-                                showVaultDialog = false
-                                isVaultUnlocked = true
-                                Toast.makeText(context, "PIN configured successfully", Toast.LENGTH_SHORT).show()
-                            } else {
-                                pinError = true
-                            }
-                        } else {
-                            if (pinInput == vaultPin) {
-                                showVaultDialog = false
-                                isVaultUnlocked = true
-                            } else {
-                                pinError = true
-                            }
-                        }
+                        val target = folderToDelete
+                        folderToDelete = null
+                        if (target != null) onDeleteFolder(target)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(
-                        text = if (isSettingNewPin) stringResource(id = R.string.action_save)
-                        else stringResource(id = R.string.action_confirm),
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(stringResource(id = R.string.videos_delete), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showVaultDialog = false }) {
+                TextButton(onClick = { folderToDelete = null }) {
+                    Text(stringResource(id = R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    // Bulk Delete Confirmation Dialog
+    if (showBulkDeleteConfirm) {
+        val selectedItems = remember(processedFolders, selectedFolderPaths) {
+            processedFolders.filter { selectedFolderPaths.contains(it.path) }
+        }
+        val totalVideos = selectedItems.sumOf { it.videoCount }
+        AlertDialog(
+            onDismissRequest = { showBulkDeleteConfirm = false },
+            title = { Text(stringResource(id = R.string.folders_delete_selected)) },
+            text = {
+                Text("Permanently delete all $totalVideos videos across the ${selectedItems.size} selected folders?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBulkDeleteConfirm = false
+                        onDeleteMultipleFolders(selectedItems)
+                        isSelectMode = false
+                        selectedFolderPaths = emptySet()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(id = R.string.videos_delete), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBulkDeleteConfirm = false }) {
                     Text(stringResource(id = R.string.action_cancel))
                 }
             }
@@ -494,16 +418,25 @@ fun FoldersScreen(
 @Composable
 fun FolderRowCard(
     folder: FolderItemModel,
-    isCustom: Boolean = false,
-    onRemoveCustom: () -> Unit = {},
+    isSelectMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
+    onHide: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onEnterSelectMode: () -> Unit = {},
     onClick: () -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) ThrynxCyan.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, ThrynxCyan) else null
     ) {
         Row(
             modifier = Modifier
@@ -511,6 +444,14 @@ fun FolderRowCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (isSelectMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelect() }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
             Box(
                 modifier = Modifier
                     .size(60.dp)
@@ -538,31 +479,14 @@ fun FolderRowCard(
             Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = folder.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    if (isCustom) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = ThrynxCyan.copy(alpha = 0.2f)
-                        ) {
-                            Text(
-                                text = "SAF",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ThrynxCyan,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
+                Text(
+                    text = folder.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${folder.videoCount} videos • ${folder.path}",
@@ -573,20 +497,45 @@ fun FolderRowCard(
                 )
             }
 
-            if (isCustom) {
-                IconButton(onClick = onRemoveCustom) {
-                    Icon(
-                        Icons.Default.DeleteOutline,
-                        contentDescription = "Remove folder",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
-                    )
+            if (!isSelectMode) {
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "Folder options",
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(id = R.string.folders_hide)) },
+                            leadingIcon = { Icon(Icons.Default.FolderOff, contentDescription = null, tint = ThrynxCyan) },
+                            onClick = {
+                                showMenu = false
+                                onHide()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(id = R.string.folders_delete), color = MaterialTheme.colorScheme.error) },
+                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(id = R.string.folders_select_mode)) },
+                            leadingIcon = { Icon(Icons.Default.Checklist, contentDescription = null) },
+                            onClick = {
+                                showMenu = false
+                                onEnterSelectMode()
+                            }
+                        )
+                    }
                 }
-            } else {
-                Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }

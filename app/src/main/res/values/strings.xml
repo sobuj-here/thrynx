@@ -2,10 +2,10 @@
 <resources>
     <!-- Brand -->
     <string name="app_name">THRYNX</string>
-    <string name="app_tagline">PROFESSIONAL VIDEO PLAYER</string>
-    <string name="app_description">High-Performance Offline Video Player for Android</string>
+    <string name="app_tagline">Video Player</string>
+    <string name="app_description">High-performance video player for local media and network streams</string>
 
-    <!-- Navigation (Strictly 4 Tabs) -->
+    <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_videos">Videos</string>
     <string name="nav_folders">Folders</string>
@@ -19,7 +19,7 @@
     <string name="home_folders">Video Folders</string>
     <string name="home_all_videos">All Videos</string>
     <string name="home_open_network_stream">Open Network Stream</string>
-    <string name="home_search_hint">Search videos by title…</string>
+    <string name="home_search_hint">Search videos…</string>
     <string name="home_no_recents">No recently played videos</string>
     <string name="home_no_favorites">No favorite videos yet. Tap the star icon on any video to add it here.</string>
 
@@ -34,22 +34,26 @@
     <string name="player_audio_track">Audio Track</string>
     <string name="player_subtitle_track">Subtitles</string>
     <string name="player_speed">Playback Speed</string>
-    <string name="player_aspect_ratio">Display Mode</string>
-    <string name="player_pip">Picture in Picture</string>
-    <string name="player_lock_controls">Lock Controls</string>
-    <string name="player_unlock_controls">Controls Unlocked</string>
+    <string name="player_aspect_ratio">Aspect Ratio</string>
+    <string name="player_rotate_video">Rotate Video</string>
+    <string name="player_zoom_video">Zoom</string>
+    <string name="player_screen_orientation">Orientation</string>
+    <string name="player_pip">Picture-in-Picture</string>
+    <string name="player_lock_controls">Lock Screen</string>
+    <string name="player_unlock_controls">Screen Unlocked</string>
+    <string name="player_lock_notification">Screen is locked. Tap lock button to unlock.</string>
     <string name="player_repeat">Repeat Mode</string>
     <string name="player_repeat_off">Repeat Off</string>
     <string name="player_repeat_one">Repeat Current</string>
     <string name="player_repeat_all">Repeat All</string>
     <string name="player_sleep_timer">Sleep Timer</string>
-    <string name="player_sleep_timer_off">Turn Off</string>
+    <string name="player_sleep_timer_off">Off</string>
     <string name="player_sleep_timer_mins">%d Minutes</string>
     <string name="player_sleep_timer_active">Sleep timer: %d mins left</string>
     <string name="player_no_audio_tracks">Single Audio Track</string>
     <string name="player_no_subtitles">No Subtitles Available</string>
     <string name="player_subtitles_off">Subtitles Off</string>
-    <string name="player_load_external_subtitle">Load Subtitle File (.srt, .vtt, .ass)</string>
+    <string name="player_load_external_subtitle">Load Subtitle (.srt, .vtt, .ass)</string>
     <string name="player_subtitle_delay">Subtitle Delay</string>
     <string name="player_subtitle_delay_value">%d ms</string>
     <string name="player_subtitle_styling">Subtitle Appearance</string>
@@ -65,13 +69,19 @@
     <string name="player_screenshot">Capture Screenshot</string>
     <string name="player_screenshot_saved">Screenshot saved to gallery</string>
     <string name="player_background_audio">Background Audio</string>
-    <string name="player_audio_only_desc">Play video audio in background with screen off</string>
+    <string name="player_audio_only_desc">Continue audio playback in background</string>
+
+    <!-- Resume Playback Dialog -->
+    <string name="dialog_resume_title">Resume Video?</string>
+    <string name="dialog_resume_message">Resume playback from %s or start from beginning?</string>
+    <string name="dialog_resume_action_resume">Resume (%s)</string>
+    <string name="dialog_resume_action_restart">Start from Beginning</string>
+    <string name="dialog_resume_remember">Remember my choice</string>
 
     <!-- Videos Screen -->
     <string name="videos_title">Videos</string>
-    <string name="videos_search_hint">Search video title or format…</string>
+    <string name="videos_search_hint">Search videos…</string>
     <string name="videos_sort">Sort By</string>
-    <string name="videos_import">Import Video</string>
     <string name="videos_rescan">Rescan Library</string>
     <string name="videos_rescan_complete">Library refreshed: %d videos found</string>
     <string name="videos_empty">No videos found on device</string>
@@ -84,13 +94,24 @@
     <string name="videos_favorite_added">Added to Favorites</string>
     <string name="videos_favorite_removed">Removed from Favorites</string>
 
-    <!-- Folders & Private Vault -->
+    <!-- Folders & Management -->
     <string name="folders_title">Folders</string>
     <string name="folders_videos_count">%d Videos</string>
     <string name="folders_empty">No video folders found</string>
-    <string name="folders_add_custom">Add Folder</string>
+    <string name="folders_hide">Hide Folder</string>
+    <string name="folders_hide_confirm">Hide \"%s\" folder from library?</string>
+    <string name="folders_hidden_count">%d Hidden Folders</string>
+    <string name="folders_unhide">Unhide</string>
+    <string name="folders_delete">Delete Folder</string>
+    <string name="folders_delete_confirm">Permanently delete all %1$d videos in \"%2$s\"?</string>
+    <string name="folders_select_mode">Select</string>
+    <string name="folders_selected_count">%d selected</string>
+    <string name="folders_hide_selected">Hide Selected</string>
+    <string name="folders_delete_selected">Delete Selected</string>
+
+    <!-- Private Vault -->
     <string name="folders_private_vault">Private Vault</string>
-    <string name="folders_private_desc">Secure hidden videos with PIN protection</string>
+    <string name="folders_private_desc">Keep sensitive videos protected with PIN</string>
     <string name="folders_vault_unlock">Unlock Vault</string>
     <string name="folders_vault_set_pin">Set 4-digit PIN</string>
     <string name="folders_vault_enter_pin">Enter 4-digit PIN</string>
@@ -98,47 +119,53 @@
     <string name="folders_vault_empty">No private videos in vault</string>
     <string name="folders_vault_hide_video">Hide in Private Vault</string>
     <string name="folders_vault_unhide_video">Unhide from Vault</string>
-    <string name="folders_vault_disclaimer">Private vault securely hides videos from the standard library within THRYNX. File content is preserved.</string>
+    <string name="folders_vault_disclaimer">Private Vault hides selected videos from the public library within THRYNX.</string>
 
     <!-- Network Stream -->
     <string name="stream_title">Open Network Stream</string>
     <string name="stream_hint">Enter stream URL (HLS, DASH, MP4)…</string>
     <string name="stream_play">Play Stream</string>
-    <string name="stream_invalid_url">Please enter a valid HTTP or HTTPS stream URL</string>
+    <string name="stream_invalid_url">Please enter a valid video stream URL</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="settings_section_player">Player Controls</string>
-    <string name="settings_section_gestures">Gestures &amp; Interaction</string>
+    <string name="settings_section_gestures">Gestures</string>
     <string name="settings_section_video">Display &amp; Decoder</string>
     <string name="settings_section_subtitles">Subtitles</string>
     <string name="settings_section_library">Library &amp; Storage</string>
-    <string name="settings_section_security">Security &amp; Vault</string>
-    <string name="settings_section_app">App &amp; Language</string>
+    <string name="settings_section_security">Security</string>
+    <string name="settings_section_app">App Preferences</string>
     <string name="settings_default_speed">Default Playback Speed</string>
-    <string name="settings_double_tap_seek">Double Tap Seek Duration</string>
-    <string name="settings_resume_playback">Resume Playback</string>
-    <string name="settings_resume_playback_desc">Continue playback from last saved position</string>
+    <string name="settings_double_tap_seek">Double Tap Seek</string>
+    <string name="settings_resume_mode_title">Resume Playback</string>
+    <string name="settings_resume_mode_desc">Choose whether to resume from last saved position</string>
+    <string name="settings_resume_ask">Ask Every Time</string>
+    <string name="settings_resume_always">Always Resume</string>
+    <string name="settings_resume_beginning">Start from Beginning</string>
+    <string name="settings_show_player_hud">Show Clock &amp; Battery in Player</string>
+    <string name="settings_show_player_hud_desc">Display current time and battery level during playback</string>
     <string name="settings_background_play">Background Playback</string>
-    <string name="settings_background_play_desc">Continue audio when app is minimized or screen off</string>
-    <string name="settings_gestures">MX Gesture Controls</string>
-    <string name="settings_gestures_desc">Brightness on left, Volume on right, Horizontal seek</string>
+    <string name="settings_background_play_desc">Continue audio playback when screen is off</string>
+    <string name="settings_gestures">Gesture Controls</string>
+    <string name="settings_gestures_desc">Brightness on left, Volume on right, horizontal seek</string>
     <string name="settings_orientation">Screen Orientation</string>
     <string name="settings_resize_mode">Default Aspect Ratio</string>
-    <string name="settings_hw_decoder">Hardware Acceleration</string>
+    <string name="settings_hw_decoder">Hardware Decoder</string>
     <string name="settings_auto_next">Auto-Play Next Video</string>
-    <string name="settings_auto_next_desc">Play the next video automatically when playback ends</string>
+    <string name="settings_auto_next_desc">Play the next video automatically</string>
     <string name="settings_rescan">Rescan Video Library</string>
     <string name="settings_clear_cache">Clear Cache</string>
     <string name="settings_clear_cache_confirm">Application cache cleared</string>
-    <string name="settings_clear_history">Clear Playback History</string>
+    <string name="settings_clear_history">Clear History</string>
     <string name="settings_clear_history_confirm">Playback history cleared</string>
+    <string name="settings_hidden_folders_title">Hidden Folders</string>
+    <string name="settings_hidden_folders_empty">No hidden folders</string>
     <string name="settings_private_pin">Private Vault PIN</string>
     <string name="settings_private_pin_setup">Set or change 4-digit PIN</string>
-    <string name="settings_theme">Color Theme</string>
-    <string name="settings_language">Language / ভাষা</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_language">Language</string>
     <string name="settings_app_info">About THRYNX</string>
-    <string name="settings_offline_notice">100% Offline-First • Zero Cloud Tracking • Privacy Guaranteed</string>
 
     <!-- Common Actions -->
     <string name="action_cancel">Cancel</string>

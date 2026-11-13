@@ -51,6 +51,9 @@ fun SettingsScreen(
     val defaultSpeed by preferencesManager.defaultSpeedFlow.collectAsState(initial = 1.0f)
     val doubleTapSeekSec by preferencesManager.doubleTapSeekSecFlow.collectAsState(initial = 10)
     val resumePlayback by preferencesManager.resumePlaybackFlow.collectAsState(initial = true)
+    val resumeMode by preferencesManager.resumeModeFlow.collectAsState(initial = "ask")
+    val showPlayerInfoHud by preferencesManager.showPlayerInfoHudFlow.collectAsState(initial = true)
+    val hiddenFolders by preferencesManager.hiddenFoldersFlow.collectAsState(initial = emptySet())
     val backgroundAudio by preferencesManager.backgroundAudioFlow.collectAsState(initial = false)
     val gesturesEnabled by preferencesManager.gesturesEnabledFlow.collectAsState(initial = true)
     val defaultOrientation by preferencesManager.defaultOrientationFlow.collectAsState(initial = "auto")
@@ -71,6 +74,8 @@ fun SettingsScreen(
     var showPinDialog by remember { mutableStateOf(false) }
     var pinInput by remember { mutableStateOf("") }
     var showSubtitleDialog by remember { mutableStateOf(false) }
+    var showResumeModeDialog by remember { mutableStateOf(false) }
+    var showHiddenFoldersDialog by remember { mutableStateOf(false) }
 
     // Dynamic Cache Size calculation
     var cacheSizeBytes by remember { mutableLongStateOf(0L) }
@@ -116,12 +121,23 @@ fun SettingsScreen(
                     onClick = { showSeekDialog = true }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsToggleRow(
+                SettingsClickableRow(
                     icon = Icons.Default.Restore,
-                    title = stringResource(id = R.string.settings_resume_playback),
-                    subtitle = stringResource(id = R.string.settings_resume_playback_desc),
-                    checked = resumePlayback,
-                    onCheckedChange = { coroutineScope.launch { preferencesManager.setResumePlayback(it) } }
+                    title = stringResource(id = R.string.settings_resume_mode_title),
+                    value = when (resumeMode) {
+                        "resume" -> stringResource(id = R.string.settings_resume_always)
+                        "beginning" -> stringResource(id = R.string.settings_resume_beginning)
+                        else -> stringResource(id = R.string.settings_resume_ask)
+                    },
+                    onClick = { showResumeModeDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsToggleRow(
+                    icon = Icons.Default.Schedule,
+                    title = stringResource(id = R.string.settings_show_player_hud),
+                    subtitle = stringResource(id = R.string.settings_show_player_hud_desc),
+                    checked = showPlayerInfoHud,
+                    onCheckedChange = { coroutineScope.launch { preferencesManager.setShowPlayerInfoHud(it) } }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsToggleRow(
@@ -233,6 +249,13 @@ fun SettingsScreen(
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsClickableRow(
+                    icon = Icons.Default.FolderOff,
+                    title = stringResource(id = R.string.settings_hidden_folders_title),
+                    value = if (hiddenFolders.isEmpty()) "0" else "${hiddenFolders.size}",
+                    onClick = { showHiddenFoldersDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsClickableRow(
                     icon = Icons.Default.History,
                     title = stringResource(id = R.string.settings_clear_history),
                     value = "Clear",
@@ -260,39 +283,111 @@ fun SettingsScreen(
                     value = currentTheme.replaceFirstChar { it.uppercase() },
                     onClick = { showThemeDialog = true }
                 )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
-                    icon = Icons.Default.Info,
-                    title = stringResource(id = R.string.settings_app_info),
-                    value = "v1.0.0 (Build 1)",
-                    onClick = {
-                        Toast.makeText(context, "THRYNX Professional Video Player", Toast.LENGTH_SHORT).show()
-                    }
-                )
             }
         }
+    }
 
-        // Offline Banner
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = ThrynxCardDark)
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Security, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(id = R.string.settings_offline_notice),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
-                    )
+    // Resume Mode Dialog
+    if (showResumeModeDialog) {
+        val options = listOf(
+            Pair("ask", stringResource(id = R.string.settings_resume_ask)),
+            Pair("resume", stringResource(id = R.string.settings_resume_always)),
+            Pair("beginning", stringResource(id = R.string.settings_resume_beginning))
+        )
+        AlertDialog(
+            onDismissRequest = { showResumeModeDialog = false },
+            title = { Text(stringResource(id = R.string.settings_resume_mode_title)) },
+            text = {
+                Column {
+                    options.forEach { (mode, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch {
+                                        preferencesManager.setResumeMode(mode)
+                                        showResumeModeDialog = false
+                                    }
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = resumeMode == mode,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        preferencesManager.setResumeMode(mode)
+                                        showResumeModeDialog = false
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(label, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showResumeModeDialog = false }) {
+                    Text(stringResource(id = R.string.action_close))
                 }
             }
-        }
+        )
+    }
+
+    // Hidden Folders Management Dialog
+    if (showHiddenFoldersDialog) {
+        AlertDialog(
+            onDismissRequest = { showHiddenFoldersDialog = false },
+            title = { Text(stringResource(id = R.string.settings_hidden_folders_title)) },
+            text = {
+                if (hiddenFolders.isEmpty()) {
+                    Text(
+                        stringResource(id = R.string.settings_hidden_folders_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        hiddenFolders.forEach { folderName ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.Default.FolderOff, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(folderName, fontWeight = FontWeight.Medium, maxLines = 1)
+                                }
+                                TextButton(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            preferencesManager.unhideFolder(folderName)
+                                            onRescanLibrary()
+                                        }
+                                    }
+                                ) {
+                                    Text(stringResource(id = R.string.folders_unhide), color = ThrynxCyan)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHiddenFoldersDialog = false }) {
+                    Text(stringResource(id = R.string.action_close))
+                }
+            }
+        )
     }
 
     // Language Dialog

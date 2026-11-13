@@ -94,11 +94,14 @@ class MainActivity : FragmentActivity() {
                 val privateVideos by app.database.privateVaultDao().getAllPrivateVideosFlow().collectAsState(initial = emptyList())
                 val customFolders by app.database.customFolderDao().getAllCustomFoldersFlow().collectAsState(initial = emptyList())
                 val vaultPin by preferencesManager.privateVaultPinFlow.collectAsState(initial = "")
+                val hiddenFolders by preferencesManager.hiddenFoldersFlow.collectAsState(initial = emptySet())
 
-                // Filter out private videos from public list
-                val visibleVideos = remember(rawVideos, privateVideos) {
+                // Filter out private videos and hidden folders from public list
+                val visibleVideos = remember(rawVideos, privateVideos, hiddenFolders) {
                     val privateUris = privateVideos.map { it.mediaUri }.toSet()
-                    rawVideos.filter { !privateUris.contains(it.mediaUriString) }
+                    rawVideos.filter {
+                        !privateUris.contains(it.mediaUriString) && !hiddenFolders.contains(it.folderName)
+                    }
                 }
 
                 val folders = remember(visibleVideos) {
@@ -254,6 +257,41 @@ class MainActivity : FragmentActivity() {
                         },
                         onLaunchBiometric = { onSuccess, onError ->
                             launchBiometricPrompt(onSuccess, onError)
+                        },
+                        onHideFolder = { folder ->
+                            lifecycleScope.launch {
+                                preferencesManager.hideFolder(folder.name)
+                                Toast.makeText(this@MainActivity, "Folder hidden", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onDeleteFolder = { folder ->
+                            lifecycleScope.launch {
+                                val folderVideos = rawVideos.filter { it.folderName.equals(folder.name, ignoreCase = true) }
+                                for (v in folderVideos) {
+                                    app.mediaScanner.deleteVideo(v)
+                                }
+                                Toast.makeText(this@MainActivity, "Folder videos deleted", Toast.LENGTH_SHORT).show()
+                                refreshVideos()
+                            }
+                        },
+                        onHideMultipleFolders = { list ->
+                            lifecycleScope.launch {
+                                for (f in list) {
+                                    preferencesManager.hideFolder(f.name)
+                                }
+                                Toast.makeText(this@MainActivity, "${list.size} folders hidden", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onDeleteMultipleFolders = { list ->
+                            lifecycleScope.launch {
+                                val names = list.map { it.name.lowercase() }.toSet()
+                                val targets = rawVideos.filter { names.contains(it.folderName.lowercase()) }
+                                for (v in targets) {
+                                    app.mediaScanner.deleteVideo(v)
+                                }
+                                Toast.makeText(this@MainActivity, "Videos deleted from ${list.size} folders", Toast.LENGTH_SHORT).show()
+                                refreshVideos()
+                            }
                         }
                     )
                 }

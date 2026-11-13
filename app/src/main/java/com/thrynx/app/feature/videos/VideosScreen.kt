@@ -70,17 +70,20 @@ fun VideosScreen(
     var mediaToRename by remember { mutableStateOf<MediaItemModel?>(null) }
     var renameInput by remember { mutableStateOf("") }
 
-    // SAF Import Launcher
-    val fileImportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            coroutineScope.launch {
-                val resolved = scanner.resolveMetadataFromUri(uri)
-                if (resolved != null) {
-                    onOpenMedia(resolved)
-                }
+    val preferencesManager = remember { com.thrynx.app.ThrynxApplication.instance.preferencesManager }
+    val resumeMode by preferencesManager.resumeModeFlow.collectAsState(initial = "ask")
+    var videoToResumePrompt by remember { mutableStateOf<MediaItemModel?>(null) }
+    var rememberResumeChoice by remember { mutableStateOf(false) }
+
+    fun handlePlayRequest(video: MediaItemModel) {
+        if (video.lastPositionMs > 5000L && (video.durationMs == 0L || video.lastPositionMs < video.durationMs - 5000L)) {
+            when (resumeMode) {
+                "resume" -> onOpenMedia(video)
+                "beginning" -> onOpenMedia(video.copy(lastPositionMs = 0L))
+                else -> videoToResumePrompt = video
             }
+        } else {
+            onOpenMedia(video)
         }
     }
 
@@ -108,29 +111,14 @@ fun VideosScreen(
         }
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { fileImportLauncher.launch("video/*") },
-                containerColor = ThrynxCyan,
-                contentColor = ThrynxBgDark,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.FileOpen, contentDescription = stringResource(id = R.string.videos_import))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(id = R.string.videos_import), fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                }
-            }
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Header Bar
@@ -319,7 +307,7 @@ fun VideosScreen(
                         VideoGridItem(
                             video = item,
                             isFavorite = isFav,
-                            onClick = { onOpenMedia(item) },
+                            onClick = { handlePlayRequest(item) },
                             onMoreClick = { selectedMediaForAction = item }
                         )
                     }
@@ -335,7 +323,7 @@ fun VideosScreen(
                         VideoListItem(
                             video = item,
                             isFavorite = isFav,
-                            onClick = { onOpenMedia(item) },
+                            onClick = { handlePlayRequest(item) },
                             onMoreClick = { selectedMediaForAction = item }
                         )
                     }
@@ -363,7 +351,7 @@ fun VideosScreen(
                         leadingContent = { Icon(Icons.Default.PlayArrow, contentDescription = null, tint = ThrynxCyan) },
                         modifier = Modifier.clickable {
                             selectedMediaForAction = null
-                            onOpenMedia(media)
+                            handlePlayRequest(media)
                         }
                     )
                     ListItem(
@@ -426,6 +414,66 @@ fun VideosScreen(
             confirmButton = {
                 TextButton(onClick = { selectedMediaForAction = null }) {
                     Text(stringResource(id = R.string.action_close))
+                }
+            }
+        )
+    }
+
+    // Resume Playback Confirmation Dialog
+    videoToResumePrompt?.let { media ->
+        AlertDialog(
+            onDismissRequest = { videoToResumePrompt = null },
+            title = { Text(stringResource(id = R.string.dialog_resume_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.dialog_resume_message, formatDuration(media.lastPositionMs)),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { rememberResumeChoice = !rememberResumeChoice }
+                    ) {
+                        Checkbox(
+                            checked = rememberResumeChoice,
+                            onCheckedChange = { rememberResumeChoice = it }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(id = R.string.dialog_resume_remember),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (rememberResumeChoice) {
+                            coroutineScope.launch { preferencesManager.setResumeMode("resume") }
+                        }
+                        val target = videoToResumePrompt
+                        videoToResumePrompt = null
+                        if (target != null) onOpenMedia(target)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                ) {
+                    Text(stringResource(id = R.string.dialog_resume_action_resume, formatDuration(media.lastPositionMs)), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        if (rememberResumeChoice) {
+                            coroutineScope.launch { preferencesManager.setResumeMode("beginning") }
+                        }
+                        val target = videoToResumePrompt
+                        videoToResumePrompt = null
+                        if (target != null) onOpenMedia(target.copy(lastPositionMs = 0L))
+                    }
+                ) {
+                    Text(stringResource(id = R.string.dialog_resume_action_restart))
                 }
             }
         )

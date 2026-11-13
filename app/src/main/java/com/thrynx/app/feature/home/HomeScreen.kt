@@ -33,6 +33,7 @@ import com.thrynx.app.core.database.PlaybackHistoryEntity
 import com.thrynx.app.core.designsystem.*
 import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -46,11 +47,32 @@ fun HomeScreen(
     onOpenFolder: (FolderItemModel) -> Unit,
     onNavigateToVideos: () -> Unit,
     onOpenStreamUrl: (String) -> Unit,
+    privateVideosCount: Int = 0,
+    onOpenVault: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val preferencesManager = remember { com.thrynx.app.ThrynxApplication.instance.preferencesManager }
+    val resumeMode by preferencesManager.resumeModeFlow.collectAsState(initial = "ask")
+
     var searchQuery by remember { mutableStateOf("") }
     var showStreamDialog by remember { mutableStateOf(false) }
     var streamUrlInput by remember { mutableStateOf("") }
+    var videoToResumePrompt by remember { mutableStateOf<Pair<MediaItemModel, Long>?>(null) }
+    var rememberResumeChoice by remember { mutableStateOf(false) }
+
+    fun handlePlayRequest(media: MediaItemModel, requestedPosition: Long = 0L) {
+        val targetPos = if (requestedPosition > 0L) requestedPosition else media.lastPositionMs
+        if (targetPos > 5000L && (media.durationMs == 0L || targetPos < media.durationMs - 5000L)) {
+            when (resumeMode) {
+                "resume" -> onOpenMedia(media, targetPos)
+                "beginning" -> onOpenMedia(media, 0L)
+                else -> videoToResumePrompt = Pair(media, targetPos)
+            }
+        } else {
+            onOpenMedia(media, requestedPosition)
+        }
+    }
 
     val lastWatched = recentHistory.firstOrNull()
 
@@ -233,7 +255,7 @@ fun HomeScreen(
             items(searchResults) { video ->
                 VideoRowItem(
                     video = video,
-                    onClick = { onOpenMedia(video, 0L) },
+                    onClick = { handlePlayRequest(video, 0L) },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
@@ -260,7 +282,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         ThrynxCard(
-                            onClick = { onOpenMedia(targetMedia, lastWatched.lastPositionMs) }
+                            onClick = { handlePlayRequest(targetMedia, lastWatched.lastPositionMs) }
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Row(
@@ -342,7 +364,7 @@ fun HomeScreen(
                                     title = item.title,
                                     uri = item.uri,
                                     durationMs = item.durationMs,
-                                    onClick = { onOpenMedia(media, item.lastPositionMs) }
+                                    onClick = { handlePlayRequest(media, item.lastPositionMs) }
                                 )
                             }
                         }
@@ -384,7 +406,7 @@ fun HomeScreen(
                                     uri = video.mediaUriString,
                                     durationMs = video.durationMs,
                                     resolution = video.resolutionLabel,
-                                    onClick = { onOpenMedia(video, 0L) }
+                                    onClick = { handlePlayRequest(video, 0L) }
                                 )
                             }
                         }
@@ -413,7 +435,7 @@ fun HomeScreen(
                                     uri = video.mediaUriString,
                                     durationMs = video.durationMs,
                                     resolution = video.resolutionLabel,
-                                    onClick = { onOpenMedia(video, 0L) }
+                                    onClick = { handlePlayRequest(video, 0L) }
                                 )
                             }
                         }
@@ -446,10 +468,72 @@ fun HomeScreen(
                     }
                 }
             }
+            // 6. Private Vault Card Banner on HomeScreen
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Text(
+                        text = stringResource(id = R.string.folders_private_vault),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onOpenVault),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = ThrynxCardDark),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, ThrynxCyan.copy(alpha = 0.35f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(ThrynxCyan.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = ThrynxCyan,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(id = R.string.folders_private_vault),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (privateVideosCount > 0) "$privateVideosCount videos protected" else stringResource(id = R.string.folders_private_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ThrynxCyan
+                                )
+                            }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = ThrynxCyan
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // Network Stream Dialog
+    // Network Stream Dialog with URL auto-sanitization & test streams
     if (showStreamDialog) {
         AlertDialog(
             onDismissRequest = { showStreamDialog = false },
@@ -457,11 +541,11 @@ fun HomeScreen(
             text = {
                 Column {
                     Text(
-                        text = "Play direct HLS (.m3u8), DASH (.mpd), or progressive MP4/MKV video stream links.",
+                        text = stringResource(id = R.string.stream_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
                         value = streamUrlInput,
                         onValueChange = { streamUrlInput = it },
@@ -470,13 +554,43 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Quick Sample Streams:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ThrynxCyan,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { streamUrlInput = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp)
+                        ) {
+                            Text("HLS (.m3u8)", fontSize = 11.sp)
+                        }
+                        OutlinedButton(
+                            onClick = { streamUrlInput = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp)
+                        ) {
+                            Text("MP4 Stream", fontSize = 11.sp)
+                        }
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val trimmed = streamUrlInput.trim()
-                        if (trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)) {
+                        var trimmed = streamUrlInput.trim()
+                        if (trimmed.isNotBlank()) {
+                            if (!trimmed.contains("://")) {
+                                trimmed = "https://$trimmed"
+                            }
                             showStreamDialog = false
                             onOpenStreamUrl(trimmed)
                         }
@@ -489,6 +603,64 @@ fun HomeScreen(
             dismissButton = {
                 TextButton(onClick = { showStreamDialog = false }) {
                     Text(stringResource(id = R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    // Resume Playback Confirmation Dialog
+    videoToResumePrompt?.let { (media, pos) ->
+        AlertDialog(
+            onDismissRequest = { videoToResumePrompt = null },
+            title = { Text(stringResource(id = R.string.dialog_resume_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.dialog_resume_message, formatDuration(pos)),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { rememberResumeChoice = !rememberResumeChoice }
+                    ) {
+                        Checkbox(
+                            checked = rememberResumeChoice,
+                            onCheckedChange = { rememberResumeChoice = it }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(id = R.string.dialog_resume_remember),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (rememberResumeChoice) {
+                            coroutineScope.launch { preferencesManager.setResumeMode("resume") }
+                        }
+                        videoToResumePrompt = null
+                        onOpenMedia(media, pos)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                ) {
+                    Text(stringResource(id = R.string.dialog_resume_action_resume, formatDuration(pos)), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        if (rememberResumeChoice) {
+                            coroutineScope.launch { preferencesManager.setResumeMode("beginning") }
+                        }
+                        videoToResumePrompt = null
+                        onOpenMedia(media, 0L)
+                    }
+                ) {
+                    Text(stringResource(id = R.string.dialog_resume_action_restart))
                 }
             }
         )

@@ -18,6 +18,9 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.thrynx.app.MainActivity
 import com.thrynx.app.core.model.*
 import kotlinx.coroutines.*
@@ -34,8 +37,20 @@ class ThrynxPlayerManager(private val context: Context) {
         .setUsage(C.USAGE_MEDIA)
         .build()
 
+    private val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+        .setUserAgent("Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 THRYNX/1.0")
+        .setAllowCrossProtocolRedirects(true)
+        .setConnectTimeoutMs(15_000)
+        .setReadTimeoutMs(15_000)
+
+    private val dataSourceFactory = DefaultDataSource.Factory(context, httpDataSourceFactory)
+
+    private val mediaSourceFactory = DefaultMediaSourceFactory(context)
+        .setDataSourceFactory(dataSourceFactory)
+
     val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setTrackSelector(trackSelector)
+        .setMediaSourceFactory(mediaSourceFactory)
         .setAudioAttributes(audioAttributes, true) // Automatically handles audio focus, calls, and ducking
         .setHandleAudioBecomingNoisy(true) // Pauses automatically on headset disconnect
         .setRenderersFactory(
@@ -172,14 +187,38 @@ class ThrynxPlayerManager(private val context: Context) {
         return media.uri ?: Uri.parse(media.path.ifBlank { "content://video/${media.id}" })
     }
 
+    fun buildMediaItem(media: MediaItemModel): MediaItem {
+        val uri = resolveMediaUri(media)
+        val uriStr = uri.toString().lowercase()
+        val builder = MediaItem.Builder()
+            .setUri(uri)
+            .setMediaId(media.id.toString())
+
+        when {
+            uriStr.contains(".m3u8") || uriStr.contains("format=m3u8") || media.mimeType == MimeTypes.APPLICATION_M3U8 -> {
+                builder.setMimeType(MimeTypes.APPLICATION_M3U8)
+            }
+            uriStr.contains(".mpd") || media.mimeType == MimeTypes.APPLICATION_MPD -> {
+                builder.setMimeType(MimeTypes.APPLICATION_MPD)
+            }
+            uriStr.contains(".mp4") -> {
+                builder.setMimeType(MimeTypes.VIDEO_MP4)
+            }
+            uriStr.contains(".mkv") -> {
+                builder.setMimeType(MimeTypes.VIDEO_MATROSKA)
+            }
+            uriStr.contains(".webm") -> {
+                builder.setMimeType(MimeTypes.VIDEO_WEBM)
+            }
+        }
+        return builder.build()
+    }
+
     fun playMedia(media: MediaItemModel, startPositionMs: Long = 0L) {
         currentPlaylist = listOf(media)
         currentPlaylistIndex = 0
 
-        val mediaItem = MediaItem.Builder()
-            .setUri(resolveMediaUri(media))
-            .setMediaId(media.id.toString())
-            .build()
+        val mediaItem = buildMediaItem(media)
 
         exoPlayer.setMediaItem(mediaItem, startPositionMs)
         exoPlayer.prepare()
@@ -200,12 +239,7 @@ class ThrynxPlayerManager(private val context: Context) {
         currentPlaylistIndex = startIndex.coerceIn(0, mediaList.size - 1)
 
         val target = currentPlaylist[currentPlaylistIndex]
-        val mediaItems = mediaList.map { media ->
-            MediaItem.Builder()
-                .setUri(resolveMediaUri(media))
-                .setMediaId(media.id.toString())
-                .build()
-        }
+        val mediaItems = mediaList.map { media -> buildMediaItem(media) }
 
         exoPlayer.setMediaItems(mediaItems, currentPlaylistIndex, startPositionMs)
         exoPlayer.prepare()
@@ -224,10 +258,7 @@ class ThrynxPlayerManager(private val context: Context) {
         if (currentPlaylistIndex < currentPlaylist.size - 1) {
             currentPlaylistIndex++
             val nextMedia = currentPlaylist[currentPlaylistIndex]
-            val mediaItem = MediaItem.Builder()
-                .setUri(resolveMediaUri(nextMedia))
-                .setMediaId(nextMedia.id.toString())
-                .build()
+            val mediaItem = buildMediaItem(nextMedia)
             exoPlayer.setMediaItem(mediaItem, 0L)
             exoPlayer.prepare()
             exoPlayer.play()
@@ -240,10 +271,7 @@ class ThrynxPlayerManager(private val context: Context) {
         } else if (_playbackState.value.repeatMode == RepeatMode.ALL && currentPlaylist.isNotEmpty()) {
             currentPlaylistIndex = 0
             val firstMedia = currentPlaylist[0]
-            val mediaItem = MediaItem.Builder()
-                .setUri(resolveMediaUri(firstMedia))
-                .setMediaId(firstMedia.id.toString())
-                .build()
+            val mediaItem = buildMediaItem(firstMedia)
             exoPlayer.setMediaItem(mediaItem, 0L)
             exoPlayer.prepare()
             exoPlayer.play()
@@ -264,10 +292,7 @@ class ThrynxPlayerManager(private val context: Context) {
         if (currentPlaylistIndex > 0) {
             currentPlaylistIndex--
             val prevMedia = currentPlaylist[currentPlaylistIndex]
-            val mediaItem = MediaItem.Builder()
-                .setUri(resolveMediaUri(prevMedia))
-                .setMediaId(prevMedia.id.toString())
-                .build()
+            val mediaItem = buildMediaItem(prevMedia)
             exoPlayer.setMediaItem(mediaItem, 0L)
             exoPlayer.prepare()
             exoPlayer.play()
@@ -348,6 +373,30 @@ class ThrynxPlayerManager(private val context: Context) {
 
     fun setAspectRatioMode(mode: AspectRatioMode) {
         _playbackState.value = _playbackState.value.copy(aspectRatioMode = mode)
+    }
+
+    fun rotateVideo() {
+        val nextDeg = (_playbackState.value.rotationDegrees + 90) % 360
+        _playbackState.value = _playbackState.value.copy(rotationDegrees = nextDeg)
+    }
+
+    fun setRotationDegrees(degrees: Int) {
+        _playbackState.value = _playbackState.value.copy(rotationDegrees = (degrees % 360 + 360) % 360)
+    }
+
+    fun cycleZoom() {
+        val cur = _playbackState.value.zoomScale
+        val nextZoom = when {
+            cur < 1.15f -> 1.25f
+            cur < 1.4f -> 1.5f
+            cur < 1.85f -> 2.0f
+            else -> 1.0f
+        }
+        _playbackState.value = _playbackState.value.copy(zoomScale = nextZoom)
+    }
+
+    fun setZoomScale(scale: Float) {
+        _playbackState.value = _playbackState.value.copy(zoomScale = scale.coerceIn(0.5f, 3.0f))
     }
 
     fun toggleRepeatMode() {

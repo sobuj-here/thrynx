@@ -43,6 +43,7 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
     object Folders : Screen("folders", R.string.nav_folders, Icons.Default.Folder)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
     object Player : Screen("player", R.string.player_title, Icons.Default.PlayCircle)
+    object PrivateVault : Screen("private_vault", R.string.folders_private_vault, Icons.Default.Lock)
 }
 
 @Composable
@@ -72,6 +73,10 @@ fun ThrynxNavigationApp(
     onLanguageChanged: (String) -> Unit,
     onClearHistory: () -> Unit,
     onLaunchBiometric: (onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit = { _, _ -> },
+    onHideFolder: (FolderItemModel) -> Unit = {},
+    onDeleteFolder: (FolderItemModel) -> Unit = {},
+    onHideMultipleFolders: (List<FolderItemModel>) -> Unit = {},
+    onDeleteMultipleFolders: (List<FolderItemModel>) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -172,15 +177,22 @@ fun ThrynxNavigationApp(
                         navController.navigate(Screen.Videos.route) { launchSingleTop = true }
                     },
                     onOpenStreamUrl = { url ->
+                        val titleFromUrl = try {
+                            android.net.Uri.parse(url).lastPathSegment?.ifBlank { "Network Stream" } ?: "Network Stream"
+                        } catch (e: Exception) { "Network Stream" }
                         val streamMedia = MediaItemModel(
                             id = System.currentTimeMillis(),
-                            title = "Network Stream",
+                            title = titleFromUrl,
                             uri = android.net.Uri.parse(url),
                             path = url,
                             isVideo = true
                         )
                         playerManager.playMedia(streamMedia)
                         navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                    },
+                    privateVideosCount = privateVideos.size,
+                    onOpenVault = {
+                        navController.navigate(Screen.PrivateVault.route) { launchSingleTop = true }
                     }
                 )
             }
@@ -214,16 +226,8 @@ fun ThrynxNavigationApp(
                 FoldersScreen(
                     folders = folders,
                     videos = videos,
-                    privateVideos = privateVideos,
-                    customFolders = customFolders,
-                    vaultPin = vaultPin,
                     hasStoragePermission = hasStoragePermission,
-                    canUseBiometric = canUseBiometric,
                     onRequestPermission = onRequestPermission,
-                    onSetVaultPin = onSetVaultPin,
-                    onUnhidePrivateVideo = onUnhidePrivateVideo,
-                    onAddCustomFolder = onAddCustomFolder,
-                    onRemoveCustomFolder = onRemoveCustomFolder,
                     onOpenMedia = { media ->
                         playerManager.playMedia(media)
                         navController.navigate(Screen.Player.route) { launchSingleTop = true }
@@ -234,8 +238,155 @@ fun ThrynxNavigationApp(
                             navController.navigate(Screen.Player.route) { launchSingleTop = true }
                         }
                     },
-                    onLaunchBiometric = onLaunchBiometric
+                    onHideFolder = onHideFolder,
+                    onDeleteFolder = onDeleteFolder,
+                    onHideMultipleFolders = onHideMultipleFolders,
+                    onDeleteMultipleFolders = onDeleteMultipleFolders
                 )
+            }
+
+            // Private Vault Screen
+            composable(Screen.PrivateVault.route) {
+                var isUnlocked by remember { mutableStateOf(false) }
+                var pinInput by remember { mutableStateOf("") }
+                var pinError by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    if (vaultPin.isBlank()) {
+                        isUnlocked = true
+                    } else if (canUseBiometric) {
+                        onLaunchBiometric(
+                            { isUnlocked = true },
+                            { /* User can enter PIN on screen */ }
+                        )
+                    }
+                }
+
+                if (isUnlocked) {
+                    com.thrynx.app.feature.folders.VaultContentView(
+                        privateVideos = privateVideos,
+                        onBack = { navController.popBackStack() },
+                        onOpenVideo = { pv ->
+                            playerManager.playMedia(
+                                MediaItemModel(
+                                    title = pv.title,
+                                    uri = android.net.Uri.parse(pv.mediaUri),
+                                    path = pv.originalPath,
+                                    durationMs = pv.durationMs,
+                                    sizeBytes = pv.sizeBytes,
+                                    isVideo = true
+                                )
+                            )
+                            navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                        },
+                        onUnhide = onUnhidePrivateVideo
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .statusBarsPadding()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = ThrynxCardDark),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(CircleShape)
+                                        .background(ThrynxCyan.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(32.dp))
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = stringResource(id = R.string.folders_private_vault),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = stringResource(id = R.string.folders_vault_enter_pin),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                OutlinedTextField(
+                                    value = pinInput,
+                                    onValueChange = {
+                                        if (it.length <= 4 && it.all { c -> c.isDigit() }) {
+                                            pinInput = it
+                                            pinError = false
+                                            if (it.length == 4) {
+                                                if (it == vaultPin || vaultPin.isBlank()) {
+                                                    isUnlocked = true
+                                                } else {
+                                                    pinError = true
+                                                }
+                                            }
+                                        }
+                                    },
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword),
+                                    isError = pinError,
+                                    placeholder = { Text("••••") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                if (pinError) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = stringResource(id = R.string.folders_vault_wrong_pin),
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(20.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    TextButton(onClick = { navController.popBackStack() }) {
+                                        Text(stringResource(id = R.string.action_cancel))
+                                    }
+                                    if (canUseBiometric) {
+                                        IconButton(onClick = {
+                                            onLaunchBiometric(
+                                                { isUnlocked = true },
+                                                { pinError = true }
+                                            )
+                                        }) {
+                                            Icon(Icons.Default.Fingerprint, contentDescription = "Biometric", tint = ThrynxCyan)
+                                        }
+                                    }
+                                    Button(
+                                        onClick = {
+                                            if (pinInput == vaultPin || vaultPin.isBlank()) {
+                                                isUnlocked = true
+                                            } else {
+                                                pinError = true
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                                    ) {
+                                        Text(stringResource(id = R.string.folders_vault_unlock), fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // 4. Settings Screen
