@@ -2,10 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Media Storage Permissions -->
+    <!-- Video Media Storage Permissions (Dedicated Video Player) -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -14,16 +12,13 @@
         android:maxSdkVersion="28"
         tools:ignore="ScopedStorage" />
 
-    <!-- Audio Recording for Video Editor Voice-Over -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!-- Background Audio & Foreground Service Permissions -->
+    <!-- Background Video Audio & Foreground Service Permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Network for Authorized Online Integration & Downloads -->
+    <!-- Network for Streaming Compatible Video URLs (HLS, DASH, HTTP) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -60,29 +55,18 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
 
-            <!-- Audio File Association -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:mimeType="audio/*" />
-            </intent-filter>
-
-            <!-- URL Handlers for Web Links -->
+            <!-- Video Streaming URL Association -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="*facebook.com" />
-                <data android:host="*fb.watch" />
-                <data android:host="*youtu.be" />
-                <data android:host="*youtube.com" />
+                <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
 
-        <!-- MediaSessionService for Background Audio and Lockscreen Controls -->
+        <!-- MediaSessionService for Background Video Audio and Lockscreen Controls -->
         <service
             android:name=".core.service.ThrynxMediaPlaybackService"
             android:exported="true"
@@ -92,7 +76,7 @@
             </intent-filter>
         </service>
 
-        <!-- Secure FileProvider for Sharing Exported Videos & Files -->
+        <!-- Secure FileProvider for Sharing Videos -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

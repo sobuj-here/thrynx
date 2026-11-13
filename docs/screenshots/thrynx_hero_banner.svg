@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="0%" stop-color="#070A12"/>
       <stop offset="50%" stop-color="#0E1626"/>
-      <stop offset="100%" stop-color="#060910"/>
+      <stop offset="100%" stop-color="#05080E"/>
     </linearGradient>
     <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#00E5FF"/>
@@ -47,17 +47,17 @@
     </g>
 
     <text x="80" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" letter-spacing="4">THRYNX</text>
-    <text x="84" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00E5FF" letter-spacing="6">PLAY • CREATE • EDIT</text>
+    <text x="84" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00E5FF" letter-spacing="5">PROFESSIONAL VIDEO PLAYER</text>
 
     <!-- Tagline description -->
     <text x="0" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
-      All-in-One Multimedia Player, CapCut-Grade Video Editor
+      High-Performance, MX Player-Grade Video Playback Engine
     </text>
     <text x="0" y="170" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
-      &amp; Creative Studio for Android
+      Intuitive Gestures • Multi-Audio • Subtitle Sync • Private Vault
     </text>
     <text x="0" y="205" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="500" fill="#94A3B8">
-      Dual Language: English &amp; বাংলা • Media3 ExoPlayer • Multi-Track Timeline • 100% Offline
+      Dual Language: English &amp; বাংলা • Media3 ExoPlayer • 4K UHD • 100% Offline
     </text>
 
     <!-- Download Badge / CTA Button -->
@@ -70,12 +70,12 @@
     
     <g transform="translate(260, 240)">
       <rect width="210" height="52" rx="26" fill="#141E30" stroke="#25354F" stroke-width="1.5"/>
-      <text x="32" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E2E8F0">v1.0.0 Stable (21 MB)</text>
+      <text x="32" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E2E8F0">v1.0.0 Stable (~21 MB)</text>
     </g>
   </g>
 
-  <!-- Right Side: 3 Isometric/Layered Device Mockups -->
-  <!-- Device 1: Video Player & Audio Track Sheet -->
+  <!-- Right Side: 2 Sleek Layered Mockups -->
+  <!-- Device 1: Video Player with MX Gestures & Multi-Track Audio -->
   <g transform="translate(710, 50)">
     <rect width="210" height="380" rx="24" fill="url(#phoneCardGrad)" stroke="#223048" stroke-width="3"/>
     <!-- Top Bar Notch -->
@@ -99,7 +99,7 @@
 
     <rect x="25" y="266" width="160" height="28" rx="6" fill="#182338"/>
     <circle cx="38" cy="280" r="5" fill="#64748B"/>
-    <text x="50" y="284" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">Hindi (Audio Track #3)</text>
+    <text x="50" y="284" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">Hindi (Track #3)</text>
     
     <!-- Gesture Hints -->
     <rect x="25" y="304" width="160" height="42" rx="6" fill="#0A0F1D"/>
@@ -107,45 +107,45 @@
     <text x="32" y="336" font-family="sans-serif" font-size="9" fill="#94A3B8">Volume ⮞ Swipe Right</text>
   </g>
 
-  <!-- Device 2: Video Editor Multi-Track Timeline (Front Focus) -->
+  <!-- Device 2: Folders & Private Vault (Front Focus) -->
   <g transform="translate(940, 70)">
     <rect width="220" height="370" rx="24" fill="url(#phoneCardGrad)" stroke="#00E5FF" stroke-width="2.5" filter="url(#glow)"/>
     <!-- Top Notch -->
     <rect x="75" y="12" width="70" height="12" rx="6" fill="#0A0E17"/>
-    <!-- Studio Header -->
-    <text x="20" y="44" font-family="sans-serif" font-size="13" font-weight="800" fill="#FFFFFF">Video Studio</text>
+    <!-- Header -->
+    <text x="20" y="44" font-family="sans-serif" font-size="13" font-weight="800" fill="#FFFFFF">Video Folders</text>
     <rect x="155" y="32" width="45" height="18" rx="9" fill="#00E5FF"/>
-    <text x="162" y="45" font-family="sans-serif" font-size="9" font-weight="800" fill="#070B14">EXPORT</text>
+    <text x="160" y="45" font-family="sans-serif" font-size="9" font-weight="800" fill="#070B14">VAULT</text>
 
-    <!-- Composition Canvas -->
-    <rect x="18" y="58" width="184" height="110" rx="8" fill="#060A12" stroke="#1D2A40"/>
-    <text x="70" y="112" font-family="sans-serif" font-size="11" font-weight="600" fill="#00E5FF">16:9 Canvas</text>
-    <text x="50" y="132" font-family="sans-serif" font-size="10" fill="#E2E8F0">বাংলা টাইটেল / Text</text>
+    <!-- Private Vault Card -->
+    <rect x="18" y="58" width="184" height="60" rx="10" fill="#0E1729" stroke="#00E5FF" stroke-width="1.2"/>
+    <circle cx="42" cy="88" r="14" fill="#00E5FF" opacity="0.2"/>
+    <text x="65" y="82" font-family="sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Private Vault</text>
+    <text x="65" y="98" font-family="sans-serif" font-size="9" fill="#00E5FF">PIN Protected • Hidden</text>
 
-    <!-- Multi-Track Timeline -->
-    <rect x="18" y="178" width="184" height="125" rx="8" fill="#0A101C" stroke="#223048"/>
-    <!-- Track 1: Video -->
-    <text x="24" y="196" font-family="sans-serif" font-size="9" font-weight="700" fill="#64748B">VID</text>
-    <rect x="48" y="186" width="60" height="16" rx="4" fill="#2979FF"/>
-    <rect x="112" y="186" width="75" height="16" rx="4" fill="#00E5FF"/>
-    <!-- Track 2: Audio -->
-    <text x="24" y="222" font-family="sans-serif" font-size="9" font-weight="700" fill="#64748B">AUD</text>
-    <rect x="48" y="212" width="140" height="16" rx="4" fill="#7C4DFF"/>
-    <!-- Track 3: Text -->
-    <text x="24" y="248" font-family="sans-serif" font-size="9" font-weight="700" fill="#64748B">TXT</text>
-    <rect x="68" y="238" width="80" height="16" rx="4" fill="#00E676"/>
-    <!-- Playhead Needle -->
-    <line x1="110" y1="178" x2="110" y2="303" stroke="#FF3366" stroke-width="2"/>
-    <circle cx="110" cy="180" r="4" fill="#FF3366"/>
+    <!-- Folder 1: Movies -->
+    <rect x="18" y="128" width="184" height="48" rx="8" fill="#141E30"/>
+    <rect x="26" y="136" width="38" height="32" rx="4" fill="#2979FF" opacity="0.3"/>
+    <text x="72" y="150" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Movies (4K UHD)</text>
+    <text x="72" y="164" font-family="sans-serif" font-size="9" fill="#94A3B8">24 Videos • 18.2 GB</text>
 
-    <!-- Tool Buttons -->
-    <rect x="18" y="314" width="38" height="24" rx="6" fill="#162236"/>
-    <text x="26" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#E2E8F0">Split</text>
-    <rect x="62" y="314" width="38" height="24" rx="6" fill="#162236"/>
-    <text x="70" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#E2E8F0">Trim</text>
-    <rect x="106" y="314" width="42" height="24" rx="6" fill="#162236"/>
-    <text x="111" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#00E5FF">Filter</text>
-    <rect x="154" y="314" width="48" height="24" rx="6" fill="#162236"/>
-    <text x="159" y="330" font-family="sans-serif" font-size="9" font-weight="700" fill="#E2E8F0">Speed</text>
+    <!-- Folder 2: Downloads -->
+    <rect x="18" y="184" width="184" height="48" rx="8" fill="#141E30"/>
+    <rect x="26" y="192" width="38" height="32" rx="4" fill="#00E5FF" opacity="0.3"/>
+    <text x="72" y="206" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Downloads</text>
+    <text x="72" y="220" font-family="sans-serif" font-size="9" fill="#94A3B8">15 Videos • 6.4 GB</text>
+
+    <!-- Folder 3: Camera -->
+    <rect x="18" y="240" width="184" height="48" rx="8" fill="#141E30"/>
+    <rect x="26" y="248" width="38" height="32" rx="4" fill="#00E676" opacity="0.3"/>
+    <text x="72" y="262" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Camera Clips</text>
+    <text x="72" y="276" font-family="sans-serif" font-size="9" fill="#94A3B8">42 Videos • 1080p</text>
+
+    <!-- Bottom Navigation Bar representation -->
+    <rect x="18" y="318" width="184" height="36" rx="8" fill="#0A0F1D"/>
+    <text x="32" y="340" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Home</text>
+    <text x="74" y="340" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Videos</text>
+    <text x="122" y="340" font-family="sans-serif" font-size="8" font-weight="700" fill="#00E5FF">Folders</text>
+    <text x="166" y="340" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Settings</text>
   </g>
 </svg>

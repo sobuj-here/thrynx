@@ -2,34 +2,26 @@
 <resources>
     <!-- Brand -->
     <string name="app_name">THRYNX</string>
-    <string name="app_tagline">PLAY • CREATE • EDIT</string>
-    <string name="app_description">All-in-One Multimedia Player, Video Editor &amp; Creative Studio</string>
+    <string name="app_tagline">PROFESSIONAL VIDEO PLAYER</string>
+    <string name="app_description">High-Performance Offline Video Player for Android</string>
 
-    <!-- Navigation -->
+    <!-- Navigation (Strictly 4 Tabs) -->
     <string name="nav_home">Home</string>
-    <string name="nav_player">Player</string>
-    <string name="nav_music">Music</string>
-    <string name="nav_library">Library</string>
-    <string name="nav_editor">Editor</string>
-    <string name="nav_photo_maker">Photo Maker</string>
-    <string name="nav_projects">Projects</string>
-    <string name="nav_online">Online</string>
-    <string name="nav_downloads">Downloads</string>
+    <string name="nav_videos">Videos</string>
+    <string name="nav_folders">Folders</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Home Screen -->
-    <string name="home_greeting">Welcome to THRYNX</string>
-    <string name="home_search_hint">Search videos, songs, projects…</string>
-    <string name="home_quick_actions">Quick Studio</string>
-    <string name="home_new_project">New Project</string>
-    <string name="home_create_slideshow">Photo Slideshow</string>
-    <string name="home_extract_audio">Extract Audio</string>
     <string name="home_continue_watching">Continue Watching</string>
-    <string name="home_continue_editing">Continue Editing</string>
-    <string name="home_recent_media">Recent Media</string>
-    <string name="home_recent_projects">Recent Projects</string>
-    <string name="home_recent_downloads">Recent Downloads</string>
-    <string name="home_no_recents">No recent activity yet. Start playing or editing!</string>
+    <string name="home_recently_played">Recently Played</string>
+    <string name="home_recently_added">Recently Added</string>
+    <string name="home_favorites">Favorite Videos</string>
+    <string name="home_folders">Video Folders</string>
+    <string name="home_all_videos">All Videos</string>
+    <string name="home_open_network_stream">Open Network Stream</string>
+    <string name="home_search_hint">Search videos by title…</string>
+    <string name="home_no_recents">No recently played videos</string>
+    <string name="home_no_favorites">No favorite videos yet. Tap the star icon on any video to add it here.</string>
 
     <!-- Video Player -->
     <string name="player_title">Video Player</string>
@@ -37,254 +29,122 @@
     <string name="player_pause">Pause</string>
     <string name="player_previous">Previous</string>
     <string name="player_next">Next</string>
-    <string name="player_forward_10s">+10s</string>
-    <string name="player_rewind_10s">-10s</string>
+    <string name="player_forward_10s">+%ds</string>
+    <string name="player_rewind_10s">-%ds</string>
     <string name="player_audio_track">Audio Track</string>
     <string name="player_subtitle_track">Subtitles</string>
     <string name="player_speed">Playback Speed</string>
-    <string name="player_aspect_ratio">Aspect Ratio</string>
+    <string name="player_aspect_ratio">Display Mode</string>
     <string name="player_pip">Picture in Picture</string>
-    <string name="player_audio_only">Audio Only Mode</string>
-    <string name="player_audio_only_desc">Play audio in background with screen turned off</string>
-    <string name="player_lock_controls">Lock Screen Controls</string>
+    <string name="player_lock_controls">Lock Controls</string>
     <string name="player_unlock_controls">Controls Unlocked</string>
-    <string name="player_repeat">Repeat</string>
+    <string name="player_repeat">Repeat Mode</string>
+    <string name="player_repeat_off">Repeat Off</string>
     <string name="player_repeat_one">Repeat Current</string>
-    <string name="player_resume_prompt">Resume from %s?</string>
-    <string name="player_resume">Resume</string>
-    <string name="player_restart">Restart</string>
+    <string name="player_repeat_all">Repeat All</string>
+    <string name="player_sleep_timer">Sleep Timer</string>
+    <string name="player_sleep_timer_off">Turn Off</string>
+    <string name="player_sleep_timer_mins">%d Minutes</string>
+    <string name="player_sleep_timer_active">Sleep timer: %d mins left</string>
     <string name="player_no_audio_tracks">Single Audio Track</string>
     <string name="player_no_subtitles">No Subtitles Available</string>
     <string name="player_subtitles_off">Subtitles Off</string>
-    <string name="player_load_external_subtitle">Load Subtitle File (.srt, .vtt)</string>
-    <string name="player_load_external_audio">Load External Audio Track</string>
-    <string name="player_subtitle_delay">Subtitle Delay: %d ms</string>
+    <string name="player_load_external_subtitle">Load Subtitle File (.srt, .vtt, .ass)</string>
+    <string name="player_subtitle_delay">Subtitle Delay</string>
+    <string name="player_subtitle_delay_value">%d ms</string>
     <string name="player_subtitle_styling">Subtitle Appearance</string>
     <string name="player_subtitle_font_size">Font Size</string>
     <string name="player_subtitle_color">Text Color</string>
     <string name="player_subtitle_background">Background Opacity</string>
     <string name="player_ratio_fit">Fit to Screen</string>
-    <string name="player_ratio_fill">Fill / Crop</string>
+    <string name="player_ratio_fill">Fill Screen (Crop)</string>
+    <string name="player_ratio_stretch">Stretch to Window</string>
     <string name="player_ratio_16_9">16:9 Widescreen</string>
     <string name="player_ratio_4_3">4:3 Standard</string>
-    <string name="player_ratio_1_1">1:1 Square</string>
+    <string name="player_info">Video Details</string>
+    <string name="player_screenshot">Capture Screenshot</string>
+    <string name="player_screenshot_saved">Screenshot saved to gallery</string>
+    <string name="player_background_audio">Background Audio</string>
+    <string name="player_audio_only_desc">Play video audio in background with screen off</string>
 
-    <!-- Music Player -->
-    <string name="music_title">Music Studio</string>
-    <string name="music_songs">Songs</string>
-    <string name="music_albums">Albums</string>
-    <string name="music_artists">Artists</string>
-    <string name="music_playlists">Playlists</string>
-    <string name="music_favorites">Favorites</string>
-    <string name="music_folders">Folders</string>
-    <string name="music_queue">Up Next</string>
-    <string name="music_shuffle">Shuffle</string>
-    <string name="music_sleep_timer">Sleep Timer</string>
-    <string name="music_sleep_timer_off">Sleep Timer Off</string>
-    <string name="music_sleep_timer_active">Stopping in %d min</string>
-    <string name="music_visualizer">Audio Visualizer</string>
-    <string name="music_create_playlist">Create Playlist</string>
-    <string name="music_add_to_playlist">Add to Playlist</string>
-    <string name="music_playlist_name">Playlist Name</string>
-    <string name="music_no_songs">No songs found on your device</string>
-    <string name="music_empty_queue">Playback queue is empty</string>
+    <!-- Videos Screen -->
+    <string name="videos_title">Videos</string>
+    <string name="videos_search_hint">Search video title or format…</string>
+    <string name="videos_sort">Sort By</string>
+    <string name="videos_import">Import Video</string>
+    <string name="videos_rescan">Rescan Library</string>
+    <string name="videos_rescan_complete">Library refreshed: %d videos found</string>
+    <string name="videos_empty">No videos found on device</string>
+    <string name="videos_details">Video Details</string>
+    <string name="videos_rename">Rename</string>
+    <string name="videos_delete">Delete</string>
+    <string name="videos_delete_confirm">Are you sure you want to delete \"%s\"? This file will be permanently removed.</string>
+    <string name="videos_share">Share</string>
+    <string name="videos_play_next">Play Next</string>
+    <string name="videos_favorite_added">Added to Favorites</string>
+    <string name="videos_favorite_removed">Removed from Favorites</string>
 
-    <!-- Video Editor -->
-    <string name="editor_title">Creative Video Studio</string>
-    <string name="editor_tracks">Timeline Tracks</string>
-    <string name="editor_video_track">Video Track</string>
-    <string name="editor_audio_track">Audio Track</string>
-    <string name="editor_text_track">Text &amp; Titles</string>
-    <string name="editor_overlay_track">Overlay Track</string>
-    <string name="editor_add_clip">Add Clip</string>
-    <string name="editor_trim">Trim</string>
-    <string name="editor_split">Split at Playhead</string>
-    <string name="editor_merge">Merge Clips</string>
-    <string name="editor_crop">Crop</string>
-    <string name="editor_rotate">Rotate 90°</string>
-    <string name="editor_flip">Flip</string>
-    <string name="editor_duplicate">Duplicate</string>
-    <string name="editor_delete">Delete</string>
-    <string name="editor_speed">Speed</string>
-    <string name="editor_reverse">Reverse</string>
-    <string name="editor_freeze">Freeze Frame</string>
-    <string name="editor_transitions">Transitions</string>
-    <string name="editor_transition_fade">Fade</string>
-    <string name="editor_transition_dissolve">Dissolve</string>
-    <string name="editor_transition_slide">Slide</string>
-    <string name="editor_transition_zoom">Zoom In</string>
-    <string name="editor_transition_wipe">Wipe</string>
-    <string name="editor_transition_blur">Blur Push</string>
-    <string name="editor_filters">Filters &amp; Effects</string>
-    <string name="editor_filter_original">Original</string>
-    <string name="editor_filter_vibrant">Vibrant</string>
-    <string name="editor_filter_cinematic">Cinematic Teal</string>
-    <string name="editor_filter_vintage">Vintage Film</string>
-    <string name="editor_filter_bnw">Black &amp; White</string>
-    <string name="editor_filter_warm">Warm Sunset</string>
-    <string name="editor_filter_cool">Cool Frost</string>
-    <string name="editor_brightness">Brightness</string>
-    <string name="editor_contrast">Contrast</string>
-    <string name="editor_saturation">Saturation</string>
-    <string name="editor_vignette">Vignette</string>
-    <string name="editor_keyframes">Keyframe Animation</string>
-    <string name="editor_add_keyframe">Add Keyframe</string>
-    <string name="editor_remove_keyframe">Remove Keyframe</string>
-    <string name="editor_undo">Undo</string>
-    <string name="editor_redo">Redo</string>
-    <string name="editor_canvas_ratio">Canvas Ratio</string>
-    <string name="editor_export_button">Export Video</string>
-    <string name="editor_project_autosaved">Project autosaved</string>
+    <!-- Folders & Private Vault -->
+    <string name="folders_title">Folders</string>
+    <string name="folders_videos_count">%d Videos</string>
+    <string name="folders_empty">No video folders found</string>
+    <string name="folders_add_custom">Add Folder</string>
+    <string name="folders_private_vault">Private Vault</string>
+    <string name="folders_private_desc">Secure hidden videos with PIN protection</string>
+    <string name="folders_vault_unlock">Unlock Vault</string>
+    <string name="folders_vault_set_pin">Set 4-digit PIN</string>
+    <string name="folders_vault_enter_pin">Enter 4-digit PIN</string>
+    <string name="folders_vault_wrong_pin">Incorrect PIN. Please try again.</string>
+    <string name="folders_vault_empty">No private videos in vault</string>
+    <string name="folders_vault_hide_video">Hide in Private Vault</string>
+    <string name="folders_vault_unhide_video">Unhide from Vault</string>
+    <string name="folders_vault_disclaimer">Private vault securely hides videos from the standard library within THRYNX. File content is preserved.</string>
 
-    <!-- Audio Editing Studio -->
-    <string name="audio_studio_title">Audio Studio</string>
-    <string name="audio_bgm">Background Music</string>
-    <string name="audio_voiceover">Record Voice-Over</string>
-    <string name="audio_recording">Recording…</string>
-    <string name="audio_tap_to_record">Tap to Record Voice</string>
-    <string name="audio_stop_record">Stop Recording</string>
-    <string name="audio_fade_in">Fade In</string>
-    <string name="audio_fade_out">Fade Out</string>
-    <string name="audio_volume">Volume</string>
-    <string name="audio_mute_original">Mute Original Video Sound</string>
-    <string name="audio_waveform">Waveform Visual</string>
+    <!-- Network Stream -->
+    <string name="stream_title">Open Network Stream</string>
+    <string name="stream_hint">Enter stream URL (HLS, DASH, MP4)…</string>
+    <string name="stream_play">Play Stream</string>
+    <string name="stream_invalid_url">Please enter a valid HTTP or HTTPS stream URL</string>
 
-    <!-- Photo-to-Video Maker -->
-    <string name="photo_maker_title">Photo Slideshow Maker</string>
-    <string name="photo_select_images">Select Photos</string>
-    <string name="photo_slide_duration">Duration per Photo: %s sec</string>
-    <string name="photo_ken_burns">Ken Burns Zoom Effect</string>
-    <string name="photo_reorder_hint">Drag cards to reorder slides</string>
-    <string name="photo_add_music">Add Soundtrack</string>
-    <string name="photo_add_caption">Add Photo Caption</string>
-    <string name="photo_generate_video">Create Video</string>
-    <string name="photo_minimum_photos">Please select at least 2 photos</string>
-
-    <!-- Export & Rendering -->
-    <string name="export_title">Export Studio</string>
-    <string name="export_resolution">Resolution</string>
-    <string name="export_fps">Frame Rate</string>
-    <string name="export_bitrate">Bitrate</string>
-    <string name="export_codec">Video Codec</string>
-    <string name="export_render_progress">Rendering Video: %d%%</string>
-    <string name="export_status_encoding">Encoding video frames…</string>
-    <string name="export_status_muxing">Muxing audio &amp; video…</string>
-    <string name="export_cancel">Cancel Export</string>
-    <string name="export_success">Video exported successfully!</string>
-    <string name="export_open_video">Open Video</string>
-    <string name="export_share">Share Video</string>
-    <string name="export_est_size">Estimated Size: %s</string>
-    <string name="export_storage_available">Available Storage: %s</string>
-
-    <!-- Project Management -->
-    <string name="projects_title">Saved Projects</string>
-    <string name="projects_empty">No editing projects yet. Start creating!</string>
-    <string name="projects_rename">Rename Project</string>
-    <string name="projects_duplicate">Duplicate Project</string>
-    <string name="projects_delete">Delete Project</string>
-    <string name="projects_delete_confirm">Delete this project? Original media files will remain safe.</string>
-    <string name="projects_last_modified">Modified %s</string>
-
-    <!-- Online Media -->
-    <string name="online_title">Online Media</string>
-    <string name="online_youtube_tab">YouTube</string>
-    <string name="online_facebook_tab">Facebook</string>
-    <string name="online_search_placeholder">Search or paste video link…</string>
-    <string name="online_search_button">Search</string>
-    <string name="online_open_external">Open in Official App</string>
-    <string name="online_play_web">Play Preview</string>
-    <string name="online_fb_paste_link">Paste Shared Facebook Video Link</string>
-    <string name="online_policy_notice">THRYNX complies strictly with YouTube &amp; Facebook platform policies. Direct downloading of protected content is restricted.</string>
-
-    <!-- Download Manager -->
-    <string name="downloads_title">Download Manager</string>
-    <string name="downloads_active">Active Downloads</string>
-    <string name="downloads_completed">Completed Files</string>
-    <string name="downloads_empty">No downloads in queue</string>
-    <string name="downloads_pause">Pause</string>
-    <string name="downloads_resume">Resume</string>
-    <string name="downloads_retry">Retry</string>
-    <string name="downloads_cancel">Cancel</string>
-    <string name="downloads_storage_used">Used Storage: %s</string>
-    <string name="downloads_storage_free">Free Storage: %s</string>
-
-    <!-- Settings -->
+    <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
-    <string name="settings_section_general">General</string>
-    <string name="settings_section_appearance">Appearance</string>
-    <string name="settings_theme">App Theme</string>
-    <string name="settings_theme_system">System Default</string>
-    <string name="settings_theme_dark">Dark Theme</string>
-    <string name="settings_theme_light">Light Theme</string>
-    <string name="settings_accent_color">Accent Color</string>
-    <string name="settings_section_language">Language / ভাষা</string>
-    <string name="settings_language">App Language</string>
-    <string name="settings_lang_en">English</string>
-    <string name="settings_lang_bn">বাংলা (Bangla)</string>
-    <string name="settings_startup_screen">Startup Screen</string>
-    <string name="settings_startup_home">Home</string>
-    <string name="settings_startup_library">Library</string>
-    <string name="settings_startup_editor">Creative Studio</string>
-
-    <string name="settings_section_player">Player Preferences</string>
+    <string name="settings_section_player">Player Controls</string>
+    <string name="settings_section_gestures">Gestures &amp; Interaction</string>
+    <string name="settings_section_video">Display &amp; Decoder</string>
+    <string name="settings_section_subtitles">Subtitles</string>
+    <string name="settings_section_library">Library &amp; Storage</string>
+    <string name="settings_section_security">Security &amp; Vault</string>
+    <string name="settings_section_app">App &amp; Language</string>
     <string name="settings_default_speed">Default Playback Speed</string>
-    <string name="settings_remember_position">Remember Last Position</string>
-    <string name="settings_remember_position_desc">Automatically resumes video from last watched point</string>
-    <string name="settings_auto_background_audio">Enable Background Audio</string>
-    <string name="settings_background_audio_desc">Continue playing audio when app is minimized or screen turns off</string>
-    <string name="settings_default_orientation">Default Orientation</string>
-    <string name="settings_orientation_auto">Auto Rotate</string>
-    <string name="settings_orientation_landscape">Landscape</string>
-    <string name="settings_orientation_portrait">Portrait</string>
-    <string name="settings_default_resize_mode">Default Video Fit</string>
-    <string name="settings_resize_fit">Fit to Screen</string>
-    <string name="settings_resize_fill">Fill &amp; Crop</string>
-    <string name="settings_gestures_enabled">Player Swipe Gestures</string>
-    <string name="settings_gestures_desc">Brightness, volume gestures &amp; double-tap seek</string>
-    <string name="settings_subtitle_styling">Subtitle Appearance</string>
-
-    <string name="settings_section_editor">Editor Preferences</string>
-    <string name="settings_editor_resolution">Default Project Resolution</string>
-    <string name="settings_editor_fps">Default Project Frame Rate</string>
-    <string name="settings_editor_autosave">Autosave Interval</string>
-    <string name="settings_export_location">Export Directory</string>
-
-    <string name="settings_section_storage">Storage &amp; Cache</string>
-    <string name="settings_cache_size">Cache Memory Used</string>
-    <string name="settings_clear_cache">Clear App Cache</string>
-    <string name="settings_clear_cache_desc">Deletes temporary frame cache and preview files</string>
-    <string name="settings_cache_cleared">App cache successfully cleared</string>
+    <string name="settings_double_tap_seek">Double Tap Seek Duration</string>
+    <string name="settings_resume_playback">Resume Playback</string>
+    <string name="settings_resume_playback_desc">Continue playback from last saved position</string>
+    <string name="settings_background_play">Background Playback</string>
+    <string name="settings_background_play_desc">Continue audio when app is minimized or screen off</string>
+    <string name="settings_gestures">MX Gesture Controls</string>
+    <string name="settings_gestures_desc">Brightness on left, Volume on right, Horizontal seek</string>
+    <string name="settings_orientation">Screen Orientation</string>
+    <string name="settings_resize_mode">Default Aspect Ratio</string>
+    <string name="settings_hw_decoder">Hardware Acceleration</string>
+    <string name="settings_auto_next">Auto-Play Next Video</string>
+    <string name="settings_auto_next_desc">Play the next video automatically when playback ends</string>
+    <string name="settings_rescan">Rescan Video Library</string>
+    <string name="settings_clear_cache">Clear Cache</string>
+    <string name="settings_clear_cache_confirm">Application cache cleared</string>
     <string name="settings_clear_history">Clear Playback History</string>
-    <string name="settings_clear_history_desc">Deletes all local video and music playback history</string>
-    <string name="settings_history_cleared">Playback history cleared</string>
+    <string name="settings_clear_history_confirm">Playback history cleared</string>
+    <string name="settings_private_pin">Private Vault PIN</string>
+    <string name="settings_private_pin_setup">Set or change 4-digit PIN</string>
+    <string name="settings_theme">Color Theme</string>
+    <string name="settings_language">Language / ভাষা</string>
+    <string name="settings_app_info">About THRYNX</string>
+    <string name="settings_offline_notice">100% Offline-First • Zero Cloud Tracking • Privacy Guaranteed</string>
 
-    <string name="settings_section_privacy">Privacy &amp; Permissions</string>
-    <string name="settings_offline_first_badge">100% Offline &amp; Private — No Cloud Uploads</string>
-    <string name="settings_offline_first_desc">All media playback, editing, and exports run strictly on your local device. Zero telemetry, zero cloud tracking, and zero AI models.</string>
-    <string name="settings_perm_storage">Media Storage Access</string>
-    <string name="settings_perm_mic">Microphone Voice-Over Access</string>
-    <string name="settings_perm_granted">Granted</string>
-    <string name="settings_perm_denied">Not Granted</string>
-
-    <string name="settings_section_about">About THRYNX</string>
-    <string name="settings_version">Version %s</string>
-    <string name="settings_licenses">Open Source Licenses</string>
-    <string name="settings_github">Source Code &amp; Releases</string>
-    <string name="settings_copyright">© 2026 THRYNX. All rights reserved.</string>
-
-    <!-- Common Actions & Errors -->
-    <string name="action_save">Save</string>
+    <!-- Common Actions -->
     <string name="action_cancel">Cancel</string>
-    <string name="action_delete">Delete</string>
     <string name="action_confirm">Confirm</string>
-    <string name="action_apply">Apply</string>
+    <string name="action_save">Save</string>
     <string name="action_close">Close</string>
     <string name="action_ok">OK</string>
-    <string name="action_grant_permissions">Grant Permission</string>
-    <string name="error_storage_permission">Storage permission is required to browse and play media.</string>
-    <string name="error_record_permission">Microphone permission is required to record voice-overs.</string>
-    <string name="error_file_not_found">Media file not found or has been moved.</string>
-    <string name="error_unsupported_format">Unsupported media format on this device.</string>
-    <string name="error_render_failed">Rendering failed. Check free storage and try again.</string>
-    <string name="error_no_network">Internet connection unavailable.</string>
+    <string name="action_done">Done</string>
 </resources>

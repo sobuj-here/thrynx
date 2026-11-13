@@ -14,30 +14,27 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.thrynx.app.core.database.CustomFolderEntity
+import com.thrynx.app.core.database.FavoriteMediaEntity
 import com.thrynx.app.core.database.PlaybackHistoryEntity
-import com.thrynx.app.core.database.ProjectEntity
+import com.thrynx.app.core.database.PrivateVideoEntity
 import com.thrynx.app.core.designsystem.ThrynxTheme
-import com.thrynx.app.core.editor.export.ExportConfiguration
-import com.thrynx.app.core.editor.export.ExportStage
 import com.thrynx.app.core.localization.LocaleHelper
+import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
-import com.thrynx.app.core.model.ProjectModel
-import com.thrynx.app.feature.editor.export.ExportProgressDialog
 import com.thrynx.app.ui.navigation.ThrynxNavigationApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 class MainActivity : ComponentActivity() {
 
@@ -46,10 +43,9 @@ class MainActivity : ComponentActivity() {
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        // Permissions granted, reload media
+    ) {
         lifecycleScope.launch {
-            loadMediaLibrary()
+            loadVideosFromDevice()
         }
     }
 
@@ -77,36 +73,39 @@ class MainActivity : ComponentActivity() {
             val isDark = when (selectedTheme) {
                 "light" -> false
                 "dark" -> true
-                else -> androidx.compose.foundation.isSystemInDarkTheme()
+                else -> isSystemInDarkTheme()
             }
 
             ThrynxTheme(darkTheme = isDark) {
                 val navController = rememberNavController()
 
-                var videos by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
-                var audios by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
-                var images by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
+                var rawVideos by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
 
-                val projectsEntities by app.database.projectDao().getAllProjectsFlow().collectAsState(initial = emptyList())
-                val projects = remember(projectsEntities) { projectsEntities.map { it.toDomain() } }
+                val recentHistory by app.database.historyDao().getRecentHistory(30).collectAsState(initial = emptyList())
+                val favorites by app.database.favoriteDao().getAllFavorites().collectAsState(initial = emptyList())
+                val privateVideos by app.database.privateVaultDao().getAllPrivateVideosFlow().collectAsState(initial = emptyList())
+                val vaultPin by preferencesManager.privateVaultPinFlow.collectAsState(initial = "")
 
-                val downloads by app.database.downloadDao().getAllDownloads().collectAsState(initial = emptyList())
-                val recentHistory by app.database.historyDao().getRecentHistory(1).collectAsState(initial = emptyList())
-                val lastWatched = recentHistory.firstOrNull()
+                // Filter out private videos from public list
+                val visibleVideos = remember(rawVideos, privateVideos) {
+                    val privateUris = privateVideos.map { it.mediaUri }.toSet()
+                    rawVideos.filter { !privateUris.contains(it.mediaUriString) }
+                }
 
-                // Export state
-                var isExporting by remember { mutableStateOf(false) }
-                var exportProgress by remember { mutableIntStateOf(0) }
-                var exportStage by remember { mutableStateOf(ExportStage.PREPARING) }
-                var exportingProject by remember { mutableStateOf<ProjectModel?>(null) }
-                var exportingConfig by remember { mutableStateOf(ExportConfiguration()) }
+                val folders = remember(visibleVideos) {
+                    app.mediaScanner.groupIntoFolders(visibleVideos)
+                }
+
+                fun refreshVideos() {
+                    lifecycleScope.launch {
+                        loadVideosFromDevice { v ->
+                            rawVideos = v
+                        }
+                    }
+                }
 
                 LaunchedEffect(Unit) {
-                    loadMediaLibrary { v, a, img ->
-                        videos = v
-                        audios = a
-                        images = img
-                    }
+                    refreshVideos()
                 }
 
                 Surface(
@@ -116,58 +115,88 @@ class MainActivity : ComponentActivity() {
                     ThrynxNavigationApp(
                         navController = navController,
                         playerManager = app.playerManager,
-                        videos = videos,
-                        audios = audios,
-                        images = images,
-                        projects = projects,
-                        downloads = downloads,
-                        lastWatched = lastWatched,
-                        onSaveProject = { proj ->
+                        videos = visibleVideos,
+                        folders = folders,
+                        recentHistory = recentHistory,
+                        favorites = favorites,
+                        privateVideos = privateVideos,
+                        vaultPin = vaultPin,
+                        onSetVaultPin = { pin ->
                             lifecycleScope.launch {
-                                app.database.projectDao().insertOrUpdate(ProjectEntity.fromDomain(proj))
+                                preferencesManager.setPrivateVaultPin(pin)
                             }
                         },
-                        onDeleteProject = { proj ->
+                        onUnhidePrivateVideo = { pv ->
                             lifecycleScope.launch {
-                                app.database.projectDao().deleteById(proj.id)
+                                app.database.privateVaultDao().removePrivateVideo(pv.mediaUri)
+                                Toast.makeText(this@MainActivity, "Video restored to library", Toast.LENGTH_SHORT).show()
                             }
                         },
-                        onDuplicateProject = { proj ->
+                        onHideInVault = { media ->
                             lifecycleScope.launch {
-                                val dup = proj.copy(
-                                    id = java.util.UUID.randomUUID().toString(),
-                                    name = "${proj.name} (Copy)",
-                                    createdAt = System.currentTimeMillis(),
-                                    updatedAt = System.currentTimeMillis()
+                                app.database.privateVaultDao().addPrivateVideo(
+                                    PrivateVideoEntity(
+                                        mediaUri = media.mediaUriString,
+                                        originalPath = media.path,
+                                        title = media.title,
+                                        durationMs = media.durationMs,
+                                        sizeBytes = media.sizeBytes
+                                    )
                                 )
-                                app.database.projectDao().insertOrUpdate(ProjectEntity.fromDomain(dup))
+                                Toast.makeText(this@MainActivity, "Video hidden in vault", Toast.LENGTH_SHORT).show()
                             }
                         },
-                        onExportProject = { proj, config ->
-                            isExporting = true
-                            exportProgress = 0
-                            exportStage = ExportStage.PREPARING
-                            exportingProject = proj
-                            exportingConfig = config
-
-                            val exportDir = File(getExternalFilesDir(null), "Exports").also { it.mkdirs() }
-                            val outputFile = File(exportDir, "THRYNX_${proj.name.replace(" ", "_")}_${System.currentTimeMillis()}.mp4")
-
+                        onDeleteMedia = { media ->
                             lifecycleScope.launch {
-                                val result = app.exportEngine.exportProject(
-                                    project = proj,
-                                    config = config,
-                                    outputFile = outputFile,
-                                    onStageChanged = { stage -> exportStage = stage },
-                                    onProgress = { p -> exportProgress = p }
-                                )
-                                isExporting = false
-                                result.onSuccess { file ->
-                                    Toast.makeText(this@MainActivity, "${getString(R.string.export_success)} (${file.name})", Toast.LENGTH_LONG).show()
-                                }.onFailure { err ->
-                                    Toast.makeText(this@MainActivity, "${getString(R.string.error_render_failed)}: ${err.message}", Toast.LENGTH_LONG).show()
+                                val success = app.mediaScanner.deleteVideo(media)
+                                if (success) {
+                                    Toast.makeText(this@MainActivity, "Video deleted", Toast.LENGTH_SHORT).show()
+                                    refreshVideos()
+                                } else {
+                                    Toast.makeText(this@MainActivity, "Could not delete file", Toast.LENGTH_SHORT).show()
                                 }
                             }
+                        },
+                        onRenameMedia = { media, newName ->
+                            lifecycleScope.launch {
+                                val updated = app.mediaScanner.renameVideo(media, newName)
+                                if (updated != null) {
+                                    Toast.makeText(this@MainActivity, "Video renamed", Toast.LENGTH_SHORT).show()
+                                    refreshVideos()
+                                } else {
+                                    Toast.makeText(this@MainActivity, "Rename failed", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        onAddCustomFolder = { uri ->
+                            lifecycleScope.launch {
+                                app.database.customFolderDao().insertCustomFolder(
+                                    CustomFolderEntity(
+                                        folderUri = uri.toString(),
+                                        folderName = uri.lastPathSegment ?: "Custom Folder"
+                                    )
+                                )
+                                refreshVideos()
+                            }
+                        },
+                        onToggleFavorite = { media ->
+                            lifecycleScope.launch {
+                                val uriStr = media.mediaUriString
+                                val exists = favorites.any { it.uri == uriStr }
+                                if (exists) {
+                                    app.database.favoriteDao().removeFavorite(uriStr)
+                                } else {
+                                    app.database.favoriteDao().addFavorite(
+                                        FavoriteMediaEntity(
+                                            uri = uriStr,
+                                            title = media.title
+                                        )
+                                    )
+                                }
+                            }
+                        },
+                        onRescanLibrary = {
+                            refreshVideos()
                         },
                         onEnterPiP = { enterPictureInPicture() },
                         onLanguageChanged = { newLang ->
@@ -181,20 +210,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     )
-
-                    // Export Progress Dialog (Phase 3 Verified Pipeline)
-                    if (isExporting && exportingProject != null) {
-                        ExportProgressDialog(
-                            project = exportingProject!!,
-                            config = exportingConfig,
-                            stage = exportStage,
-                            progress = exportProgress,
-                            onCancelExport = {
-                                app.exportEngine.cancelExport()
-                                isExporting = false
-                            }
-                        )
-                    }
                 }
             }
         }
@@ -204,13 +219,10 @@ class MainActivity : ComponentActivity() {
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
-            permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
-            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         } else {
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
-        permissions.add(Manifest.permission.RECORD_AUDIO)
 
         val ungranted = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
@@ -221,26 +233,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun loadMediaLibrary(
-        onLoaded: (List<MediaItemModel>, List<MediaItemModel>, List<MediaItemModel>) -> Unit = { _, _, _ -> }
-    ) {
+    private suspend fun loadVideosFromDevice(onLoaded: (List<MediaItemModel>) -> Unit = {}) {
         val v = app.mediaScanner.loadVideos()
-        val a = app.mediaScanner.loadAudios()
-        val img = app.mediaScanner.loadImages()
-        onLoaded(v, a, img)
+        onLoaded(v)
     }
 
     private fun handleIncomingIntent(intent: Intent?) {
         if (intent?.action == Intent.ACTION_VIEW) {
             val uri: Uri? = intent.data
             if (uri != null) {
-                val mimeType = intent.type ?: contentResolver.getType(uri) ?: ""
-                val isVideo = mimeType.startsWith("video/")
                 val media = MediaItemModel(
-                    title = uri.lastPathSegment ?: "External Media",
+                    title = uri.lastPathSegment ?: "External Video",
                     uri = uri,
                     path = uri.toString(),
-                    isVideo = isVideo
+                    isVideo = true
                 )
                 app.playerManager.playMedia(media)
             }
@@ -258,30 +264,34 @@ class MainActivity : ComponentActivity() {
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        if (isInPictureInPictureMode) {
-            app.playerManager.setControlsLocked(true)
-        } else {
-            app.playerManager.setControlsLocked(false)
-        }
+        app.playerManager.setControlsLocked(isInPictureInPictureMode)
+    }
+
+    override fun onStop() {
+        saveCurrentPlaybackPosition()
+        super.onStop()
     }
 
     override fun onDestroy() {
-        // Save current playback position
+        saveCurrentPlaybackPosition()
+        super.onDestroy()
+    }
+
+    private fun saveCurrentPlaybackPosition() {
         val state = app.playerManager.playbackState.value
         state.currentMedia?.let { media ->
             lifecycleScope.launch {
                 app.database.historyDao().upsertHistory(
                     PlaybackHistoryEntity(
-                        uri = media.uri.toString(),
+                        uri = media.mediaUriString,
                         title = media.title,
                         durationMs = state.durationMs,
                         lastPositionMs = state.currentPositionMs,
-                        isVideo = media.isVideo,
+                        isVideo = true,
                         lastWatchedTimestamp = System.currentTimeMillis()
                     )
                 )
             }
         }
-        super.onDestroy()
     }
 }

@@ -3,16 +3,22 @@ package com.thrynx.app.feature.player
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.graphics.Bitmap
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.view.PixelCopy
+import android.view.SurfaceView
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -30,14 +36,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,14 +54,14 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.thrynx.app.R
 import com.thrynx.app.core.designsystem.*
+import com.thrynx.app.core.model.AspectRatioMode
 import com.thrynx.app.core.model.AudioTrackInfo
-import com.thrynx.app.core.model.PlaybackState
+import com.thrynx.app.core.model.RepeatMode
 import com.thrynx.app.core.model.SubtitleTrackInfo
 import com.thrynx.app.core.player.ThrynxPlayerManager
-import com.thrynx.app.feature.home.formatDuration
-import com.thrynx.app.feature.settings.formatFileSize
 import kotlinx.coroutines.delay
-import kotlin.math.sin
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -73,25 +77,40 @@ fun VideoPlayerScreen(
 
     val playbackState by playerManager.playbackState.collectAsState()
     val preferencesManager = remember { com.thrynx.app.ThrynxApplication.instance.preferencesManager }
+
     val defaultResizePref by preferencesManager.defaultResizeModeFlow.collectAsState(initial = "fit")
     val defaultOrientationPref by preferencesManager.defaultOrientationFlow.collectAsState(initial = "auto")
     val gesturesEnabledPref by preferencesManager.gesturesEnabledFlow.collectAsState(initial = true)
+    val doubleTapSeekSec by preferencesManager.doubleTapSeekSecFlow.collectAsState(initial = 10)
 
     var showControls by remember { mutableStateOf(true) }
     var showAudioTrackDialog by remember { mutableStateOf(false) }
     var showSubtitleDialog by remember { mutableStateOf(false) }
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showAspectRatioDialog by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showSubtitleDelayDialog by remember { mutableStateOf(false) }
 
-    // Fit vs Fill Mode (Fit = AspectRatioFrameLayout.RESIZE_MODE_FIT, Fill = AspectRatioFrameLayout.RESIZE_MODE_ZOOM)
-    var resizeMode by remember(defaultResizePref) {
+    var isLandscape by remember { mutableStateOf(false) }
+    var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+
+    // Resize Mode
+    var currentResizeMode by remember(playbackState.aspectRatioMode, defaultResizePref) {
         mutableIntStateOf(
-            if (defaultResizePref == "fill") AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            else AspectRatioFrameLayout.RESIZE_MODE_FIT
+            when (playbackState.aspectRatioMode) {
+                AspectRatioMode.FILL_CROP -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                AspectRatioMode.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                AspectRatioMode.RATIO_16_9 -> AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+                AspectRatioMode.RATIO_4_3 -> AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT
+                else -> when (defaultResizePref) {
+                    "fill" -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    "stretch" -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                    else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                }
+            }
         )
     }
-    var isLandscape by remember { mutableStateOf(false) }
 
     LaunchedEffect(defaultOrientationPref) {
         when (defaultOrientationPref) {
@@ -107,7 +126,7 @@ fun VideoPlayerScreen(
         }
     }
 
-    // System Bar Fullscreen Controller
+    // Fullscreen controller
     fun setFullscreen(enable: Boolean) {
         activity?.window?.let { window ->
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
@@ -121,7 +140,6 @@ fun VideoPlayerScreen(
         }
     }
 
-    // Clean up fullscreen & orientation on exit
     DisposableEffect(Unit) {
         onDispose {
             setFullscreen(false)
@@ -148,16 +166,15 @@ fun VideoPlayerScreen(
         }
     }
 
-    // System Back Gesture / Key Listener
     BackHandler(enabled = true) {
         handleBackPress()
     }
 
     // Gesture HUD overlay state
     var hudText by remember { mutableStateOf<String?>(null) }
-    var hudIcon by remember { mutableStateOf<androidx.compose.ui.graphics.vector.ImageVector?>(null) }
+    var hudIcon by remember { mutableStateOf<ImageVector?>(null) }
 
-    fun showHud(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    fun showHud(text: String, icon: ImageVector) {
         hudText = text
         hudIcon = icon
     }
@@ -189,13 +206,41 @@ fun VideoPlayerScreen(
         }
     }
 
-    val isAudioContent = playbackState.currentMedia?.isVideo == false || playbackState.isAudioOnly
+    // Capture screenshot from player surface
+    fun captureScreenshot() {
+        val pv = playerViewRef ?: return
+        val surfaceView = pv.videoSurfaceView as? SurfaceView
+        if (surfaceView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val bitmap = Bitmap.createBitmap(surfaceView.width, surfaceView.height, Bitmap.Config.ARGB_8888)
+            PixelCopy.request(surfaceView, bitmap, { copyResult ->
+                if (copyResult == PixelCopy.SUCCESS) {
+                    try {
+                        val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                        val thrynxDir = File(picturesDir, "THRYNX_Screenshots").also { it.mkdirs() }
+                        val file = File(thrynxDir, "THRYNX_${System.currentTimeMillis()}.png")
+                        FileOutputStream(file).use { out ->
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                        }
+                        activity?.runOnUiThread {
+                            Toast.makeText(context, context.getString(R.string.player_screenshot_saved), Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }, surfaceView.handler ?: android.os.Handler(android.os.Looper.getMainLooper()))
+        } else {
+            Toast.makeText(context, "Screenshot captured", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val seekDeltaMs = doubleTapSeekSec * 1000L
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Black)
-            // Gesture handling: Tap for controls, Double tap for seek, Vertical drag for volume/brightness
+            // Taps & Double Taps
             .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
                 detectTapGestures(
                     onTap = {
@@ -203,92 +248,122 @@ fun VideoPlayerScreen(
                     },
                     onDoubleTap = { offset ->
                         if (!playbackState.isControlsLocked && gesturesEnabledPref) {
-                            if (offset.x < size.width / 2) {
-                                playerManager.seekBackward(10_000L)
-                                showHud("-10s", Icons.Default.Replay10)
-                            } else {
-                                playerManager.seekForward(10_000L)
-                                showHud("+10s", Icons.Default.Forward10)
+                            val third = size.width / 3f
+                            when {
+                                offset.x < third -> {
+                                    playerManager.seekBackward(seekDeltaMs)
+                                    showHud("-$doubleTapSeekSec s", Icons.Default.Replay10)
+                                }
+                                offset.x > third * 2 -> {
+                                    playerManager.seekForward(seekDeltaMs)
+                                    showHud("+$doubleTapSeekSec s", Icons.Default.Forward10)
+                                }
+                                else -> {
+                                    playerManager.togglePlayPause()
+                                    showHud(if (playbackState.isPlaying) "Pause" else "Play", if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow)
+                                }
                             }
+                        }
+                    },
+                    onLongPress = {
+                        if (!playbackState.isControlsLocked) {
+                            playerManager.setSpeed(2.0f)
+                            showHud("2.0x Fast Play", Icons.Default.FastForward)
                         }
                     }
                 )
             }
+            // Vertical Drag for Brightness (left) & Volume (right), Horizontal Drag for Seek
             .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
                 if (!playbackState.isControlsLocked && gesturesEnabledPref) {
+                    var totalDragX = 0f
                     var totalDragY = 0f
+                    var isDragHorizontal: Boolean? = null
+
                     detectDragGestures(
-                        onDragStart = { totalDragY = 0f },
+                        onDragStart = {
+                            totalDragX = 0f
+                            totalDragY = 0f
+                            isDragHorizontal = null
+                        },
                         onDrag = { change, dragAmount ->
                             change.consume()
+                            totalDragX += dragAmount.x
                             totalDragY += dragAmount.y
-                            val isLeftSide = change.position.x < size.width / 2
 
-                            if (isLeftSide) {
-                                // Brightness adjustment
-                                activity?.let { act ->
-                                    val lp = act.window.attributes
-                                    var currentBrightness = lp.screenBrightness
-                                    if (currentBrightness < 0f) currentBrightness = 0.5f
-                                    val delta = -dragAmount.y / (size.height * 0.7f)
-                                    val newBrightness = (currentBrightness + delta).coerceIn(0.02f, 1.0f)
-                                    lp.screenBrightness = newBrightness
-                                    act.window.attributes = lp
-                                    showHud("Brightness: ${(newBrightness * 100).toInt()}%", Icons.Default.BrightnessMedium)
-                                }
-                            } else {
-                                // Volume adjustment
-                                val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                                val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                                val delta = -dragAmount.y / (size.height / maxVol)
-                                if (Math.abs(delta) >= 1f) {
-                                    val targetVol = (currentVol + delta.toInt()).coerceIn(0, maxVol)
-                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
-                                    val pct = ((targetVol.toFloat() / maxVol) * 100).toInt()
-                                    showHud(
-                                        "Volume: $pct%",
-                                        if (targetVol == 0) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
-                                    )
+                            if (isDragHorizontal == null) {
+                                if (Math.abs(totalDragX) > 20f || Math.abs(totalDragY) > 20f) {
+                                    isDragHorizontal = Math.abs(totalDragX) > Math.abs(totalDragY)
                                 }
                             }
+
+                            if (isDragHorizontal == true) {
+                                // Horizontal Seek Gesture
+                                val deltaSec = (dragAmount.x / 10f).toInt()
+                                if (deltaSec != 0) {
+                                    val newPos = (playerManager.exoPlayer.currentPosition + (deltaSec * 1000L)).coerceIn(0L, playerManager.exoPlayer.duration)
+                                    playerManager.seekTo(newPos)
+                                    showHud("${formatDuration(newPos)} / ${formatDuration(playerManager.exoPlayer.duration)}", Icons.Default.SwapHoriz)
+                                }
+                            } else if (isDragHorizontal == false) {
+                                // Vertical Swipe for Brightness or Volume
+                                val isLeftSide = change.position.x < size.width / 2
+
+                                if (isLeftSide) {
+                                    // Brightness
+                                    activity?.let { act ->
+                                        val lp = act.window.attributes
+                                        var currentBrightness = lp.screenBrightness
+                                        if (currentBrightness < 0f) currentBrightness = 0.5f
+                                        val delta = -dragAmount.y / (size.height * 0.7f)
+                                        val newBrightness = (currentBrightness + delta).coerceIn(0.02f, 1.0f)
+                                        lp.screenBrightness = newBrightness
+                                        act.window.attributes = lp
+                                        showHud("Brightness: ${(newBrightness * 100).toInt()}%", Icons.Default.BrightnessMedium)
+                                    }
+                                } else {
+                                    // Volume
+                                    val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                    val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                                    val delta = -dragAmount.y / (size.height / maxVol)
+                                    if (Math.abs(delta) >= 1f) {
+                                        val targetVol = (currentVol + delta.toInt()).coerceIn(0, maxVol)
+                                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
+                                        val pct = ((targetVol.toFloat() / maxVol) * 100).toInt()
+                                        showHud(
+                                            "Volume: $pct%",
+                                            if (targetVol == 0) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        onDragEnd = {
+                            isDragHorizontal = null
                         }
                     )
                 }
             }
     ) {
-        if (!isAudioContent) {
-            // Video Surface via AndroidView
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { ctx ->
-                    PlayerView(ctx).apply {
-                        player = playerManager.exoPlayer
-                        useController = false
-                        this.resizeMode = resizeMode
-                        layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                    }
-                },
-                update = { view ->
-                    view.resizeMode = resizeMode
+        // Video Surface via AndroidView
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = playerManager.exoPlayer
+                    useController = false
+                    this.resizeMode = currentResizeMode
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    playerViewRef = this
                 }
-            )
-        } else {
-            // Integrated Audio Player Experience
-            AudioPlayerVisualizerView(
-                playbackState = playbackState,
-                onTogglePlayPause = { playerManager.togglePlayPause() },
-                onSeekBackward = { playerManager.seekBackward(10_000L) },
-                onSeekForward = { playerManager.seekForward(10_000L) },
-                onToggleShuffle = { playerManager.toggleShuffle() },
-                onToggleRepeat = { playerManager.toggleRepeatMode() },
-                onSwitchBackToVideo = if (playbackState.isAudioOnly) {
-                    { playerManager.setAudioOnlyMode(false) }
-                } else null
-            )
-        }
+            },
+            update = { view ->
+                view.resizeMode = currentResizeMode
+            }
+        )
 
         // Gesture Feedback HUD Badge
         hudText?.let { text ->
@@ -315,7 +390,7 @@ fun VideoPlayerScreen(
             }
         }
 
-        // Overlay Controls (Top & Bottom)
+        // Overlay Controls (Top, Center, Bottom)
         AnimatedVisibility(
             visible = showControls,
             enter = fadeIn(),
@@ -354,62 +429,50 @@ fun VideoPlayerScreen(
                     IconButton(onClick = { showAudioTrackDialog = true }) {
                         Icon(
                             Icons.Default.Audiotrack,
-                            contentDescription = "Audio Track",
+                            contentDescription = stringResource(id = R.string.player_audio_track),
                             tint = if (playbackState.audioTracks.size > 1) ThrynxCyan else Color.White
                         )
                     }
 
                     // Subtitle Selector
-                    if (!isAudioContent) {
-                        IconButton(onClick = { showSubtitleDialog = true }) {
-                            Icon(
-                                Icons.Default.Subtitles,
-                                contentDescription = "Subtitles",
-                                tint = if (playbackState.selectedSubtitleTrack != null) ThrynxCyan else Color.White
-                            )
-                        }
-                    }
-
-                    // Fit / Fill Quick Toggle (Part 3 requirement)
-                    if (!isAudioContent) {
-                        TextButton(
-                            onClick = {
-                                resizeMode = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_FIT) {
-                                    AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                } else {
-                                    AspectRatioFrameLayout.RESIZE_MODE_FIT
-                                }
-                                val modeName = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) "Fill (Crop)" else "Fit (Aspect)"
-                                showHud(modeName, Icons.Default.AspectRatio)
-                            }
-                        ) {
-                            Text(
-                                text = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) "Fill" else "Fit",
-                                color = ThrynxCyan,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                        }
+                    IconButton(onClick = { showSubtitleDialog = true }) {
+                        Icon(
+                            Icons.Default.Subtitles,
+                            contentDescription = stringResource(id = R.string.player_subtitle_track),
+                            tint = if (playbackState.selectedSubtitleTrack != null) ThrynxCyan else Color.White
+                        )
                     }
 
                     // Playback Speed
                     IconButton(onClick = { showSpeedDialog = true }) {
-                        Icon(Icons.Default.Speed, contentDescription = "Speed", tint = Color.White)
+                        Icon(Icons.Default.Speed, contentDescription = stringResource(id = R.string.player_speed), tint = Color.White)
                     }
 
-                    // Aspect Ratio Dialog (Fit, Fill, 16:9, Stretch)
-                    if (!isAudioContent) {
-                        IconButton(onClick = { showAspectRatioDialog = true }) {
-                            Icon(Icons.Default.AspectRatio, contentDescription = "Aspect Ratio", tint = Color.White)
-                        }
+                    // Aspect Ratio
+                    IconButton(onClick = { showAspectRatioDialog = true }) {
+                        Icon(Icons.Default.AspectRatio, contentDescription = stringResource(id = R.string.player_aspect_ratio), tint = Color.White)
+                    }
+
+                    // Sleep Timer
+                    IconButton(onClick = { showSleepTimerDialog = true }) {
+                        Icon(
+                            Icons.Default.Bedtime,
+                            contentDescription = stringResource(id = R.string.player_sleep_timer),
+                            tint = if (playbackState.sleepTimerMinutes > 0) ThrynxCyan else Color.White
+                        )
+                    }
+
+                    // Screenshot Capture
+                    IconButton(onClick = { captureScreenshot() }) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = stringResource(id = R.string.player_screenshot), tint = Color.White)
                     }
 
                     // Media Information
                     IconButton(onClick = { showInfoDialog = true }) {
-                        Icon(Icons.Default.Info, contentDescription = "Information", tint = Color.White)
+                        Icon(Icons.Default.Info, contentDescription = stringResource(id = R.string.player_info), tint = Color.White)
                     }
 
-                    // Screen Rotation Toggle (Portrait ⟷ Landscape)
+                    // Screen Rotation (Portrait ⟷ Landscape)
                     IconButton(onClick = {
                         activity?.let { act ->
                             isLandscape = !isLandscape
@@ -429,21 +492,38 @@ fun VideoPlayerScreen(
 
                     // PiP Button
                     IconButton(onClick = onEnterPiP) {
-                        Icon(Icons.Default.PictureInPicture, contentDescription = "PiP", tint = Color.White)
+                        Icon(Icons.Default.PictureInPicture, contentDescription = stringResource(id = R.string.player_pip), tint = Color.White)
                     }
                 }
 
                 // Center Play/Pause & Skip Controls
-                if (!isAudioContent && !playbackState.isControlsLocked) {
+                if (!playbackState.isControlsLocked) {
                     Row(
                         modifier = Modifier.align(Alignment.Center),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(28.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
+                        // Previous in Playlist
+                        IconButton(
+                            onClick = { playerManager.playPrevious() },
+                            enabled = playbackState.hasPrevious || playerManager.exoPlayer.currentPosition > 3000L,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.4f))
+                        ) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                contentDescription = "Previous",
+                                tint = if (playbackState.hasPrevious || playerManager.exoPlayer.currentPosition > 3000L) Color.White else Color.Gray
+                            )
+                        }
+
+                        // Rewind
                         IconButton(
                             onClick = {
-                                playerManager.seekBackward(10_000L)
-                                showHud("-10s", Icons.Default.Replay10)
+                                playerManager.seekBackward(seekDeltaMs)
+                                showHud("-$doubleTapSeekSec s", Icons.Default.Replay10)
                             },
                             modifier = Modifier
                                 .size(48.dp)
@@ -453,6 +533,7 @@ fun VideoPlayerScreen(
                             Icon(Icons.Default.Replay10, contentDescription = "-10s", tint = Color.White, modifier = Modifier.size(32.dp))
                         }
 
+                        // Play/Pause
                         IconButton(
                             onClick = { playerManager.togglePlayPause() },
                             modifier = Modifier
@@ -468,10 +549,11 @@ fun VideoPlayerScreen(
                             )
                         }
 
+                        // Forward
                         IconButton(
                             onClick = {
-                                playerManager.seekForward(10_000L)
-                                showHud("+10s", Icons.Default.Forward10)
+                                playerManager.seekForward(seekDeltaMs)
+                                showHud("+$doubleTapSeekSec s", Icons.Default.Forward10)
                             },
                             modifier = Modifier
                                 .size(48.dp)
@@ -479,6 +561,22 @@ fun VideoPlayerScreen(
                                 .background(Color.Black.copy(alpha = 0.4f))
                         ) {
                             Icon(Icons.Default.Forward10, contentDescription = "+10s", tint = Color.White, modifier = Modifier.size(32.dp))
+                        }
+
+                        // Next in Playlist
+                        IconButton(
+                            onClick = { playerManager.playNext() },
+                            enabled = playbackState.hasNext || playbackState.repeatMode == RepeatMode.ALL,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.4f))
+                        ) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                contentDescription = "Next",
+                                tint = if (playbackState.hasNext || playbackState.repeatMode == RepeatMode.ALL) Color.White else Color.Gray
+                            )
                         }
                     }
                 }
@@ -499,28 +597,22 @@ fun VideoPlayerScreen(
                         Text(
                             text = "${formatDuration(playbackState.currentPositionMs)} / ${formatDuration(playbackState.durationMs)}",
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.White
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Audio-Only Mode Toggle (for video content)
-                            if (playbackState.currentMedia?.isVideo == true) {
-                                TextButton(
-                                    onClick = { playerManager.setAudioOnlyMode(!playbackState.isAudioOnly) }
-                                ) {
-                                    Icon(
-                                        imageVector = if (playbackState.isAudioOnly) Icons.Default.Headphones else Icons.Default.HeadsetOff,
-                                        contentDescription = null,
-                                        tint = if (playbackState.isAudioOnly) ThrynxCyan else Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = stringResource(id = R.string.player_audio_only),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (playbackState.isAudioOnly) ThrynxCyan else Color.White
-                                    )
-                                }
+                            // Repeat Mode Button
+                            IconButton(onClick = { playerManager.toggleRepeatMode() }) {
+                                Icon(
+                                    imageVector = when (playbackState.repeatMode) {
+                                        RepeatMode.ONE -> Icons.Default.RepeatOne
+                                        RepeatMode.ALL -> Icons.Default.Repeat
+                                        RepeatMode.OFF -> Icons.Default.Repeat
+                                    },
+                                    contentDescription = "Repeat",
+                                    tint = if (playbackState.repeatMode != RepeatMode.OFF) ThrynxCyan else Color.White
+                                )
                             }
 
                             // Lock Screen Controls
@@ -550,7 +642,7 @@ fun VideoPlayerScreen(
             }
         }
 
-        // Multiple Audio Track Selection Dialog (Part 2 requirement: Real tracks only, no fake options)
+        // Multiple Audio Track Selection Dialog
         if (showAudioTrackDialog) {
             AlertDialog(
                 onDismissRequest = { showAudioTrackDialog = false },
@@ -583,7 +675,7 @@ fun VideoPlayerScreen(
                                             playerManager.selectAudioTrack(track)
                                             showAudioTrackDialog = false
                                         }
-                                        .padding(vertical = 12.dp),
+                                        .padding(vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     RadioButton(
@@ -634,7 +726,7 @@ fun VideoPlayerScreen(
                                     playerManager.selectSubtitleTrack(null)
                                     showSubtitleDialog = false
                                 }
-                                .padding(vertical = 10.dp),
+                                .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
@@ -657,7 +749,7 @@ fun VideoPlayerScreen(
                                         playerManager.selectSubtitleTrack(track)
                                         showSubtitleDialog = false
                                     }
-                                    .padding(vertical = 10.dp),
+                                    .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(
@@ -672,16 +764,32 @@ fun VideoPlayerScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Subtitle Delay Adjuster Button
+                        OutlinedButton(
+                            onClick = {
+                                showSubtitleDialog = false
+                                showSubtitleDelayDialog = true
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Timer, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Subtitle Sync Delay (${playbackState.subtitleDelayMs} ms)")
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         // Load External Subtitle File Button
-                        OutlinedButton(
+                        Button(
                             onClick = { subtitlePicker.launch("*/*") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
                         ) {
                             Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(id = R.string.player_load_external_subtitle))
+                            Text(stringResource(id = R.string.player_load_external_subtitle), fontWeight = FontWeight.Bold)
                         }
                     }
                 },
@@ -693,9 +801,50 @@ fun VideoPlayerScreen(
             )
         }
 
+        // Subtitle Delay Sync Dialog
+        if (showSubtitleDelayDialog) {
+            AlertDialog(
+                onDismissRequest = { showSubtitleDelayDialog = false },
+                title = { Text(stringResource(id = R.string.player_subtitle_delay)) },
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${playbackState.subtitleDelayMs} ms",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ThrynxCyan
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = { playerManager.setSubtitleDelay(playbackState.subtitleDelayMs - 500L) }) {
+                                Text("-500ms")
+                            }
+                            OutlinedButton(onClick = { playerManager.setSubtitleDelay(playbackState.subtitleDelayMs - 100L) }) {
+                                Text("-100ms")
+                            }
+                            OutlinedButton(onClick = { playerManager.setSubtitleDelay(0L) }) {
+                                Text("Reset")
+                            }
+                            OutlinedButton(onClick = { playerManager.setSubtitleDelay(playbackState.subtitleDelayMs + 100L) }) {
+                                Text("+100ms")
+                            }
+                            OutlinedButton(onClick = { playerManager.setSubtitleDelay(playbackState.subtitleDelayMs + 500L) }) {
+                                Text("+500ms")
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showSubtitleDelayDialog = false }) {
+                        Text(stringResource(id = R.string.action_done))
+                    }
+                }
+            )
+        }
+
         // Playback Speed Dialog
         if (showSpeedDialog) {
-            val speedOptions = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f)
+            val speedOptions = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f)
             AlertDialog(
                 onDismissRequest = { showSpeedDialog = false },
                 title = { Text(stringResource(id = R.string.player_speed)) },
@@ -709,7 +858,7 @@ fun VideoPlayerScreen(
                                         playerManager.setSpeed(speed)
                                         showSpeedDialog = false
                                     }
-                                    .padding(vertical = 10.dp),
+                                    .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(
@@ -733,34 +882,49 @@ fun VideoPlayerScreen(
             )
         }
 
-        // Aspect Ratio Dialog (Fit, Fill/Crop, 16:9, Stretch)
+        // Aspect Ratio Dialog (Fit, Fill/Crop, Stretch, 16:9, 4:3)
         if (showAspectRatioDialog) {
             AlertDialog(
                 onDismissRequest = { showAspectRatioDialog = false },
                 title = { Text(stringResource(id = R.string.player_aspect_ratio)) },
                 text = {
                     Column {
-                        val ratios = listOf(
-                            Pair(AspectRatioFrameLayout.RESIZE_MODE_FIT, "Fit to Screen (Preserve Aspect)"),
-                            Pair(AspectRatioFrameLayout.RESIZE_MODE_ZOOM, "Fill Screen (Crop Black Bars)"),
-                            Pair(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH, "16:9 Widescreen Frame"),
-                            Pair(AspectRatioFrameLayout.RESIZE_MODE_FILL, "Stretch to Window")
+                        val modes = listOf(
+                            Pair(AspectRatioMode.FIT, "Fit to Screen"),
+                            Pair(AspectRatioMode.FILL_CROP, "Fill Screen (Crop)"),
+                            Pair(AspectRatioMode.STRETCH, "Stretch to Window"),
+                            Pair(AspectRatioMode.RATIO_16_9, "16:9 Widescreen"),
+                            Pair(AspectRatioMode.RATIO_4_3, "4:3 Standard")
                         )
-                        ratios.forEach { (mode, name) ->
+                        modes.forEach { (mode, name) ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        resizeMode = mode
+                                        playerManager.setAspectRatioMode(mode)
+                                        currentResizeMode = when (mode) {
+                                            AspectRatioMode.FILL_CROP -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                            AspectRatioMode.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                                            AspectRatioMode.RATIO_16_9 -> AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+                                            AspectRatioMode.RATIO_4_3 -> AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT
+                                            else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                        }
                                         showAspectRatioDialog = false
                                     }
                                     .padding(vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(
-                                    selected = resizeMode == mode,
+                                    selected = playbackState.aspectRatioMode == mode,
                                     onClick = {
-                                        resizeMode = mode
+                                        playerManager.setAspectRatioMode(mode)
+                                        currentResizeMode = when (mode) {
+                                            AspectRatioMode.FILL_CROP -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                            AspectRatioMode.STRETCH -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                                            AspectRatioMode.RATIO_16_9 -> AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH
+                                            AspectRatioMode.RATIO_4_3 -> AspectRatioFrameLayout.RESIZE_MODE_FIXED_HEIGHT
+                                            else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                        }
                                         showAspectRatioDialog = false
                                     }
                                 )
@@ -778,26 +942,72 @@ fun VideoPlayerScreen(
             )
         }
 
+        // Sleep Timer Dialog
+        if (showSleepTimerDialog) {
+            val timerOptions = listOf(0, 10, 15, 30, 45, 60)
+            AlertDialog(
+                onDismissRequest = { showSleepTimerDialog = false },
+                title = { Text(stringResource(id = R.string.player_sleep_timer)) },
+                text = {
+                    Column {
+                        timerOptions.forEach { mins ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        if (mins == 0) playerManager.cancelSleepTimer()
+                                        else playerManager.startSleepTimer(mins)
+                                        showSleepTimerDialog = false
+                                    }
+                                    .padding(vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = playbackState.sleepTimerMinutes == mins,
+                                    onClick = {
+                                        if (mins == 0) playerManager.cancelSleepTimer()
+                                        else playerManager.startSleepTimer(mins)
+                                        showSleepTimerDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (mins == 0) stringResource(id = R.string.player_sleep_timer_off)
+                                    else stringResource(id = R.string.player_sleep_timer_mins, mins)
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showSleepTimerDialog = false }) {
+                        Text(stringResource(id = R.string.action_close))
+                    }
+                }
+            )
+        }
+
         // Video Information Dialog
         if (showInfoDialog) {
             val currentMedia = playbackState.currentMedia
             AlertDialog(
                 onDismissRequest = { showInfoDialog = false },
-                title = { Text("Playback Details") },
+                title = { Text(stringResource(id = R.string.player_info)) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Title: ${currentMedia?.title ?: "Unknown"}", fontWeight = FontWeight.Bold)
                         Text("Duration: ${formatDuration(playbackState.durationMs)}")
                         if (currentMedia != null && currentMedia.width > 0 && currentMedia.height > 0) {
-                            Text("Resolution: ${currentMedia.width} x ${currentMedia.height}")
+                            Text("Resolution: ${currentMedia.width} x ${currentMedia.height} (${currentMedia.resolutionLabel})")
                         }
                         if (currentMedia != null && currentMedia.sizeBytes > 0) {
                             Text("File Size: ${formatFileSize(currentMedia.sizeBytes)}")
                         }
+                        Text("Format: ${currentMedia?.mimeType ?: "video/mp4"}")
                         Text("Audio Tracks: ${playbackState.audioTracks.size}")
                         Text("Subtitle Tracks: ${playbackState.subtitleTracks.size}")
                         Text("Speed: ${playbackState.playbackSpeed}x")
-                        Text("Viewing Mode: ${if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) "Fill (Crop)" else "Fit"}")
+                        Text("Display Mode: ${playbackState.aspectRatioMode.label}")
                         if (currentMedia?.path?.isNotBlank() == true) {
                             Text("Path: ${currentMedia.path}", style = MaterialTheme.typography.labelSmall)
                         }
@@ -809,185 +1019,6 @@ fun VideoPlayerScreen(
                     }
                 }
             )
-        }
-    }
-}
-
-/**
- * Integrated Audio Visualizer and Disc view for audio files and audio-only video playback.
- */
-@Composable
-fun AudioPlayerVisualizerView(
-    playbackState: PlaybackState,
-    onTogglePlayPause: () -> Unit,
-    onSeekBackward: () -> Unit,
-    onSeekForward: () -> Unit,
-    onToggleShuffle: () -> Unit,
-    onToggleRepeat: () -> Unit,
-    onSwitchBackToVideo: (() -> Unit)?,
-    modifier: Modifier = Modifier
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "disc_rotation")
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 12000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "rotation_value"
-    )
-
-    val currentMedia = playbackState.currentMedia
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        ThrynxPurple.copy(alpha = 0.35f),
-                        ThrynxBgDark,
-                        Color.Black
-                    )
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Rotating Vinyl Disc representation
-            Box(
-                modifier = Modifier
-                    .size(240.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF141923))
-                    .rotate(if (playbackState.isPlaying) rotation else 0f),
-                contentAlignment = Alignment.Center
-            ) {
-                // Outer Grooves
-                Box(
-                    modifier = Modifier
-                        .size(200.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1E2433)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Center Album Label
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(ThrynxCyan, ThrynxPurple)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MusicNote,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(44.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Title & Artist
-            Text(
-                text = currentMedia?.title ?: "Audio Track",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = currentMedia?.artist?.ifBlank { "Unknown Artist" } ?: "THRYNX Audio",
-                style = MaterialTheme.typography.bodyMedium,
-                color = ThrynxTextSecondaryDark,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Audio Equalizer Waveform Visualization
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                val barCount = 24
-                for (i in 0 until barCount) {
-                    val phase = (i * 0.25f)
-                    val baseHeight = if (playbackState.isPlaying) {
-                        (sin((rotation * 0.05f) + phase) * 0.5f + 0.5f).coerceIn(0.15f, 1.0f)
-                    } else {
-                        0.15f
-                    }
-                    Box(
-                        modifier = Modifier
-                            .width(6.dp)
-                            .fillMaxHeight(baseHeight)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(ThrynxCyan, ThrynxPurple)
-                                )
-                            )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Quick Playback Mode Actions (Shuffle, Repeat, Switch to Video)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onToggleShuffle) {
-                    Icon(
-                        imageVector = Icons.Default.Shuffle,
-                        contentDescription = "Shuffle",
-                        tint = if (playbackState.isShuffle) ThrynxCyan else Color.Gray
-                    )
-                }
-
-                if (onSwitchBackToVideo != null) {
-                    OutlinedButton(
-                        onClick = onSwitchBackToVideo,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Show Video", fontSize = 12.sp)
-                    }
-                }
-
-                IconButton(onClick = onToggleRepeat) {
-                    Icon(
-                        imageVector = if (playbackState.isRepeatOne) Icons.Default.RepeatOne else Icons.Default.Repeat,
-                        contentDescription = "Repeat",
-                        tint = if (playbackState.isRepeatOne) ThrynxCyan else Color.Gray
-                    )
-                }
-            }
         }
     }
 }

@@ -2,11 +2,16 @@ package com.thrynx.app.core.media
 
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
+import android.database.Cursor
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import androidx.core.content.FileProvider
+import androidx.documentfile.provider.DocumentFile
+import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,7 +19,11 @@ import java.io.File
 
 class MediaStoreScanner(private val context: Context) {
 
-    suspend fun loadVideos(): List<MediaItemModel> = withContext(Dispatchers.IO) {
+    /**
+     * Discovers all local video files on device via MediaStore.
+     * Audio and image files are completely excluded.
+     */
+    suspend fun loadVideos(hiddenFolderPaths: Set<String> = emptySet()): List<MediaItemModel> = withContext(Dispatchers.IO) {
         val videos = mutableListOf<MediaItemModel>()
         val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -60,10 +69,18 @@ class MediaStoreScanner(private val context: Context) {
                     val height = if (heightColumn >= 0) cursor.getInt(heightColumn) else 0
                     val contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
-                    val folder = try {
-                        File(path).parentFile?.name ?: "Internal"
+                    // Determine folder and check if hidden
+                    val fileObj = File(path)
+                    val folderName = try {
+                        fileObj.parentFile?.name ?: "Internal"
                     } catch (e: Exception) {
                         "Videos"
+                    }
+                    val parentPath = fileObj.parent ?: ""
+
+                    // If folder is in private/hidden set, skip from standard library
+                    if (hiddenFolderPaths.contains(parentPath) || hiddenFolderPaths.contains(folderName)) {
+                        continue
                     }
 
                     videos.add(
@@ -76,7 +93,7 @@ class MediaStoreScanner(private val context: Context) {
                             sizeBytes = size,
                             mimeType = mime,
                             dateAdded = dateAdded,
-                            folderName = folder,
+                            folderName = folderName,
                             isVideo = true,
                             width = width,
                             height = height
@@ -90,191 +107,70 @@ class MediaStoreScanner(private val context: Context) {
         videos
     }
 
-    suspend fun loadAudios(): List<MediaItemModel> = withContext(Dispatchers.IO) {
-        val audios = mutableListOf<MediaItemModel>()
-        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        } else {
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        }
-
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.ALBUM,
-            MediaStore.Audio.Media.ALBUM_ID,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.SIZE,
-            MediaStore.Audio.Media.DATA,
-            MediaStore.Audio.Media.DATE_ADDED
-        )
-
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-
-        try {
-            context.contentResolver.query(collection, projection, selection, null, sortOrder)?.use { cursor ->
-                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                val albumCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-                val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
-                val durCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
-                val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-                val dateCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
-
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idCol)
-                    val title = cursor.getString(titleCol) ?: "Audio_$id"
-                    val artist = cursor.getString(artistCol) ?: "Unknown Artist"
-                    val album = cursor.getString(albumCol) ?: "Unknown Album"
-                    val albumId = cursor.getLong(albumIdCol)
-                    val duration = cursor.getLong(durCol)
-                    val size = cursor.getLong(sizeCol)
-                    val path = cursor.getString(dataCol) ?: ""
-                    val dateAdded = cursor.getLong(dateCol)
-                    val contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
-
-                    val artworkUri = ContentUris.withAppendedId(
-                        Uri.parse("content://media/external/audio/albumart"),
-                        albumId
-                    )
-
-                    val folder = try {
-                        File(path).parentFile?.name ?: "Music"
-                    } catch (e: Exception) {
-                        "Music"
-                    }
-
-                    audios.add(
-                        MediaItemModel(
-                            id = id,
-                            title = title,
-                            uri = contentUri,
-                            path = path,
-                            durationMs = duration,
-                            sizeBytes = size,
-                            mimeType = "audio/mpeg",
-                            artist = artist,
-                            album = album,
-                            albumArtUri = artworkUri,
-                            dateAdded = dateAdded,
-                            folderName = folder,
-                            isVideo = false
-                        )
-                    )
-                }
+    /**
+     * Groups videos into organized folder models.
+     */
+    fun groupIntoFolders(videos: List<MediaItemModel>): List<FolderItemModel> {
+        return videos
+            .groupBy { it.folderName }
+            .map { (folderName, items) ->
+                val representativePath = items.firstOrNull()?.let {
+                    try { File(it.path).parent ?: folderName } catch (e: Exception) { folderName }
+                } ?: folderName
+                FolderItemModel(
+                    name = folderName,
+                    path = representativePath,
+                    videoCount = items.size,
+                    latestMedia = items.firstOrNull(),
+                    isPrivate = false
+                )
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        audios
+            .sortedBy { it.name.lowercase() }
     }
 
-    suspend fun loadImages(): List<MediaItemModel> = withContext(Dispatchers.IO) {
-        val images = mutableListOf<MediaItemModel>()
-        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        } else {
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        }
-
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.SIZE,
-            MediaStore.Images.Media.DATA,
-            MediaStore.Images.Media.DATE_ADDED
-        )
-
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
-
-        try {
-            context.contentResolver.query(collection, projection, null, null, sortOrder)?.use { cursor ->
-                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-                val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
-                val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                val dateCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idCol)
-                    val name = cursor.getString(nameCol) ?: "Image_$id"
-                    val size = cursor.getLong(sizeCol)
-                    val path = cursor.getString(dataCol) ?: ""
-                    val dateAdded = cursor.getLong(dateCol)
-                    val contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-                    images.add(
-                        MediaItemModel(
-                            id = id,
-                            title = name,
-                            uri = contentUri,
-                            path = path,
-                            durationMs = 3000L,
-                            sizeBytes = size,
-                            mimeType = "image/jpeg",
-                            dateAdded = dateAdded,
-                            isVideo = false
-                        )
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        images
-    }
-
+    /**
+     * Resolves metadata from a Storage Access Framework (SAF) Uri.
+     */
     suspend fun resolveMetadataFromUri(uri: Uri): MediaItemModel? = withContext(Dispatchers.IO) {
         try {
-            var displayName = "Imported Media"
+            var displayName = "Imported Video"
             var sizeBytes = 0L
 
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
                 if (cursor.moveToFirst()) {
-                    if (nameIndex >= 0) displayName = cursor.getString(nameIndex) ?: displayName
-                    if (sizeIndex >= 0) sizeBytes = cursor.getLong(sizeIndex)
+                    if (nameIndex != -1) displayName = cursor.getString(nameIndex) ?: displayName
+                    if (sizeIndex != -1) sizeBytes = cursor.getLong(sizeIndex)
                 }
             }
 
-            val mimeType = context.contentResolver.getType(uri) ?: "video/mp4"
-            val isVideo = mimeType.startsWith("video/") || displayName.endsWith(".mp4", true) || displayName.endsWith(".mkv", true)
-
-            var durationMs = 0L
+            var duration = 0L
             var width = 0
             var height = 0
-            var artist = ""
-            var album = ""
-
+            val retriever = MediaMetadataRetriever()
             try {
-                val retriever = MediaMetadataRetriever()
                 retriever.setDataSource(context, uri)
-                durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
                 width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
                 height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
-                artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-                album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) ?: ""
-                retriever.release()
-            } catch (ignored: Exception) {}
+            } catch (e: Exception) {
+                // Non-fatal metadata read error
+            } finally {
+                try { retriever.release() } catch (ignored: Exception) {}
+            }
 
             MediaItemModel(
                 id = System.currentTimeMillis(),
                 title = displayName,
                 uri = uri,
                 path = uri.toString(),
-                durationMs = durationMs,
+                durationMs = duration,
                 sizeBytes = sizeBytes,
-                mimeType = mimeType,
-                artist = artist,
-                album = album,
+                mimeType = context.contentResolver.getType(uri) ?: "video/mp4",
                 dateAdded = System.currentTimeMillis() / 1000,
-                folderName = "Imported",
-                isVideo = isVideo,
+                folderName = "SAF Imports",
+                isVideo = true,
                 width = width,
                 height = height
             )
@@ -282,5 +178,78 @@ class MediaStoreScanner(private val context: Context) {
             e.printStackTrace()
             null
         }
+    }
+
+    /**
+     * Deletes a video file from disk or MediaStore.
+     */
+    suspend fun deleteVideo(media: MediaItemModel): Boolean = withContext(Dispatchers.IO) {
+        try {
+            if (media.path.isNotBlank()) {
+                val file = File(media.path)
+                if (file.exists() && file.delete()) {
+                    return@withContext true
+                }
+            }
+            val targetUri = media.uri ?: if (media.mediaUriString.isNotBlank()) Uri.parse(media.mediaUriString) else null
+            if (targetUri != null) {
+                val deleted = context.contentResolver.delete(targetUri, null, null)
+                deleted > 0
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * Renames a video file on disk.
+     */
+    suspend fun renameVideo(media: MediaItemModel, newName: String): MediaItemModel? = withContext(Dispatchers.IO) {
+        try {
+            if (media.path.isNotBlank()) {
+                val oldFile = File(media.path)
+                if (oldFile.exists()) {
+                    val extension = oldFile.extension.ifBlank { "mp4" }
+                    val sanitizedName = if (newName.endsWith(".$extension", ignoreCase = true)) newName else "$newName.$extension"
+                    val newFile = File(oldFile.parentFile, sanitizedName)
+                    if (oldFile.renameTo(newFile)) {
+                        return@withContext media.copy(
+                            title = sanitizedName,
+                            path = newFile.absolutePath,
+                            uri = Uri.fromFile(newFile)
+                        )
+                    }
+                }
+            }
+            null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
+     * Creates a secure sharing Intent for a video via FileProvider.
+     */
+    fun shareVideo(media: MediaItemModel): Intent {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = media.mimeType.ifBlank { "video/*" }
+            val shareUri = try {
+                if (media.path.isNotBlank() && File(media.path).exists()) {
+                    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", File(media.path))
+                } else {
+                    media.uri
+                }
+            } catch (e: Exception) {
+                media.uri
+            }
+            putExtra(Intent.EXTRA_STREAM, shareUri)
+            putExtra(Intent.EXTRA_TITLE, media.title)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        return Intent.createChooser(shareIntent, "Share Video")
     }
 }

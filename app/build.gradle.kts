@@ -39,6 +39,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs += listOf(
@@ -84,14 +88,14 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // AndroidX Media3 (ExoPlayer, Transformer, Session, UI, Effects)
+    // AndroidX Media3 (ExoPlayer, Session, UI, HLS, DASH)
     val media3Version = "1.2.1"
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-ui:$media3Version")
     implementation("androidx.media3:media3-session:$media3Version")
     implementation("androidx.media3:media3-common:$media3Version")
-    implementation("androidx.media3:media3-transformer:$media3Version")
-    implementation("androidx.media3:media3-effect:$media3Version")
+    implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
+    implementation("androidx.media3:media3-exoplayer-dash:$media3Version")
 
     // Room Database
     val roomVersion = "2.6.1"

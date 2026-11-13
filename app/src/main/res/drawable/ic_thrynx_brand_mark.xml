@@ -4,13 +4,20 @@
     android:height="48dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
+    <!-- Top Bar -->
     <path
         android:fillColor="#00E5FF"
-        android:pathData="M12,12 L36,12 L28,24 L16,24 Z" />
+        android:pathData="M12,12 L36,12 L33,18 L15,18 Z" />
+    <!-- Center Column -->
     <path
         android:fillColor="#2979FF"
-        android:pathData="M20,22 L36,22 L24,40 L16,32 Z" />
+        android:pathData="M21,18 L27,18 L22,36 L17,31 Z" />
+    <!-- Forward Play Wedge -->
     <path
         android:fillColor="#00E5FF"
-        android:pathData="M24,24 L36,34 L28,42 L20,34 Z" />
+        android:pathData="M26,18 L38,25 L24,36 L21,31 Z" />
+    <!-- Specular Highlight -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,20 L35,25 L27,26 Z" />
 </vector>

@@ -18,44 +18,57 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.thrynx.app.R
+import com.thrynx.app.core.database.FavoriteMediaEntity
 import com.thrynx.app.core.database.PlaybackHistoryEntity
 import com.thrynx.app.core.designsystem.*
+import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
-import com.thrynx.app.core.model.ProjectModel
 
 @Composable
 fun HomeScreen(
-    recentProjects: List<ProjectModel>,
-    recentMedia: List<MediaItemModel>,
-    lastWatchedHistory: PlaybackHistoryEntity?,
-    onOpenMedia: (MediaItemModel) -> Unit,
-    onOpenProject: (ProjectModel) -> Unit,
-    onNewProject: () -> Unit,
-    onNewSlideshow: () -> Unit,
-    onNavigateToLibrary: () -> Unit,
-    onNavigateToOnline: () -> Unit = {},
+    videos: List<MediaItemModel>,
+    folders: List<FolderItemModel>,
+    recentHistory: List<PlaybackHistoryEntity>,
+    favorites: List<FavoriteMediaEntity>,
+    onOpenMedia: (MediaItemModel, Long) -> Unit,
+    onOpenFolder: (FolderItemModel) -> Unit,
+    onNavigateToVideos: () -> Unit,
+    onOpenStreamUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var showStreamDialog by remember { mutableStateOf(false) }
+    var streamUrlInput by remember { mutableStateOf("") }
 
-    val filteredMedia = remember(recentMedia, searchQuery) {
-        if (searchQuery.isBlank()) recentMedia
-        else recentMedia.filter { it.title.contains(searchQuery, ignoreCase = true) }
+    val lastWatched = recentHistory.firstOrNull()
+
+    // Map favorites to media items
+    val favoriteVideos = remember(favorites, videos) {
+        val favUris = favorites.map { it.uri }.toSet()
+        videos.filter { favUris.contains(it.mediaUriString) }
+    }
+
+    // Filtered search results
+    val searchResults = remember(videos, searchQuery) {
+        if (searchQuery.isBlank()) emptyList()
+        else videos.filter { it.title.contains(searchQuery, ignoreCase = true) }
     }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 100.dp)
+        contentPadding = PaddingValues(bottom = 110.dp)
     ) {
         // Brand Header Banner
         item {
@@ -65,171 +78,188 @@ fun HomeScreen(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                ThrynxCobalt.copy(alpha = 0.25f),
+                                ThrynxCobalt.copy(alpha = 0.22f),
                                 MaterialTheme.colorScheme.background
                             )
                         )
                     )
-                    .padding(horizontal = 20.dp, vertical = 24.dp)
+                    .padding(horizontal = 20.dp, vertical = 20.dp)
             ) {
                 Column {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Box(
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(ThrynxCardDark),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_thrynx_brand_mark),
+                                    contentDescription = null,
+                                    tint = ThrynxCyan,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(id = R.string.app_name),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ThrynxCyan
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.app_tagline),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    letterSpacing = 1.5.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+
+                        // Network Stream Action Icon
+                        IconButton(
+                            onClick = { showStreamDialog = true },
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(ThrynxCardDark),
-                            contentAlignment = Alignment.Center
+                                .clip(CircleShape)
+                                .background(ThrynxCyan.copy(alpha = 0.15f))
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_thrynx_brand_mark),
-                                contentDescription = null,
-                                tint = ThrynxCyan,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = stringResource(id = R.string.app_name),
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = ThrynxCyan
-                            )
-                            Text(
-                                text = stringResource(id = R.string.app_tagline),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                letterSpacing = 2.sp
+                                Icons.Default.Link,
+                                contentDescription = stringResource(id = R.string.home_open_network_stream),
+                                tint = ThrynxCyan
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Search Field
+                    // Video Search Input
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text(stringResource(id = R.string.home_search_hint)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = ThrynxCyan) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                }
+                            }
+                        },
                         shape = RoundedCornerShape(14.dp),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedBorderColor = ThrynxCyan
                         )
                     )
                 }
             }
         }
 
-        // Quick Studio Action Hub
-        item {
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    text = stringResource(id = R.string.home_quick_actions),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    QuickActionButton(
-                        title = stringResource(id = R.string.home_new_project),
-                        icon = Icons.Default.VideoCall,
-                        accentColor = ThrynxCyan,
-                        onClick = onNewProject,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        title = stringResource(id = R.string.home_create_slideshow),
-                        icon = Icons.Default.PhotoLibrary,
-                        accentColor = ThrynxCoral,
-                        onClick = onNewSlideshow,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        title = stringResource(id = R.string.nav_library),
-                        icon = Icons.Default.Folder,
-                        accentColor = ThrynxPurple,
-                        onClick = onNavigateToLibrary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    QuickActionButton(
-                        title = stringResource(id = R.string.nav_online),
-                        icon = Icons.Default.Language,
-                        accentColor = ThrynxAmber,
-                        onClick = onNavigateToOnline,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
-        // Continue Watching Card (if history exists)
-        if (lastWatchedHistory != null) {
+        // Live Search Results
+        if (searchQuery.isNotBlank()) {
             item {
-                Spacer(modifier = Modifier.height(20.dp))
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(
-                        text = stringResource(id = R.string.home_continue_watching),
+                        text = "Search Results (${searchResults.size})",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold,
+                        color = ThrynxCyan
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    if (searchResults.isEmpty()) {
+                        Text(
+                            text = "No videos matching \"$searchQuery\"",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
 
-                    ThrynxCard(
-                        onClick = {
-                            onOpenMedia(
-                                MediaItemModel(
-                                    title = lastWatchedHistory.title,
-                                    uri = Uri.parse(lastWatchedHistory.uri),
-                                    path = lastWatchedHistory.uri,
-                                    durationMs = lastWatchedHistory.durationMs,
-                                    lastPositionMs = lastWatchedHistory.lastPositionMs,
-                                    isVideo = lastWatchedHistory.isVideo
-                                )
-                            )
-                        }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
+            items(searchResults) { video ->
+                VideoRowItem(
+                    video = video,
+                    onClick = { onOpenMedia(video, 0L) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+        } else {
+            // 1. Continue Watching Card
+            if (lastWatched != null && lastWatched.durationMs > 0 && !lastWatched.isCompleted) {
+                item {
+                    val matchingVideo = videos.firstOrNull { it.mediaUriString == lastWatched.uri }
+                    val targetMedia = matchingVideo ?: MediaItemModel(
+                        title = lastWatched.title,
+                        uri = Uri.parse(lastWatched.uri),
+                        path = lastWatched.uri,
+                        durationMs = lastWatched.durationMs,
+                        lastPositionMs = lastWatched.lastPositionMs,
+                        isVideo = true
+                    )
+
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Text(
+                            text = stringResource(id = R.string.home_continue_watching),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        ThrynxCard(
+                            onClick = { onOpenMedia(targetMedia, lastWatched.lastPositionMs) }
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(ThrynxCyan.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = ThrynxCyan)
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = lastWatchedHistory.title,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                val progress = if (lastWatchedHistory.durationMs > 0) {
-                                    (lastWatchedHistory.lastPositionMs.toFloat() / lastWatchedHistory.durationMs.toFloat())
-                                } else 0f
-                                Spacer(modifier = Modifier.height(6.dp))
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(ThrynxCyan.copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.PlayArrow,
+                                            contentDescription = null,
+                                            tint = ThrynxCyan,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(14.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = lastWatched.title,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "${formatDuration(lastWatched.lastPositionMs)} / ${formatDuration(lastWatched.durationMs)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                val progress = (lastWatched.lastPositionMs.toFloat() / lastWatched.durationMs.toFloat()).coerceIn(0f, 1f)
+                                Spacer(modifier = Modifier.height(12.dp))
                                 LinearProgressIndicator(
-                                    progress = progress.coerceIn(0f, 1f),
+                                    progress = { progress },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(4.dp)
@@ -242,207 +272,319 @@ fun HomeScreen(
                     }
                 }
             }
-        }
 
-        // Recent Projects Section
-        if (recentProjects.isNotEmpty()) {
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text(
-                        text = stringResource(id = R.string.home_recent_projects),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
+            // 2. Recently Played Carousel
+            if (recentHistory.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            text = stringResource(id = R.string.home_recently_played),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(recentProjects) { project ->
-                            ProjectCard(
-                                project = project,
-                                onClick = { onOpenProject(project) }
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(recentHistory.take(10)) { item ->
+                                val matching = videos.firstOrNull { it.mediaUriString == item.uri }
+                                val media = matching ?: MediaItemModel(
+                                    title = item.title,
+                                    uri = Uri.parse(item.uri),
+                                    durationMs = item.durationMs,
+                                    lastPositionMs = item.lastPositionMs
+                                )
+                                RecentVideoCard(
+                                    title = item.title,
+                                    uri = item.uri,
+                                    durationMs = item.durationMs,
+                                    onClick = { onOpenMedia(media, item.lastPositionMs) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Recently Added Carousel
+            if (videos.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.home_recently_added),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
+                            TextButton(onClick = onNavigateToVideos) {
+                                Text(
+                                    text = stringResource(id = R.string.home_all_videos),
+                                    color = ThrynxCyan,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(videos.take(10)) { video ->
+                                RecentVideoCard(
+                                    title = video.title,
+                                    uri = video.mediaUriString,
+                                    durationMs = video.durationMs,
+                                    resolution = video.resolutionLabel,
+                                    onClick = { onOpenMedia(video, 0L) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 4. Favorites Carousel
+            if (favoriteVideos.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            text = stringResource(id = R.string.home_favorites),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(favoriteVideos) { video ->
+                                RecentVideoCard(
+                                    title = video.title,
+                                    uri = video.mediaUriString,
+                                    durationMs = video.durationMs,
+                                    resolution = video.resolutionLabel,
+                                    onClick = { onOpenMedia(video, 0L) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 5. Video Folders Row
+            if (folders.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            text = stringResource(id = R.string.home_folders),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(folders.take(8)) { folder ->
+                                FolderChipCard(
+                                    folder = folder,
+                                    onClick = { onOpenFolder(folder) }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+    }
 
-        // Recent Media Feed
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(id = R.string.home_recent_media),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                TextButton(onClick = onNavigateToLibrary) {
+    // Network Stream Dialog
+    if (showStreamDialog) {
+        AlertDialog(
+            onDismissRequest = { showStreamDialog = false },
+            title = { Text(stringResource(id = R.string.stream_title)) },
+            text = {
+                Column {
                     Text(
-                        text = stringResource(id = R.string.nav_library),
-                        color = ThrynxCyan
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        if (filteredMedia.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.home_no_recents),
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Play direct HLS (.m3u8), DASH (.mpd), or progressive MP4/MKV video stream links.",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = streamUrlInput,
+                        onValueChange = { streamUrlInput = it },
+                        placeholder = { Text("https://example.com/video.m3u8") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = streamUrlInput.trim()
+                        if (trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)) {
+                            showStreamDialog = false
+                            onOpenStreamUrl(trimmed)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                ) {
+                    Text(stringResource(id = R.string.stream_play), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStreamDialog = false }) {
+                    Text(stringResource(id = R.string.action_cancel))
                 }
             }
-        } else {
-            items(filteredMedia.take(15)) { media ->
-                MediaItemRow(
-                    media = media,
-                    onClick = { onOpenMedia(media) }
-                )
-            }
-        }
+        )
     }
 }
 
 @Composable
-fun QuickActionButton(
+fun RecentVideoCard(
     title: String,
-    icon: ImageVector,
-    accentColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    uri: String,
+    durationMs: Long,
+    resolution: String? = null,
+    onClick: () -> Unit
 ) {
-    ThrynxCard(
-        modifier = modifier,
-        onClick = onClick
+    Card(
+        modifier = Modifier
+            .width(170.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(accentColor.copy(alpha = 0.15f)),
+                    .fillMaxWidth()
+                    .height(98.dp)
+                    .background(Color(0xFF141C2B)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = accentColor, modifier = Modifier.size(22.dp))
+                AsyncImage(
+                    model = uri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.55f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = ThrynxCyan,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                if (durationMs > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(6.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color.Black.copy(alpha = 0.75f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = formatDuration(durationMs),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                if (!resolution.isNullOrBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(6.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ThrynxCobalt.copy(alpha = 0.85f))
+                            .padding(horizontal = 5.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = resolution,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
             )
         }
     }
 }
 
 @Composable
-fun ProjectCard(
-    project: ProjectModel,
+fun FolderChipCard(
+    folder: FolderItemModel,
     onClick: () -> Unit
 ) {
-    ThrynxCard(
+    Card(
         modifier = Modifier
-            .width(160.dp)
-            .height(130.dp),
-        onClick = onClick
+            .width(140.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(ThrynxCyan.copy(alpha = 0.2f)),
+                    .background(ThrynxCobalt.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.MovieFilter, contentDescription = null, tint = ThrynxCyan)
-            }
-            Column {
-                Text(
-                    text = project.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "${project.canvasRatio.label.take(4)} • ${project.tracks.sumOf { it.clips.size }} clips",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(
+                    Icons.Default.Folder,
+                    contentDescription = null,
+                    tint = ThrynxCyan,
+                    modifier = Modifier.size(22.dp)
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun MediaItemRow(
-    media: MediaItemModel,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    if (media.isVideo) ThrynxCyan.copy(alpha = 0.15f)
-                    else ThrynxPurple.copy(alpha = 0.15f)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = if (media.isVideo) Icons.Default.Videocam else Icons.Default.MusicNote,
-                contentDescription = null,
-                tint = if (media.isVideo) ThrynxCyan else ThrynxPurple
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = media.title,
+                text = folder.name,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = if (media.isVideo) formatDuration(media.durationMs) else media.artist,
+                text = "${folder.videoCount} videos",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -450,14 +592,68 @@ fun MediaItemRow(
     }
 }
 
-fun formatDuration(ms: Long): String {
-    val totalSeconds = (ms / 1000).coerceAtLeast(0)
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    val hours = minutes / 60
-    return if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes % 60, seconds)
-    } else {
-        String.format("%02d:%02d", minutes, seconds)
+@Composable
+fun VideoRowItem(
+    video: MediaItemModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 68.dp, height = 44.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF141C2B)),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = video.uri ?: video.path,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = video.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = formatDuration(video.durationMs),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = video.resolutionLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ThrynxCyan,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = formatFileSize(video.sizeBytes),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }

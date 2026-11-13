@@ -19,36 +19,30 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.thrynx.app.R
+import com.thrynx.app.core.database.FavoriteMediaEntity
+import com.thrynx.app.core.database.PlaybackHistoryEntity
+import com.thrynx.app.core.database.PrivateVideoEntity
 import com.thrynx.app.core.designsystem.*
+import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
 import com.thrynx.app.core.model.PlaybackState
-import com.thrynx.app.core.model.ProjectModel
 import com.thrynx.app.core.player.ThrynxPlayerManager
-import com.thrynx.app.feature.downloads.DownloadsScreen
-import com.thrynx.app.feature.editor.EditorScreen
+import com.thrynx.app.feature.folders.FoldersScreen
 import com.thrynx.app.feature.home.HomeScreen
-import com.thrynx.app.feature.home.formatDuration
-import com.thrynx.app.feature.library.LibraryScreen
-import com.thrynx.app.feature.online.OnlineScreen
-import com.thrynx.app.feature.photomaker.PhotoMakerScreen
 import com.thrynx.app.feature.player.VideoPlayerScreen
-import com.thrynx.app.feature.projects.ProjectsScreen
 import com.thrynx.app.feature.settings.SettingsScreen
+import com.thrynx.app.feature.videos.VideosScreen
 
 sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
     object Home : Screen("home", R.string.nav_home, Icons.Default.Home)
-    object Player : Screen("player", R.string.nav_player, Icons.Default.PlayCircle)
-    object Music : Screen("music", R.string.nav_music, Icons.Default.MusicNote)
-    object Editor : Screen("editor", R.string.nav_editor, Icons.Default.MovieFilter)
-    object Library : Screen("library", R.string.nav_library, Icons.Default.Folder)
-    object Online : Screen("online", R.string.nav_online, Icons.Default.Language)
-    object PhotoMaker : Screen("photo_maker", R.string.nav_photo_maker, Icons.Default.PhotoLibrary)
-    object Projects : Screen("projects", R.string.nav_projects, Icons.Default.FolderSpecial)
-    object Downloads : Screen("downloads", R.string.nav_downloads, Icons.Default.Download)
+    object Videos : Screen("videos", R.string.nav_videos, Icons.Default.VideoLibrary)
+    object Folders : Screen("folders", R.string.nav_folders, Icons.Default.Folder)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
+    object Player : Screen("player", R.string.player_title, Icons.Default.PlayCircle)
 }
 
 @Composable
@@ -56,15 +50,19 @@ fun ThrynxNavigationApp(
     navController: NavHostController,
     playerManager: ThrynxPlayerManager,
     videos: List<MediaItemModel>,
-    audios: List<MediaItemModel>,
-    images: List<MediaItemModel>,
-    projects: List<ProjectModel>,
-    downloads: List<com.thrynx.app.core.database.DownloadEntity>,
-    lastWatched: com.thrynx.app.core.database.PlaybackHistoryEntity?,
-    onSaveProject: (ProjectModel) -> Unit,
-    onDeleteProject: (ProjectModel) -> Unit,
-    onDuplicateProject: (ProjectModel) -> Unit,
-    onExportProject: (ProjectModel, com.thrynx.app.core.editor.export.ExportConfiguration) -> Unit,
+    folders: List<FolderItemModel>,
+    recentHistory: List<PlaybackHistoryEntity>,
+    favorites: List<FavoriteMediaEntity>,
+    privateVideos: List<PrivateVideoEntity>,
+    vaultPin: String,
+    onSetVaultPin: (String) -> Unit,
+    onUnhidePrivateVideo: (PrivateVideoEntity) -> Unit,
+    onHideInVault: (MediaItemModel) -> Unit,
+    onDeleteMedia: (MediaItemModel) -> Unit,
+    onRenameMedia: (MediaItemModel, String) -> Unit,
+    onAddCustomFolder: (android.net.Uri) -> Unit,
+    onToggleFavorite: (MediaItemModel) -> Unit,
+    onRescanLibrary: () -> Unit,
     onEnterPiP: () -> Unit,
     onLanguageChanged: (String) -> Unit,
     onClearHistory: () -> Unit,
@@ -74,29 +72,20 @@ fun ThrynxNavigationApp(
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
     val playbackState by playerManager.playbackState.collectAsState()
 
-    var activeEditingProject by remember { mutableStateOf<ProjectModel?>(null) }
+    val favoritesUris = remember(favorites) { favorites.map { it.uri }.toSet() }
 
-    val startupScreenPref by com.thrynx.app.ThrynxApplication.instance.preferencesManager.startupScreenFlow.collectAsState(initial = "home")
-    val initialRoute = remember {
-        when (startupScreenPref) {
-            "library" -> Screen.Library.route
-            "editor" -> Screen.Editor.route
-            else -> Screen.Home.route
-        }
-    }
-
+    // Exactly 4 Navigation Tabs as Required
     val bottomNavItems = listOf(
         Screen.Home,
-        Screen.Editor,
-        Screen.Library,
-        Screen.Projects,
+        Screen.Videos,
+        Screen.Folders,
         Screen.Settings
     )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            if (currentRoute != Screen.Player.route && currentRoute != Screen.Editor.route) {
+            if (currentRoute != Screen.Player.route) {
                 Column {
                     // Persistent Mini-Player Bar
                     playbackState.currentMedia?.let {
@@ -111,7 +100,7 @@ fun ThrynxNavigationApp(
                         )
                     }
 
-                    // Navigation Bar
+                    // Bottom Navigation Bar
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surface,
                         tonalElevation = 6.dp
@@ -152,142 +141,95 @@ fun ThrynxNavigationApp(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = initialRoute,
+            startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
+            // 1. Home Screen
             composable(Screen.Home.route) {
                 HomeScreen(
-                    recentProjects = projects,
-                    recentMedia = (videos + audios).sortedByDescending { it.dateAdded },
-                    lastWatchedHistory = lastWatched,
-                    onOpenMedia = { media ->
-                        playerManager.playMedia(media, media.lastPositionMs)
-                        navController.navigate(Screen.Player.route) {
-                            launchSingleTop = true
-                        }
-                    },
-                    onOpenProject = { proj ->
-                        activeEditingProject = proj
-                        navController.navigate(Screen.Editor.route)
-                    },
-                    onNewProject = {
-                        activeEditingProject = ProjectModel(name = "Project_${System.currentTimeMillis() / 1000}")
-                        navController.navigate(Screen.Editor.route)
-                    },
-                    onNewSlideshow = {
-                        navController.navigate(Screen.PhotoMaker.route)
-                    },
-                    onNavigateToLibrary = {
-                        navController.navigate(Screen.Library.route)
-                    },
-                    onNavigateToOnline = {
-                        navController.navigate(Screen.Online.route)
-                    }
-                )
-            }
-
-            composable(Screen.Player.route) {
-                VideoPlayerScreen(
-                    playerManager = playerManager,
-                    onBack = {
-                        if (!navController.popBackStack()) {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Home.route) { inclusive = true }
-                            }
-                        }
-                    },
-                    onEnterPiP = onEnterPiP
-                )
-            }
-
-            composable(Screen.Music.route) {
-                VideoPlayerScreen(
-                    playerManager = playerManager,
-                    onBack = {
-                        if (!navController.popBackStack()) {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Home.route) { inclusive = true }
-                            }
-                        }
-                    },
-                    onEnterPiP = onEnterPiP
-                )
-            }
-
-            composable(Screen.Editor.route) {
-                val proj = activeEditingProject ?: ProjectModel()
-                EditorScreen(
-                    initialProject = proj,
-                    onSaveProject = onSaveProject,
-                    onExportProject = onExportProject,
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            composable(Screen.PhotoMaker.route) {
-                PhotoMakerScreen(
-                    availablePhotos = images,
-                    onCreateVideoProject = { proj ->
-                        activeEditingProject = proj
-                        navController.navigate(Screen.Editor.route)
-                    },
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            composable(Screen.Library.route) {
-                LibraryScreen(
                     videos = videos,
-                    audios = audios,
+                    folders = folders,
+                    recentHistory = recentHistory,
+                    favorites = favorites,
+                    onOpenMedia = { media, pos ->
+                        playerManager.playMedia(media, pos)
+                        navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                    },
+                    onOpenFolder = { _ ->
+                        navController.navigate(Screen.Folders.route) { launchSingleTop = true }
+                    },
+                    onNavigateToVideos = {
+                        navController.navigate(Screen.Videos.route) { launchSingleTop = true }
+                    },
+                    onOpenStreamUrl = { url ->
+                        val streamMedia = MediaItemModel(
+                            id = System.currentTimeMillis(),
+                            title = "Network Stream",
+                            uri = android.net.Uri.parse(url),
+                            path = url,
+                            isVideo = true
+                        )
+                        playerManager.playMedia(streamMedia)
+                        navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            // 2. Videos Screen
+            composable(Screen.Videos.route) {
+                VideosScreen(
+                    videos = videos,
+                    favoritesUris = favoritesUris,
+                    onOpenMedia = { media ->
+                        val idx = videos.indexOf(media)
+                        if (idx >= 0) {
+                            playerManager.playQueue(videos, idx)
+                        } else {
+                            playerManager.playMedia(media)
+                        }
+                        navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                    },
+                    onToggleFavorite = onToggleFavorite,
+                    onHideInVault = onHideInVault,
+                    onDeleteMedia = onDeleteMedia,
+                    onRenameMedia = onRenameMedia,
+                    onRescanLibrary = onRescanLibrary
+                )
+            }
+
+            // 3. Folders Screen
+            composable(Screen.Folders.route) {
+                FoldersScreen(
+                    folders = folders,
+                    videos = videos,
+                    privateVideos = privateVideos,
+                    vaultPin = vaultPin,
+                    onSetVaultPin = onSetVaultPin,
+                    onUnhidePrivateVideo = onUnhidePrivateVideo,
+                    onAddCustomFolder = onAddCustomFolder,
                     onOpenMedia = { media ->
                         playerManager.playMedia(media)
-                        navController.navigate(Screen.Player.route) {
-                            launchSingleTop = true
-                        }
+                        navController.navigate(Screen.Player.route) { launchSingleTop = true }
                     }
                 )
             }
 
-            composable(Screen.Online.route) {
-                OnlineScreen()
-            }
-
-            composable(Screen.Projects.route) {
-                ProjectsScreen(
-                    projects = projects,
-                    onOpenProject = { proj ->
-                        activeEditingProject = proj
-                        navController.navigate(Screen.Editor.route)
-                    },
-                    onDeleteProject = onDeleteProject,
-                    onDuplicateProject = onDuplicateProject,
-                    onNewProject = {
-                        activeEditingProject = ProjectModel(name = "Project_${System.currentTimeMillis() / 1000}")
-                        navController.navigate(Screen.Editor.route)
-                    }
-                )
-            }
-
-            composable(Screen.Downloads.route) {
-                DownloadsScreen(
-                    downloads = downloads,
-                    onPauseDownload = {},
-                    onResumeDownload = {},
-                    onCancelDownload = {},
-                    onPlayCompletedMedia = { media ->
-                        playerManager.playMedia(media)
-                        navController.navigate(Screen.Player.route) {
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-
+            // 4. Settings Screen
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     preferencesManager = com.thrynx.app.ThrynxApplication.instance.preferencesManager,
                     onLanguageChanged = onLanguageChanged,
-                    onClearHistory = onClearHistory
+                    onClearHistory = onClearHistory,
+                    onRescanLibrary = onRescanLibrary
+                )
+            }
+
+            // Video Player Screen
+            composable(Screen.Player.route) {
+                VideoPlayerScreen(
+                    playerManager = playerManager,
+                    onBack = { navController.popBackStack() },
+                    onEnterPiP = onEnterPiP
                 )
             }
         }
@@ -298,22 +240,25 @@ fun ThrynxNavigationApp(
 fun MiniPlayerBar(
     playbackState: PlaybackState,
     onTogglePlayPause: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val currentMedia = playbackState.currentMedia ?: return
+
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = ThrynxCardDark,
         tonalElevation = 8.dp
     ) {
         Column {
             // Linear Progress Indicator
             val progress = if (playbackState.durationMs > 0) {
-                playbackState.currentPositionMs.toFloat() / playbackState.durationMs.toFloat()
+                (playbackState.currentPositionMs.toFloat() / playbackState.durationMs.toFloat()).coerceIn(0f, 1f)
             } else 0f
             LinearProgressIndicator(
-                progress = progress.coerceIn(0f, 1f),
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.dp),
@@ -330,15 +275,15 @@ fun MiniPlayerBar(
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(ThrynxCardDark),
+                        .clip(CircleShape)
+                        .background(ThrynxCyan.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (playbackState.currentMedia?.isVideo == true) Icons.Default.PlayArrow else Icons.Default.MusicNote,
+                        Icons.Default.PlayArrow,
                         contentDescription = null,
                         tint = ThrynxCyan,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
@@ -346,16 +291,17 @@ fun MiniPlayerBar(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = playbackState.currentMedia?.title ?: "",
+                        text = currentMedia.title,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = "${formatDuration(playbackState.currentPositionMs)} / ${formatDuration(playbackState.durationMs)}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = ThrynxTextSecondaryDark
                     )
                 }
 
@@ -363,7 +309,8 @@ fun MiniPlayerBar(
                     Icon(
                         imageVector = if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
-                        tint = ThrynxCyan
+                        tint = ThrynxCyan,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }

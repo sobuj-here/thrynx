@@ -2,120 +2,62 @@ package com.thrynx.app.core.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.thrynx.app.core.model.CanvasAspectRatio
-import com.thrynx.app.core.model.DownloadState
-import com.thrynx.app.core.model.ProjectModel
-import com.thrynx.app.core.model.TimelineTrackModel
 
-@Entity(tableName = "projects")
-data class ProjectEntity(
-    @PrimaryKey val id: String,
-    val name: String,
-    val createdAt: Long,
-    val updatedAt: Long,
-    val thumbnailUri: String,
-    val durationMs: Long,
-    val canvasRatio: CanvasAspectRatio,
-    val resolutionWidth: Int,
-    val resolutionHeight: Int,
-    val fps: Int,
-    val bitrateMbps: Int,
-    val tracks: List<TimelineTrackModel>
-) {
-    fun toDomain(): ProjectModel = ProjectModel(
-        id = id,
-        name = name,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        thumbnailUri = thumbnailUri,
-        durationMs = durationMs,
-        canvasRatio = canvasRatio,
-        resolutionWidth = resolutionWidth,
-        resolutionHeight = resolutionHeight,
-        fps = fps,
-        bitrateMbps = bitrateMbps,
-        tracks = tracks
-    )
-
-    companion object {
-        fun fromDomain(model: ProjectModel): ProjectEntity = ProjectEntity(
-            id = model.id,
-            name = model.name,
-            createdAt = model.createdAt,
-            updatedAt = model.updatedAt,
-            thumbnailUri = model.thumbnailUri,
-            durationMs = model.durationMs,
-            canvasRatio = model.canvasRatio,
-            resolutionWidth = model.resolutionWidth,
-            resolutionHeight = model.resolutionHeight,
-            fps = model.fps,
-            bitrateMbps = model.bitrateMbps,
-            tracks = model.tracks
-        )
-    }
-}
-
+/**
+ * Persists video playback progress and history.
+ */
 @Entity(tableName = "playback_history")
 data class PlaybackHistoryEntity(
     @PrimaryKey val uri: String,
     val title: String,
     val durationMs: Long,
     val lastPositionMs: Long,
-    val isVideo: Boolean,
-    val lastWatchedTimestamp: Long,
+    val isVideo: Boolean = true,
+    val lastWatchedTimestamp: Long = System.currentTimeMillis(),
     val isCompleted: Boolean = false
 )
 
+/**
+ * Stores user's starred/favorite videos.
+ */
 @Entity(tableName = "favorite_media")
 data class FavoriteMediaEntity(
     @PrimaryKey val uri: String,
     val title: String,
-    val isVideo: Boolean,
-    val addedTimestamp: Long
+    val isVideo: Boolean = true,
+    val addedTimestamp: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "downloads")
-data class DownloadEntity(
-    @PrimaryKey val id: String,
-    val title: String,
-    val sourceUrl: String,
-    val destinationPath: String,
-    val bytesDownloaded: Long,
-    val totalBytes: Long,
-    val state: DownloadState,
-    val mimeType: String,
-    val timestamp: Long,
-    val errorMessage: String? = null
+/**
+ * Tracks hidden/private folders for the private vault.
+ */
+@Entity(tableName = "private_folders")
+data class PrivateFolderEntity(
+    @PrimaryKey val folderPath: String,
+    val folderName: String,
+    val isHidden: Boolean = true,
+    val addedTimestamp: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "playlists")
-data class PlaylistEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String,
-    val isVideoPlaylist: Boolean,
-    val createdAt: Long = System.currentTimeMillis()
-)
-
-@Entity(tableName = "playlist_items")
-data class PlaylistItemEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val playlistId: Long,
-    val mediaUri: String,
+/**
+ * Tracks individually hidden private videos.
+ */
+@Entity(tableName = "private_videos")
+data class PrivateVideoEntity(
+    @PrimaryKey val mediaUri: String,
+    val originalPath: String,
     val title: String,
     val durationMs: Long,
-    val orderIndex: Int
+    val sizeBytes: Long,
+    val addedTimestamp: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "export_history")
-data class ExportHistoryEntity(
-    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
-    val projectName: String,
-    val filePath: String,
-    val thumbnailUri: String = "",
-    val resolution: String,
-    val fps: Int,
-    val durationMs: Long,
-    val fileSizeBytes: Long,
-    val exportedAt: Long = System.currentTimeMillis(),
-    val status: String = "COMPLETED"
+/**
+ * Stores custom directories added by user via SAF folder picker.
+ */
+@Entity(tableName = "custom_folders")
+data class CustomFolderEntity(
+    @PrimaryKey val folderUri: String,
+    val folderName: String,
+    val addedTimestamp: Long = System.currentTimeMillis()
 )
