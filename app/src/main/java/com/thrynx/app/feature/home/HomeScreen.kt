@@ -40,6 +40,8 @@ fun HomeScreen(
     folders: List<FolderItemModel>,
     recentHistory: List<PlaybackHistoryEntity>,
     favorites: List<FavoriteMediaEntity>,
+    hasStoragePermission: Boolean = true,
+    onRequestPermission: () -> Unit = {},
     onOpenMedia: (MediaItemModel, Long) -> Unit,
     onOpenFolder: (FolderItemModel) -> Unit,
     onNavigateToVideos: () -> Unit,
@@ -163,6 +165,46 @@ fun HomeScreen(
                             focusedBorderColor = ThrynxCyan
                         )
                     )
+                }
+            }
+        }
+
+        // Storage Permission Warning Banner
+        if (!hasStoragePermission) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.SecurityUpdateWarning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Storage Permission Required",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Grant media permission to discover and play videos",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Button(
+                            onClick = onRequestPermission,
+                            colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                        ) {
+                            Text("Grant", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }

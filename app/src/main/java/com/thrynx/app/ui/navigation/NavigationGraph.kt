@@ -54,18 +54,24 @@ fun ThrynxNavigationApp(
     recentHistory: List<PlaybackHistoryEntity>,
     favorites: List<FavoriteMediaEntity>,
     privateVideos: List<PrivateVideoEntity>,
+    customFolders: List<com.thrynx.app.core.database.CustomFolderEntity> = emptyList(),
     vaultPin: String,
+    hasStoragePermission: Boolean = true,
+    canUseBiometric: Boolean = false,
+    onRequestPermission: () -> Unit = {},
     onSetVaultPin: (String) -> Unit,
     onUnhidePrivateVideo: (PrivateVideoEntity) -> Unit,
     onHideInVault: (MediaItemModel) -> Unit,
     onDeleteMedia: (MediaItemModel) -> Unit,
     onRenameMedia: (MediaItemModel, String) -> Unit,
     onAddCustomFolder: (android.net.Uri) -> Unit,
+    onRemoveCustomFolder: (String) -> Unit = {},
     onToggleFavorite: (MediaItemModel) -> Unit,
     onRescanLibrary: () -> Unit,
     onEnterPiP: () -> Unit,
     onLanguageChanged: (String) -> Unit,
     onClearHistory: () -> Unit,
+    onLaunchBiometric: (onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -92,6 +98,8 @@ fun ThrynxNavigationApp(
                         MiniPlayerBar(
                             playbackState = playbackState,
                             onTogglePlayPause = { playerManager.togglePlayPause() },
+                            onStop = { playerManager.stop() },
+                            onDismiss = { playerManager.dismiss() },
                             onClick = {
                                 navController.navigate(Screen.Player.route) {
                                     launchSingleTop = true
@@ -151,6 +159,8 @@ fun ThrynxNavigationApp(
                     folders = folders,
                     recentHistory = recentHistory,
                     favorites = favorites,
+                    hasStoragePermission = hasStoragePermission,
+                    onRequestPermission = onRequestPermission,
                     onOpenMedia = { media, pos ->
                         playerManager.playMedia(media, pos)
                         navController.navigate(Screen.Player.route) { launchSingleTop = true }
@@ -180,6 +190,8 @@ fun ThrynxNavigationApp(
                 VideosScreen(
                     videos = videos,
                     favoritesUris = favoritesUris,
+                    hasStoragePermission = hasStoragePermission,
+                    onRequestPermission = onRequestPermission,
                     onOpenMedia = { media ->
                         val idx = videos.indexOf(media)
                         if (idx >= 0) {
@@ -203,14 +215,26 @@ fun ThrynxNavigationApp(
                     folders = folders,
                     videos = videos,
                     privateVideos = privateVideos,
+                    customFolders = customFolders,
                     vaultPin = vaultPin,
+                    hasStoragePermission = hasStoragePermission,
+                    canUseBiometric = canUseBiometric,
+                    onRequestPermission = onRequestPermission,
                     onSetVaultPin = onSetVaultPin,
                     onUnhidePrivateVideo = onUnhidePrivateVideo,
                     onAddCustomFolder = onAddCustomFolder,
+                    onRemoveCustomFolder = onRemoveCustomFolder,
                     onOpenMedia = { media ->
                         playerManager.playMedia(media)
                         navController.navigate(Screen.Player.route) { launchSingleTop = true }
-                    }
+                    },
+                    onPlayAll = { folderVideos ->
+                        if (folderVideos.isNotEmpty()) {
+                            playerManager.playQueue(folderVideos, 0)
+                            navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                        }
+                    },
+                    onLaunchBiometric = onLaunchBiometric
                 )
             }
 
@@ -240,6 +264,8 @@ fun ThrynxNavigationApp(
 fun MiniPlayerBar(
     playbackState: PlaybackState,
     onTogglePlayPause: () -> Unit,
+    onStop: () -> Unit,
+    onDismiss: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -269,7 +295,7 @@ fun MiniPlayerBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -280,14 +306,14 @@ fun MiniPlayerBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.PlayArrow,
+                        imageVector = if (playbackState.isPlaying) Icons.Default.PlayArrow else Icons.Default.Pause,
                         contentDescription = null,
                         tint = ThrynxCyan,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -305,12 +331,42 @@ fun MiniPlayerBar(
                     )
                 }
 
-                IconButton(onClick = onTogglePlayPause) {
+                // Play / Pause Button
+                IconButton(
+                    onClick = onTogglePlayPause,
+                    modifier = Modifier.size(36.dp)
+                ) {
                     Icon(
                         imageVector = if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
                         tint = ThrynxCyan,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Stop Button
+                IconButton(
+                    onClick = onStop,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop",
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                // Dismiss / Close Button
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Dismiss",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

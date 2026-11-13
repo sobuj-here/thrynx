@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
-    <img src="https://img.shields.io/badge/⚡%20Download%20APK-v1.0.0%20(21.6%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=0B0E14" alt="Download APK" />
+    <img src="https://img.shields.io/badge/⚡%20Download%20APK-v1.0.0%20(25.9%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=0B0E14" alt="Download APK" />
   </a>
   <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0">
     <img src="https://img.shields.io/badge/📦%20Release%20Notes-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Release Notes" />
@@ -30,7 +30,7 @@ The official release binary for Android 8.0+ (API 26–34) is hosted on [GitHub 
 
 | Package | Version | Binary Size | Target Architecture | Direct Download |
 | :--- | :--- | :--- | :--- | :--- |
-| **THRYNX Universal APK** | `v1.0.0` | **21.67 MB** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | [**Download APK (`app-debug.apk`)**](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk) |
+| **THRYNX Universal APK** | `v1.0.0` | **25.88 MB** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | [**Download APK (`app-debug.apk`)**](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk) |
 
 ### Installation Instructions:
 1. Download `app-debug.apk` directly to your Android device.

@@ -1,7 +1,10 @@
 package com.thrynx.app.core.player
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -14,6 +17,8 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.session.MediaSession
+import com.thrynx.app.MainActivity
 import com.thrynx.app.core.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +28,16 @@ import kotlinx.coroutines.flow.asStateFlow
 class ThrynxPlayerManager(private val context: Context) {
 
     private val trackSelector = DefaultTrackSelector(context)
+
+    private val audioAttributes = AudioAttributes.Builder()
+        .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+        .setUsage(C.USAGE_MEDIA)
+        .build()
+
     val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setTrackSelector(trackSelector)
+        .setAudioAttributes(audioAttributes, true) // Automatically handles audio focus, calls, and ducking
+        .setHandleAudioBecomingNoisy(true) // Pauses automatically on headset disconnect
         .setRenderersFactory(
             DefaultRenderersFactory(context)
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
@@ -38,6 +51,17 @@ class ThrynxPlayerManager(private val context: Context) {
                     3_000   // buffer after rebuffer 3s
                 )
                 .build()
+        )
+        .build()
+
+    val mediaSession: MediaSession = MediaSession.Builder(context, exoPlayer)
+        .setSessionActivity(
+            PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
         )
         .build()
 
@@ -88,7 +112,7 @@ class ThrynxPlayerManager(private val context: Context) {
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                // Retry automatically if recoverable
+                // Retry automatically if network recoverable
                 if (error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
                     error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT) {
                     val pos = exoPlayer.currentPosition
@@ -266,6 +290,37 @@ class ThrynxPlayerManager(private val context: Context) {
         }
     }
 
+    fun pause() {
+        if (exoPlayer.isPlaying) {
+            exoPlayer.pause()
+        }
+    }
+
+    /**
+     * Completely stops playback, clears media queue, and dismisses active playback state.
+     */
+    fun stop() {
+        exoPlayer.stop()
+        exoPlayer.clearMediaItems()
+        stopProgressTracker()
+        cancelSleepTimer()
+        _playbackState.value = _playbackState.value.copy(
+            isPlaying = false,
+            currentMedia = null,
+            currentPositionMs = 0L,
+            durationMs = 0L,
+            queue = emptyList(),
+            queueIndex = 0
+        )
+    }
+
+    /**
+     * Dismisses the active player and mini-player.
+     */
+    fun dismiss() {
+        stop()
+    }
+
     fun seekTo(positionMs: Long) {
         val bounded = positionMs.coerceIn(0L, exoPlayer.duration.coerceAtLeast(0L))
         exoPlayer.seekTo(bounded)
@@ -390,7 +445,6 @@ class ThrynxPlayerManager(private val context: Context) {
             .build()
         trackSelector.parameters = parameters
 
-        // Audio track switched without restarting playback or resetting position
         exoPlayer.seekTo(currentPosition)
         _playbackState.value = _playbackState.value.copy(selectedAudioTrack = track)
     }
@@ -485,6 +539,7 @@ class ThrynxPlayerManager(private val context: Context) {
     fun release() {
         stopProgressTracker()
         cancelSleepTimer()
+        try { mediaSession.release() } catch (ignored: Exception) {}
         exoPlayer.release()
     }
 }

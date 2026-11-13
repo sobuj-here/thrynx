@@ -65,6 +65,8 @@ class PreferencesManager(private val context: Context) {
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_BACKGROUND_AUDIO] ?: false }
 
+    val backgroundPlaybackFlow: Flow<Boolean> get() = backgroundAudioFlow
+
     val defaultResizeModeFlow: Flow<String> = context.dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_DEFAULT_RESIZE_MODE] ?: "fit" }

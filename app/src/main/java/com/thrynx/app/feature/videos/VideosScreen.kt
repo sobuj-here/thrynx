@@ -44,6 +44,8 @@ import kotlinx.coroutines.launch
 fun VideosScreen(
     videos: List<MediaItemModel>,
     favoritesUris: Set<String>,
+    hasStoragePermission: Boolean = true,
+    onRequestPermission: () -> Unit = {},
     onOpenMedia: (MediaItemModel) -> Unit,
     onToggleFavorite: (MediaItemModel) -> Unit,
     onHideInVault: (MediaItemModel) -> Unit,
@@ -222,23 +224,62 @@ fun VideosScreen(
                 )
             )
 
-            // Duration Filter Chips
-            Row(
+            // Duration Filter Chips (Scrollable row prevents narrow text wrapping)
+            androidx.compose.foundation.lazy.LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(vertical = 6.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                DurationFilter.values().forEach { filter ->
+                items(DurationFilter.values()) { filter ->
                     FilterChip(
                         selected = durationFilter == filter,
                         onClick = { durationFilter = filter },
-                        label = { Text(filter.label, fontSize = 12.sp) },
+                        label = { Text(filter.label, fontSize = 12.sp, maxLines = 1) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = ThrynxCyan.copy(alpha = 0.2f),
                             selectedLabelColor = ThrynxCyan
                         )
                     )
+                }
+            }
+
+            // Storage Permission Warning Banner
+            if (!hasStoragePermission) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.SecurityUpdateWarning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Storage Permission Required",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Allow permission to scan and display videos on your device",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Button(
+                            onClick = onRequestPermission,
+                            colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                        ) {
+                            Text("Grant", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
 

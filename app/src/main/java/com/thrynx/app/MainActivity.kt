@@ -11,9 +11,10 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.thrynx.app.core.database.CustomFolderEntity
@@ -29,23 +31,28 @@ import com.thrynx.app.core.database.PlaybackHistoryEntity
 import com.thrynx.app.core.database.PrivateVideoEntity
 import com.thrynx.app.core.designsystem.ThrynxTheme
 import com.thrynx.app.core.localization.LocaleHelper
-import com.thrynx.app.core.model.FolderItemModel
+import com.thrynx.app.core.media.MediaStoreScanner
 import com.thrynx.app.core.model.MediaItemModel
+import com.thrynx.app.core.service.ThrynxMediaPlaybackService
 import com.thrynx.app.ui.navigation.ThrynxNavigationApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val app by lazy { ThrynxApplication.instance }
     private var currentLanguage = "en"
+    private var onPermissionGrantedCallback: (() -> Unit)? = null
+    private val hasStoragePermissionState = mutableStateOf(false)
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
-        lifecycleScope.launch {
-            loadVideosFromDevice()
+        val granted = MediaStoreScanner.hasStoragePermission(this)
+        hasStoragePermissionState.value = granted
+        if (granted) {
+            onPermissionGrantedCallback?.invoke()
         }
     }
 
@@ -64,6 +71,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        hasStoragePermissionState.value = MediaStoreScanner.hasStoragePermission(this)
         checkAndRequestPermissions()
         handleIncomingIntent(intent)
 
@@ -84,6 +92,7 @@ class MainActivity : ComponentActivity() {
                 val recentHistory by app.database.historyDao().getRecentHistory(30).collectAsState(initial = emptyList())
                 val favorites by app.database.favoriteDao().getAllFavorites().collectAsState(initial = emptyList())
                 val privateVideos by app.database.privateVaultDao().getAllPrivateVideosFlow().collectAsState(initial = emptyList())
+                val customFolders by app.database.customFolderDao().getAllCustomFoldersFlow().collectAsState(initial = emptyList())
                 val vaultPin by preferencesManager.privateVaultPinFlow.collectAsState(initial = "")
 
                 // Filter out private videos from public list
@@ -98,13 +107,27 @@ class MainActivity : ComponentActivity() {
 
                 fun refreshVideos() {
                     lifecycleScope.launch {
-                        loadVideosFromDevice { v ->
-                            rawVideos = v
+                        val foldersToScan = try {
+                            app.database.customFolderDao().getAllCustomFolders()
+                        } catch (e: Exception) {
+                            emptyList()
                         }
+                        val v = app.mediaScanner.loadVideos(customFolders = foldersToScan)
+                        rawVideos = v
                     }
                 }
 
+                onPermissionGrantedCallback = {
+                    hasStoragePermissionState.value = true
+                    refreshVideos()
+                }
+
                 LaunchedEffect(Unit) {
+                    hasStoragePermissionState.value = MediaStoreScanner.hasStoragePermission(this@MainActivity)
+                    refreshVideos()
+                }
+
+                LaunchedEffect(customFolders) {
                     refreshVideos()
                 }
 
@@ -120,7 +143,11 @@ class MainActivity : ComponentActivity() {
                         recentHistory = recentHistory,
                         favorites = favorites,
                         privateVideos = privateVideos,
+                        customFolders = customFolders,
                         vaultPin = vaultPin,
+                        hasStoragePermission = hasStoragePermissionState.value,
+                        canUseBiometric = canUseBiometric(),
+                        onRequestPermission = { checkAndRequestPermissions() },
                         onSetVaultPin = { pin ->
                             lifecycleScope.launch {
                                 preferencesManager.setPrivateVaultPin(pin)
@@ -130,6 +157,7 @@ class MainActivity : ComponentActivity() {
                             lifecycleScope.launch {
                                 app.database.privateVaultDao().removePrivateVideo(pv.mediaUri)
                                 Toast.makeText(this@MainActivity, "Video restored to library", Toast.LENGTH_SHORT).show()
+                                refreshVideos()
                             }
                         },
                         onHideInVault = { media ->
@@ -144,6 +172,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 )
                                 Toast.makeText(this@MainActivity, "Video hidden in vault", Toast.LENGTH_SHORT).show()
+                                refreshVideos()
                             }
                         },
                         onDeleteMedia = { media ->
@@ -169,13 +198,27 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         onAddCustomFolder = { uri ->
+                            try {
+                                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                contentResolver.takePersistableUriPermission(uri, flags)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                             lifecycleScope.launch {
+                                val folderName = uri.lastPathSegment?.substringAfterLast(':')?.ifBlank { null }
+                                    ?: uri.lastPathSegment ?: "Custom Folder"
                                 app.database.customFolderDao().insertCustomFolder(
                                     CustomFolderEntity(
                                         folderUri = uri.toString(),
-                                        folderName = uri.lastPathSegment ?: "Custom Folder"
+                                        folderName = folderName
                                     )
                                 )
+                                refreshVideos()
+                            }
+                        },
+                        onRemoveCustomFolder = { folderUri ->
+                            lifecycleScope.launch {
+                                app.database.customFolderDao().deleteCustomFolder(folderUri)
                                 refreshVideos()
                             }
                         },
@@ -208,6 +251,9 @@ class MainActivity : ComponentActivity() {
                             lifecycleScope.launch {
                                 app.database.historyDao().clearAllHistory()
                             }
+                        },
+                        onLaunchBiometric = { onSuccess, onError ->
+                            launchBiometricPrompt(onSuccess, onError)
                         }
                     )
                 }
@@ -215,9 +261,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val perm = MediaStoreScanner.hasStoragePermission(this)
+        if (perm != hasStoragePermissionState.value) {
+            hasStoragePermissionState.value = perm
+            if (perm) {
+                onPermissionGrantedCallback?.invoke()
+            }
+        }
+    }
+
     private fun checkAndRequestPermissions() {
         val permissions = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+            permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         } else {
@@ -230,12 +291,9 @@ class MainActivity : ComponentActivity() {
 
         if (ungranted.isNotEmpty()) {
             requestPermissionLauncher.launch(ungranted.toTypedArray())
+        } else {
+            hasStoragePermissionState.value = true
         }
-    }
-
-    private suspend fun loadVideosFromDevice(onLoaded: (List<MediaItemModel>) -> Unit = {}) {
-        val v = app.mediaScanner.loadVideos()
-        onLoaded(v)
     }
 
     private fun handleIncomingIntent(intent: Intent?) {
@@ -269,6 +327,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         saveCurrentPlaybackPosition()
+        val backgroundEnabled = runBlocking {
+            try {
+                app.preferencesManager.backgroundPlaybackFlow.first()
+            } catch (e: Exception) {
+                false
+            }
+        }
+        if (!backgroundEnabled && !isInPictureInPictureMode) {
+            app.playerManager.pause()
+        } else if (backgroundEnabled && app.playerManager.playbackState.value.isPlaying) {
+            val serviceIntent = Intent(this, ThrynxMediaPlaybackService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        }
         super.onStop()
     }
 
@@ -292,6 +367,51 @@ class MainActivity : ComponentActivity() {
                     )
                 )
             }
+        }
+    }
+
+    private fun canUseBiometric(): Boolean {
+        return try {
+            val biometricManager = BiometricManager.from(this)
+            biometricManager.canAuthenticate(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.BIOMETRIC_WEAK
+            ) == BiometricManager.BIOMETRIC_SUCCESS
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun launchBiometricPrompt(
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit = {}
+    ) {
+        try {
+            val executor = ContextCompat.getMainExecutor(this)
+            val prompt = BiometricPrompt(
+                this,
+                executor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        super.onAuthenticationSucceeded(result)
+                        onSuccess()
+                    }
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        super.onAuthenticationError(errorCode, errString)
+                        onError(errString.toString())
+                    }
+                }
+            )
+
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Unlock Private Vault")
+                .setSubtitle("Confirm your biometric credentials to access hidden videos")
+                .setNegativeButtonText("Use PIN")
+                .build()
+
+            prompt.authenticate(promptInfo)
+        } catch (e: Exception) {
+            onError(e.message ?: "Biometric error")
         }
     }
 }

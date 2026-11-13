@@ -71,6 +71,9 @@ interface CustomFolderDao {
     @Query("SELECT * FROM custom_folders ORDER BY addedTimestamp DESC")
     fun getAllCustomFoldersFlow(): Flow<List<CustomFolderEntity>>
 
+    @Query("SELECT * FROM custom_folders ORDER BY addedTimestamp DESC")
+    suspend fun getAllCustomFolders(): List<CustomFolderEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCustomFolder(folder: CustomFolderEntity)
 

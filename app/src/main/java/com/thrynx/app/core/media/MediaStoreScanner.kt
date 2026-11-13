@@ -1,16 +1,19 @@
 package com.thrynx.app.core.media
 
+import android.Manifest
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
+import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import com.thrynx.app.core.database.CustomFolderEntity
 import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
 import kotlinx.coroutines.Dispatchers
@@ -19,80 +22,224 @@ import java.io.File
 
 class MediaStoreScanner(private val context: Context) {
 
+    companion object {
+        private val SUPPORTED_VIDEO_EXTENSIONS = setOf(
+            "mp4", "mkv", "webm", "avi", "mov", "3gp", "ts", "flv", "m4v", "wmv"
+        )
+
+        fun hasStoragePermission(context: Context): Boolean {
+            return when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+                    // Android 14+
+                    val full = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
+                    val partial = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) == PackageManager.PERMISSION_GRANTED
+                    full || partial
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                    // Android 13
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
+                }
+                else -> {
+                    // Android 8-12
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                }
+            }
+        }
+    }
+
     /**
-     * Discovers all local video files on device via MediaStore.
-     * Audio and image files are completely excluded.
+     * Discovers all local video files on device via MediaStore and custom SAF folders.
+     * Guaranteed safe column extraction without throwing on any Android OEM or version.
      */
-    suspend fun loadVideos(hiddenFolderPaths: Set<String> = emptySet()): List<MediaItemModel> = withContext(Dispatchers.IO) {
+    suspend fun loadVideos(
+        customFolders: List<CustomFolderEntity> = emptyList(),
+        hiddenFolderPaths: Set<String> = emptySet()
+    ): List<MediaItemModel> = withContext(Dispatchers.IO) {
         val videos = mutableListOf<MediaItemModel>()
+        val seenUris = mutableSetOf<String>()
+
+        // 1. Scan MediaStore Video Media
         val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         } else {
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         }
 
-        val projection = arrayOf(
+        val projectionList = mutableListOf(
             MediaStore.Video.Media._ID,
             MediaStore.Video.Media.DISPLAY_NAME,
             MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media.SIZE,
             MediaStore.Video.Media.MIME_TYPE,
             MediaStore.Video.Media.DATA,
-            MediaStore.Video.Media.DATE_ADDED,
-            MediaStore.Video.Media.WIDTH,
-            MediaStore.Video.Media.HEIGHT
+            MediaStore.Video.Media.DATE_ADDED
         )
+
+        // Add optional columns where supported
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            projectionList.add(MediaStore.Video.Media.WIDTH)
+            projectionList.add(MediaStore.Video.Media.HEIGHT)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            projectionList.add(MediaStore.Video.Media.RELATIVE_PATH)
+        }
+        projectionList.add(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
 
         val sortOrder = "${MediaStore.Video.Media.DATE_ADDED} DESC"
 
         try {
-            context.contentResolver.query(collection, projection, null, null, sortOrder)?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
-                val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
-                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
-                val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.MIME_TYPE)
-                val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
-                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)
-                val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
-                val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
+            context.contentResolver.query(
+                collection,
+                projectionList.toTypedArray(),
+                null,
+                null,
+                sortOrder
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+                val nameCol = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
+                val durationCol = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                val sizeCol = cursor.getColumnIndex(MediaStore.Video.Media.SIZE)
+                val mimeCol = cursor.getColumnIndex(MediaStore.Video.Media.MIME_TYPE)
+                val dataCol = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
+                val dateCol = cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED)
+                val widthCol = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
+                val heightCol = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
+                val bucketCol = cursor.getColumnIndex(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
+                val relPathCol = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    cursor.getColumnIndex(MediaStore.Video.Media.RELATIVE_PATH)
+                } else -1
 
                 while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    val name = cursor.getString(nameColumn) ?: "Video_$id"
-                    val duration = cursor.getLong(durationColumn)
-                    val size = cursor.getLong(sizeColumn)
-                    val mime = cursor.getString(mimeColumn) ?: "video/mp4"
-                    val path = cursor.getString(dataColumn) ?: ""
-                    val dateAdded = cursor.getLong(dateColumn)
-                    val width = if (widthColumn >= 0) cursor.getInt(widthColumn) else 0
-                    val height = if (heightColumn >= 0) cursor.getInt(heightColumn) else 0
-                    val contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                    val id = if (idCol >= 0) cursor.getLong(idCol) else System.currentTimeMillis()
+                    val name = if (nameCol >= 0) cursor.getString(nameCol) ?: "Video_$id" else "Video_$id"
+                    val duration = if (durationCol >= 0) cursor.getLong(durationCol).coerceAtLeast(0L) else 0L
+                    val size = if (sizeCol >= 0) cursor.getLong(sizeCol).coerceAtLeast(0L) else 0L
+                    val mime = if (mimeCol >= 0) cursor.getString(mimeCol) ?: "video/mp4" else "video/mp4"
+                    val path = if (dataCol >= 0) cursor.getString(dataCol) ?: "" else ""
+                    val dateAdded = if (dateCol >= 0) cursor.getLong(dateCol) else System.currentTimeMillis() / 1000
+                    val width = if (widthCol >= 0) cursor.getInt(widthCol) else 0
+                    val height = if (heightCol >= 0) cursor.getInt(heightCol) else 0
 
-                    // Determine folder and check if hidden
-                    val fileObj = File(path)
-                    val folderName = try {
-                        fileObj.parentFile?.name ?: "Internal"
-                    } catch (e: Exception) {
-                        "Videos"
+                    val bucketName = if (bucketCol >= 0) cursor.getString(bucketCol) else null
+                    val relPath = if (relPathCol >= 0) cursor.getString(relPathCol) else null
+
+                    // Determine folder name reliably
+                    val folderName = when {
+                        !bucketName.isNullOrBlank() -> bucketName
+                        !relPath.isNullOrBlank() -> {
+                            relPath.trim('/').split('/').lastOrNull()?.ifBlank { null } ?: "Videos"
+                        }
+                        path.isNotBlank() -> {
+                            try { File(path).parentFile?.name ?: "Internal" } catch (e: Exception) { "Videos" }
+                        }
+                        else -> "Videos"
                     }
-                    val parentPath = fileObj.parent ?: ""
 
-                    // If folder is in private/hidden set, skip from standard library
+                    // Check if folder is excluded/hidden in vault
+                    val parentPath = try { if (path.isNotBlank()) File(path).parent ?: "" else "" } catch (e: Exception) { "" }
                     if (hiddenFolderPaths.contains(parentPath) || hiddenFolderPaths.contains(folderName)) {
                         continue
                     }
 
-                    videos.add(
+                    val contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                    val uriKey = contentUri.toString()
+
+                    if (seenUris.add(uriKey)) {
+                        videos.add(
+                            MediaItemModel(
+                                id = id,
+                                title = name,
+                                uri = contentUri,
+                                path = path.ifBlank { uriKey },
+                                durationMs = duration,
+                                sizeBytes = size,
+                                mimeType = mime,
+                                dateAdded = dateAdded,
+                                folderName = folderName,
+                                isVideo = true,
+                                width = width,
+                                height = height
+                            )
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // 2. Scan Custom SAF Folders Persisted by User
+        for (customFolder in customFolders) {
+            try {
+                val folderUri = Uri.parse(customFolder.folderUri)
+                val safVideos = scanSafDirectory(folderUri, customFolder.folderName, hiddenFolderPaths)
+                for (v in safVideos) {
+                    if (seenUris.add(v.mediaUriString)) {
+                        videos.add(v)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        videos
+    }
+
+    /**
+     * Traverses a Storage Access Framework (SAF) tree directory to discover video files.
+     */
+    private fun scanSafDirectory(
+        treeUri: Uri,
+        folderName: String,
+        hiddenFolderPaths: Set<String>
+    ): List<MediaItemModel> {
+        val results = mutableListOf<MediaItemModel>()
+        val docFolder = DocumentFile.fromTreeUri(context, treeUri) ?: return results
+        if (!docFolder.exists() || !docFolder.isDirectory) return results
+
+        if (hiddenFolderPaths.contains(folderName) || hiddenFolderPaths.contains(treeUri.toString())) {
+            return results
+        }
+
+        val files = docFolder.listFiles()
+        for (file in files) {
+            if (file.isFile) {
+                val name = file.name ?: continue
+                val ext = name.substringAfterLast('.', "").lowercase()
+                val isVideoExt = SUPPORTED_VIDEO_EXTENSIONS.contains(ext)
+                val isVideoMime = file.type?.startsWith("video/") == true
+
+                if (isVideoExt || isVideoMime) {
+                    val size = file.length().coerceAtLeast(0L)
+                    val lastModified = file.lastModified() / 1000
+
+                    // Quick duration check via metadata retriever
+                    var durationMs = 0L
+                    var width = 0
+                    var height = 0
+                    val retriever = MediaMetadataRetriever()
+                    try {
+                        retriever.setDataSource(context, file.uri)
+                        durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                        width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+                        height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+                    } catch (e: Exception) {
+                        // Safe fallback
+                    } finally {
+                        try { retriever.release() } catch (ignored: Exception) {}
+                    }
+
+                    results.add(
                         MediaItemModel(
-                            id = id,
+                            id = file.uri.hashCode().toLong(),
                             title = name,
-                            uri = contentUri,
-                            path = path,
-                            durationMs = duration,
+                            uri = file.uri,
+                            path = file.uri.toString(),
+                            durationMs = durationMs,
                             sizeBytes = size,
-                            mimeType = mime,
-                            dateAdded = dateAdded,
+                            mimeType = file.type ?: "video/$ext",
+                            dateAdded = lastModified,
                             folderName = folderName,
                             isVideo = true,
                             width = width,
@@ -101,22 +248,29 @@ class MediaStoreScanner(private val context: Context) {
                     )
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
-        videos
+        return results
     }
 
     /**
-     * Groups videos into organized folder models.
+     * Groups videos into organized folder models with video counts and representative media.
      */
     fun groupIntoFolders(videos: List<MediaItemModel>): List<FolderItemModel> {
         return videos
             .groupBy { it.folderName }
             .map { (folderName, items) ->
                 val representativePath = items.firstOrNull()?.let {
-                    try { File(it.path).parent ?: folderName } catch (e: Exception) { folderName }
+                    try {
+                        if (it.path.startsWith("content://")) {
+                            it.folderName
+                        } else {
+                            File(it.path).parent ?: folderName
+                        }
+                    } catch (e: Exception) {
+                        folderName
+                    }
                 } ?: folderName
+
                 FolderItemModel(
                     name = folderName,
                     path = representativePath,
@@ -129,7 +283,7 @@ class MediaStoreScanner(private val context: Context) {
     }
 
     /**
-     * Resolves metadata from a Storage Access Framework (SAF) Uri.
+     * Resolves metadata from a single Storage Access Framework (SAF) Uri.
      */
     suspend fun resolveMetadataFromUri(uri: Uri): MediaItemModel? = withContext(Dispatchers.IO) {
         try {
@@ -169,7 +323,7 @@ class MediaStoreScanner(private val context: Context) {
                 sizeBytes = sizeBytes,
                 mimeType = context.contentResolver.getType(uri) ?: "video/mp4",
                 dateAdded = System.currentTimeMillis() / 1000,
-                folderName = "SAF Imports",
+                folderName = "Imports",
                 isVideo = true,
                 width = width,
                 height = height
@@ -185,7 +339,7 @@ class MediaStoreScanner(private val context: Context) {
      */
     suspend fun deleteVideo(media: MediaItemModel): Boolean = withContext(Dispatchers.IO) {
         try {
-            if (media.path.isNotBlank()) {
+            if (media.path.isNotBlank() && !media.path.startsWith("content://")) {
                 val file = File(media.path)
                 if (file.exists() && file.delete()) {
                     return@withContext true
@@ -209,7 +363,7 @@ class MediaStoreScanner(private val context: Context) {
      */
     suspend fun renameVideo(media: MediaItemModel, newName: String): MediaItemModel? = withContext(Dispatchers.IO) {
         try {
-            if (media.path.isNotBlank()) {
+            if (media.path.isNotBlank() && !media.path.startsWith("content://")) {
                 val oldFile = File(media.path)
                 if (oldFile.exists()) {
                     val extension = oldFile.extension.ifBlank { "mp4" }
@@ -238,13 +392,13 @@ class MediaStoreScanner(private val context: Context) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = media.mimeType.ifBlank { "video/*" }
             val shareUri = try {
-                if (media.path.isNotBlank() && File(media.path).exists()) {
+                if (media.path.isNotBlank() && !media.path.startsWith("content://") && File(media.path).exists()) {
                     FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", File(media.path))
                 } else {
-                    media.uri
+                    media.uri ?: if (media.mediaUriString.isNotBlank()) Uri.parse(media.mediaUriString) else null
                 }
             } catch (e: Exception) {
-                media.uri
+                media.uri ?: if (media.mediaUriString.isNotBlank()) Uri.parse(media.mediaUriString) else null
             }
             putExtra(Intent.EXTRA_STREAM, shareUri)
             putExtra(Intent.EXTRA_TITLE, media.title)

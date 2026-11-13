@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,22 +34,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.thrynx.app.R
+import com.thrynx.app.core.database.CustomFolderEntity
 import com.thrynx.app.core.database.PrivateVideoEntity
 import com.thrynx.app.core.designsystem.*
 import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
-import kotlinx.coroutines.launch
+
+enum class FolderSortOption(val label: String) {
+    NAME_ASC("Name (A–Z)"),
+    NAME_DESC("Name (Z–A)"),
+    COUNT_DESC("Videos (Most first)"),
+    COUNT_ASC("Videos (Least first)")
+}
 
 @Composable
 fun FoldersScreen(
     folders: List<FolderItemModel>,
     videos: List<MediaItemModel>,
     privateVideos: List<PrivateVideoEntity>,
+    customFolders: List<CustomFolderEntity> = emptyList(),
     vaultPin: String,
+    hasStoragePermission: Boolean = true,
+    canUseBiometric: Boolean = false,
+    onRequestPermission: () -> Unit = {},
     onSetVaultPin: (String) -> Unit,
     onUnhidePrivateVideo: (PrivateVideoEntity) -> Unit,
     onAddCustomFolder: (Uri) -> Unit,
+    onRemoveCustomFolder: (String) -> Unit = {},
     onOpenMedia: (MediaItemModel) -> Unit,
+    onPlayAll: (List<MediaItemModel>) -> Unit,
+    onLaunchBiometric: (onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -58,6 +73,8 @@ fun FoldersScreen(
     var pinInput by remember { mutableStateOf("") }
     var pinError by remember { mutableStateOf(false) }
     var isSettingNewPin by remember { mutableStateOf(false) }
+    var sortOption by remember { mutableStateOf(FolderSortOption.NAME_ASC) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
     // SAF Folder Picker Launcher
     val folderPickerLauncher = rememberLauncherForActivityResult(
@@ -67,6 +84,20 @@ fun FoldersScreen(
             onAddCustomFolder(uri)
             Toast.makeText(context, "Folder added to library", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // Process and sort folders
+    val processedFolders = remember(folders, sortOption) {
+        when (sortOption) {
+            FolderSortOption.NAME_ASC -> folders.sortedBy { it.name.lowercase() }
+            FolderSortOption.NAME_DESC -> folders.sortedByDescending { it.name.lowercase() }
+            FolderSortOption.COUNT_DESC -> folders.sortedByDescending { it.videoCount }
+            FolderSortOption.COUNT_ASC -> folders.sortedBy { it.videoCount }
+        }
+    }
+
+    val customFolderUris = remember(customFolders) {
+        customFolders.map { it.folderUri }.toSet()
     }
 
     // Handle back button when inside a folder or vault
@@ -135,10 +166,11 @@ fun FoldersScreen(
                     folder = folder,
                     videos = folderVideos,
                     onBack = { selectedFolder = null },
-                    onOpenMedia = onOpenMedia
+                    onOpenMedia = onOpenMedia,
+                    onPlayAll = { onPlayAll(folderVideos) }
                 )
             } else {
-                // Main Folders Overview
+                // Main Folders Overview Top Bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -154,10 +186,75 @@ fun FoldersScreen(
                             color = ThrynxCyan
                         )
                         Text(
-                            text = "${folders.size} video folders",
+                            text = "${processedFolders.size} video folders",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    // Sort Folders Menu
+                    Box {
+                        IconButton(onClick = { showSortMenu = true }) {
+                            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort Folders", tint = Color.White)
+                        }
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
+                            FolderSortOption.values().forEach { option ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = option.label,
+                                            fontWeight = if (sortOption == option) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (sortOption == option) ThrynxCyan else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
+                                    onClick = {
+                                        sortOption = option
+                                        showSortMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Storage Permission Missing Warning Banner
+                if (!hasStoragePermission) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.SecurityUpdateWarning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Storage Permission Required",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Allow access to discover all videos on your device",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                            Button(
+                                onClick = onRequestPermission,
+                                colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                            ) {
+                                Text("Grant", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
 
@@ -174,12 +271,28 @@ fun FoldersScreen(
                                 .clickable {
                                     if (vaultPin.isBlank()) {
                                         isSettingNewPin = true
+                                        pinInput = ""
+                                        pinError = false
+                                        showVaultDialog = true
                                     } else {
-                                        isSettingNewPin = false
+                                        if (canUseBiometric) {
+                                            onLaunchBiometric(
+                                                { isVaultUnlocked = true },
+                                                {
+                                                    // Fallback to PIN dialog on biometric error/cancel
+                                                    isSettingNewPin = false
+                                                    pinInput = ""
+                                                    pinError = false
+                                                    showVaultDialog = true
+                                                }
+                                            )
+                                        } else {
+                                            isSettingNewPin = false
+                                            pinInput = ""
+                                            pinError = false
+                                            showVaultDialog = true
+                                        }
                                     }
-                                    pinInput = ""
-                                    pinError = false
-                                    showVaultDialog = true
                                 },
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = ThrynxCardDark),
@@ -231,7 +344,7 @@ fun FoldersScreen(
                     }
 
                     // 2. Folder List
-                    if (folders.isEmpty()) {
+                    if (processedFolders.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -239,17 +352,35 @@ fun FoldersScreen(
                                     .padding(vertical = 48.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = stringResource(id = R.string.folders_empty),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Default.FolderOpen,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(id = R.string.folders_empty),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     } else {
-                        items(folders) { folder ->
+                        items(processedFolders) { folder ->
+                            val isCustom = customFolderUris.contains(folder.path) || customFolderUris.any { folder.path.startsWith(it) }
                             FolderRowCard(
                                 folder = folder,
+                                isCustom = isCustom,
+                                onRemoveCustom = {
+                                    val customEntity = customFolders.firstOrNull { it.folderUri == folder.path || folder.path.startsWith(it.folderUri) }
+                                    if (customEntity != null) {
+                                        onRemoveCustomFolder(customEntity.folderUri)
+                                        Toast.makeText(context, "Folder removed from app", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
                                 onClick = { selectedFolder = folder }
                             )
                         }
@@ -301,6 +432,24 @@ fun FoldersScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
+
+                    if (canUseBiometric && !isSettingNewPin) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = {
+                                showVaultDialog = false
+                                onLaunchBiometric(
+                                    { isVaultUnlocked = true },
+                                    { pinError = true }
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Fingerprint, contentDescription = null, tint = ThrynxCyan)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Use Biometric Unlock", color = ThrynxCyan)
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -345,6 +494,8 @@ fun FoldersScreen(
 @Composable
 fun FolderRowCard(
     folder: FolderItemModel,
+    isCustom: Boolean = false,
+    onRemoveCustom: () -> Unit = {},
     onClick: () -> Unit
 ) {
     Card(
@@ -362,9 +513,9 @@ fun FolderRowCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 64.dp, height = 48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF141C2B)),
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(ThrynxBgDark),
                 contentAlignment = Alignment.Center
             ) {
                 if (folder.latestMedia != null) {
@@ -379,7 +530,7 @@ fun FolderRowCard(
                         Icons.Default.Folder,
                         contentDescription = null,
                         tint = ThrynxCyan,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -387,35 +538,56 @@ fun FolderRowCard(
             Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = folder.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (isCustom) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = ThrynxCyan.copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                text = "SAF",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ThrynxCyan,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = folder.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    text = "${folder.videoCount} videos • ${folder.path}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = stringResource(id = R.string.folders_videos_count, folder.videoCount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (folder.path.isNotBlank()) {
-                    Text(
-                        text = folder.path,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
 
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (isCustom) {
+                IconButton(onClick = onRemoveCustom) {
+                    Icon(
+                        Icons.Default.DeleteOutline,
+                        contentDescription = "Remove folder",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                    )
+                }
+            } else {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -425,7 +597,8 @@ fun FolderDetailView(
     folder: FolderItemModel,
     videos: List<MediaItemModel>,
     onBack: () -> Unit,
-    onOpenMedia: (MediaItemModel) -> Unit
+    onOpenMedia: (MediaItemModel) -> Unit,
+    onPlayAll: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -452,6 +625,18 @@ fun FolderDetailView(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            if (videos.isNotEmpty()) {
+                Button(
+                    onClick = onPlayAll,
+                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.PlayCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Play All", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+            }
         }
 
         LazyColumn(
@@ -460,46 +645,57 @@ fun FolderDetailView(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(videos) { video ->
-                Row(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { onOpenMedia(video) }
-                        .padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .clickable { onOpenMedia(video) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = ThrynxCardDark)
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(width = 72.dp, height = 48.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF141C2B)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        AsyncImage(
-                            model = video.uri ?: video.path,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
-                    }
+                        Box(
+                            modifier = Modifier
+                                .size(width = 80.dp, height = 50.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Black),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = video.uri ?: video.path,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = video.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${formatDuration(video.durationMs)} • ${video.resolutionLabel} • ${formatFileSize(video.sizeBytes)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = video.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${formatDuration(video.durationMs)} • ${formatFileSize(video.sizeBytes)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = "Play",
+                            tint = ThrynxCyan
                         )
                     }
                 }
@@ -534,21 +730,12 @@ fun VaultContentView(
                     color = ThrynxCyan
                 )
                 Text(
-                    text = "${privateVideos.size} hidden videos",
+                    text = "${privateVideos.size} hidden videos protected",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-
-        Text(
-            text = stringResource(id = R.string.folders_vault_disclaimer),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         if (privateVideos.isEmpty()) {
             Box(
@@ -557,11 +744,26 @@ fun VaultContentView(
                     .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = stringResource(id = R.string.folders_vault_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.LockOpen,
+                        contentDescription = null,
+                        tint = ThrynxCyan.copy(alpha = 0.5f),
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Vault is empty",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Move sensitive videos here from the Videos tab action menu.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         } else {
             LazyColumn(
@@ -570,49 +772,60 @@ fun VaultContentView(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(privateVideos) { pv ->
-                    Row(
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { onOpenVideo(pv) }
-                            .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable { onOpenVideo(pv) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = ThrynxCardDark)
                     ) {
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(width = 64.dp, height = 44.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF141C2B)),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Lock, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
-                        }
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 80.dp, height = 50.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.Black),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AsyncImage(
+                                    model = pv.mediaUri,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = pv.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${formatDuration(pv.durationMs)} • ${formatFileSize(pv.sizeBytes)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = pv.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${formatDuration(pv.durationMs)} • ${formatFileSize(pv.sizeBytes)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
 
-                        IconButton(onClick = { onUnhide(pv) }) {
-                            Icon(
-                                Icons.Default.Visibility,
-                                contentDescription = stringResource(id = R.string.folders_vault_unhide_video),
-                                tint = ThrynxCyan
-                            )
+                            IconButton(onClick = { onUnhide(pv) }) {
+                                Icon(
+                                    Icons.Default.LockOpen,
+                                    contentDescription = "Unhide",
+                                    tint = ThrynxCyan
+                                )
+                            }
                         }
                     }
                 }
