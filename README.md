@@ -5,18 +5,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
-    <img src="https://img.shields.io/badge/⚡%20Download%20APK-v1.0.0-00E5FF?style=for-the-badge&logo=android&logoColor=0B0E14" alt="Download APK" />
+  <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/THRYNX-v1.0.0.apk">
+    <img src="https://img.shields.io/badge/📥%20DOWNLOAD%20APK-v1.0.0%20(Official)-00E5FF?style=for-the-badge&logo=android&logoColor=0B0E14" height="42" alt="Download APK" />
   </a>
+  &nbsp;&nbsp;
   <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0">
-    <img src="https://img.shields.io/badge/📦%20Release%20Notes-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Release Notes" />
+    <img src="https://img.shields.io/badge/📦%20RELEASE%20PAGE-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" height="42" alt="Release Page" />
   </a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-green?style=flat-square&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Engine-Media3%20ExoPlayer-00E5FF?style=flat-square" alt="Engine" />
-  <img src="https://img.shields.io/badge/Architecture-Kotlin%20%7C%20Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Architecture" />
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Compose" />
   <img src="https://img.shields.io/badge/Privacy-100%25%20Offline--First-00E676?style=flat-square" alt="Privacy" />
   <img src="https://img.shields.io/badge/Languages-English%20%7C%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-orange?style=flat-square" alt="Languages" />
   <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" alt="License" />
@@ -24,42 +25,54 @@
 
 ---
 
-## 📥 Production Release & Installation
+## 📥 Direct Download & Installation
 
-The official release binaries for Android 8.0+ (API 26–34) are available on [GitHub Releases](https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0).
+Get the latest official APK build directly on your Android device:
 
-| Package | Version | Binary Profile | Target Architectures | Direct Link |
-| :--- | :--- | :--- | :--- | :--- |
-| **THRYNX Release APK** | `v1.0.0` | **Optimized Release (R8 Shrink)** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | [**Download APK**](https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0) |
-| **THRYNX Debug APK** | `v1.0.0` | Debug Build | Universal | [**Download Debug APK**](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk) |
+<div align="center">
 
-### Installation:
-1. Download the `.apk` package to your Android device.
-2. Tap the file to install. If prompted, permit "Install Unknown Apps" for your browser or file manager.
-3. Launch **THRYNX** to access hardware-accelerated video and audio playback.
+[![Download THRYNX APK](https://img.shields.io/badge/⚡_Download_THRYNX_APK-v1.0.0-00E5FF?style=for-the-badge&logo=android&logoColor=black)](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/THRYNX-v1.0.0.apk)
+
+**Direct Package**: [`THRYNX-v1.0.0.apk`](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/THRYNX-v1.0.0.apk) &bull; **Compatibility**: Android 8.0 (Oreo) to Android 14 (API 26–34) &bull; **Architecture**: Universal
+
+</div>
+
+### Installation Steps:
+1. Tap the **Download APK** button above to download `THRYNX-v1.0.0.apk`.
+2. Tap the downloaded file in your browser or file manager.
+3. If prompted, permit **"Install Unknown Apps"** for the browser or file manager.
+4. Open **THRYNX** to enjoy fast, hardware-accelerated playback.
 
 ---
 
-## 🏗️ Application Architecture & Project Structure
+## 🌟 Overview
 
-THRYNX is designed following modern Android architecture guidelines using **Unidirectional Data Flow (UDF)**, MVVM, clean domain boundaries, and Jetpack Compose.
+**THRYNX** is a native, modern **Video and Audio Player** crafted in **Kotlin**, **Jetpack Compose (Material 3)**, and **AndroidX Media3 ExoPlayer**. 
+
+Engineered with an offline-first philosophy, THRYNX delivers an ultra-smooth, zero-latency playback experience with hardware-accelerated video decoding, multi-track audio switching, real-time subtitle synchronization, intuitive touch gestures, and true physical storage isolation for private media.
+
+---
+
+## 🏗️ Project Architecture & Directory Structure
+
+THRYNX follows Android recommended architecture (Unidirectional Data Flow, MVVM, and clean separation of concerns):
 
 ```
 THRYNX/
 ├── app/
-│   ├── build.gradle.kts                   # Build configuration, R8 optimization, ProGuard rules
+│   ├── build.gradle.kts                   # Dependencies, R8 code/resource shrinking, ProGuard config
 │   ├── proguard-rules.pro                 # Media3, Room, and Coroutines keep rules
 │   └── src/
 │       ├── main/
-│       │   ├── AndroidManifest.xml        # Permissions (READ_MEDIA_*, FOREGROUND_SERVICE), Services, PiP config
+│       │   ├── AndroidManifest.xml        # MediaStore permissions, AudioBecomingNoisy receiver, PiP config
 │       │   ├── java/com/thrynx/app/
-│       │   │   ├── MainActivity.kt        # Single activity host, SAF permissions, Vault isolation, PiP handling
+│       │   │   ├── MainActivity.kt        # Single activity host, SAF permissions, Physical Vault isolation, PiP
 │       │   │   ├── core/
 │       │   │   │   ├── datastore/
 │       │   │   │   │   └── PreferencesManager.kt  # User preferences (view modes, HUD, audio disconnect, PIN)
 │       │   │   │   ├── db/
 │       │   │   │   │   ├── AppDatabase.kt         # Room database with schema migration
-│       │   │   │   │   ├── MediaItemDao.kt        # Playback history, favorites, vault queries
+│       │   │   │   │   ├── MediaItemDao.kt        # Playback history, favorites, and vault queries
 │       │   │   │   │   └── MediaItemEntity.kt     # Media item persistence model
 │       │   │   │   ├── media/
 │       │   │   │   │   ├── MediaModels.kt         # Domain models (MediaItemModel, FolderItemModel)
@@ -98,54 +111,36 @@ THRYNX/
 
 ---
 
-## ⚡ APK Size Analysis & Optimization
+## 🚀 Key Features
 
-### Why was the Debug APK ~25 MB?
-1. **No R8 / ProGuard Shrinking in Debug**: In debug builds, Android Gradle Plugin sets `isMinifyEnabled = false` and `isShrinkResources = false`. The debug APK packages uncompressed, unstripped code for faster developer compilation.
-2. **Material Icons Extended Overhead**: `androidx.compose.material:material-icons-extended` was included to provide system icons. Because the library contains over 10,000 vector drawable icon classes, unstripped debug builds compiled over 14 DEX files (~65 MB uncompressed DEX bytecode).
-3. **Legacy Dependencies**: Unused legacy background libraries (`androidx.work:work-runtime-ktx` and `com.google.code.gson:gson`) remained in the dependency graph.
-
-### Optimization Steps Applied:
-- **Dependency Cleansing**: Removed `work-runtime-ktx` and `gson`.
-- **R8 Full Code & Resource Shrinking**: Configured `isMinifyEnabled = true` and `isShrinkResources = true` with aggressive dead-code elimination.
-- **Tree-Shaking**: R8 strips out all 9,900+ unused icon classes and dead methods from Compose and Media3, cutting the compiled release APK size down to a fraction of the debug footprint.
-
----
-
-## 🌟 Core Features & Modules
-
-### 1. 🎬 Advanced Video Player Engine
-- **Media3 ExoPlayer Core**: Adaptive buffering pipeline with hardware acceleration and automatic stream recovery.
+### 🎬 1. Advanced Playback Engine
+- **Media3 ExoPlayer Core**: Hardware-accelerated decoding pipeline supporting 4K UHD, 1080p FHD, H.264/AVC, H.265/HEVC, VP9, and AV1 video codecs.
+- **Universal Screen Orientation Button**: Readily accessible quick-toggle button positioned at the bottom-left above the timeline, accessible in both Portrait and Landscape orientations.
+- **Play Time & Remaining Time HUD**: Tap the timeline duration to toggle between Total Duration (`05:30`) and Remaining Time (`-02:15`).
+- **Two-Finger Pinch-to-Zoom**: Multi-touch pinch-to-zoom allows scaling the video canvas from `0.5x` to `4.0x` with live HUD percentage feedback.
 - **Precision Gesture Controls**:
-  - **Left Half Vertical Swipe**: Adjust screen brightness (0% – 100%) with visual HUD indicator.
-  - **Right Half Vertical Swipe**: Adjust device media volume (0% – 100%) with visual HUD indicator.
-  - **Horizontal Swipe**: Precise timeline scrubbing with delta display (`+00:15 / -00:10`).
-  - **Double-Tap Seek**:
-    - Left 45% screen width: Rewind 10 seconds.
-    - Right 45% screen width: Fast-forward 10 seconds.
-    - Center 10% screen width: Play / Pause toggle.
+  - **Left Half Vertical Swipe**: Adjust screen brightness (0% – 100%).
+  - **Right Half Vertical Swipe**: Adjust device media volume (0% – 100%).
+  - **Horizontal Scrubbing**: Seek through video with delta indicator (`+00:15 / -00:10`).
+  - **Double-Tap Seek**: Left 45% screen rewinds 10s; right 45% forwards 10s; center 10% toggles play/pause.
   - **Long Press**: Instant 2.0x playback speed acceleration while held.
-- **Two-Finger Pinch to Zoom**: Smoothly zoom and magnify the video frame from 0.5x to 4.0x with on-screen percentage HUD.
-- **Orientation Control**: Bottom-left orientation quick-toggle easily reachable in both Portrait and Landscape orientations.
-- **Play Time / Remaining Time HUD**: Tap the timeline duration to switch between Total Duration (`05:30`) and Remaining Time (`-02:15`).
-- **Bluetooth & Headset Auto-Pause**: Automatically pauses playback when Bluetooth headphones or wired headsets disconnect (`ACTION_AUDIO_BECOMING_NOISY` / `ACTION_ACL_DISCONNECTED`).
+- **Bluetooth & Headset Auto-Pause**: Automatically pauses playback with an on-screen notification when Bluetooth headphones disconnect or wired headsets are unplugged (`ACTION_AUDIO_BECOMING_NOISY`).
 - **Seamless Picture-in-Picture (PiP)**: Smooth system PiP mode activates automatically when switching to other apps (`onUserLeaveHint`).
-- **Dual/Multi-Audio Track Selection**: Switch between embedded audio streams (English, Bengali, Hindi, Commentary) instantly without playback reload.
-- **Sub-Frame Subtitle Synchronization**: Auto-detect embedded subtitles or load external `.srt`, `.vtt`, `.ass` files with millisecond timing adjustments.
-- **Lock Controls**: One-tap lock disables touch gestures and system back navigation during playback.
+- **Dual/Multi-Audio Track Selection**: Switch between embedded audio streams without video reloads.
+- **Sub-Frame Subtitle Synchronization**: Auto-detects embedded subtitles or load external `.srt`, `.vtt`, `.ass` files with millisecond offset tuning.
 
 ---
 
-### 2. 🎵 Dedicated Audio & Music Player (`Screen.Audio`)
-- Replaces traditional folder tabs with a full-fledged local audio player.
+### 🎵 2. Dedicated Audio & Music Player
+- **Complete Audio Library**: Automatically discovers local music files and albums across device storage.
 - **Two Flexible Views**: Toggle between **All Songs** (flat track list) and **Audio Folders** (album/directory hierarchy).
-- **Persistent Floating Mini-Player**: Bottom audio control bar with play/pause, seek track bar, previous/next skip, and track details.
+- **Floating Mini-Player Bar**: Persistent bottom control bar with play/pause, seek track bar, previous/next skip, and track metadata.
 - **Batch Multi-Select Mode**: Long-press any track to enter multi-select mode for bulk delete or batch vaulting.
 - **Audio Sorting & Filtering**: Sort audio tracks by Title (A–Z), Date Added, File Size, and Track Duration.
 
 ---
 
-### 3. 📁 Media Library & File Management (`Screen.Videos`)
+### 📁 3. Local Media Library
 - **Native Hardware Thumbnails**: Custom `VideoThumbnail` loader using Android's native `ContentResolver.loadThumbnail` (Android 10+) and `ThumbnailUtils` with memory `LruCache` for smooth 60fps scrolling without network overhead.
 - **Active Video Highlight**: Currently active or recently played videos are highlighted with a cyan/blue accent border, title highlight, and progress indicator.
 - **Played Time Badge**: Shows exact progress (e.g., `04:12 played`) on the video card (toggleable in Settings).
@@ -155,16 +150,16 @@ THRYNX/
 
 ---
 
-### 4. 🔒 Physical Private Vault Isolation
-- **True File-System Privacy**: Hiding videos in THRYNX does not merely hide database records. Files moved to the Private Vault are physically transferred into the app's secure internal sandbox (`context.filesDir/vault/`) accompanied by a `.nomedia` file, and their entries are deleted from Android's system `MediaStore`.
+### 🔒 4. Physical Private Vault Isolation
+- **True File-System Privacy**: Videos moved to the Private Vault are physically moved into the app's secure internal sandbox (`context.filesDir/vault/`) accompanied by a `.nomedia` marker file, and their records are removed from Android's system `MediaStore`.
 - **Complete Invisibility**: Vaulted files are 100% invisible to Google Photos, device Gallery apps, and third-party file managers.
 - **Biometric & PIN Protection**: Protected with a 4-digit PIN stored using cryptographic SHA-256 hashing.
 
 ---
 
-### 5. ⚙️ Organized 8-Category Settings Center
+### ⚙️ 5. Organized 8-Category Settings Center
 
-The settings experience is organized into 8 distinct sections:
+Settings are structured into 8 distinct sections:
 
 1. **List**: Toggle between All Videos and Folder View; Show/hide played time badges and progress bars on video cards.
 2. **Player**: Resume playback preferences (Ask Every Time, Always Resume, Start from Beginning), default orientation, default speed, double-tap jump seek interval, clock & battery HUD toggle, auto-play next video.
@@ -188,6 +183,12 @@ THRYNX includes unit test coverage for media repository operations, player state
 - `VideoPlayerStateTest`: Validates audio track selection, subtitle stream extraction, and aspect ratio calculation.
 - `VideoLibraryRepositoryTest`: Validates media sorting, folder aggregation, and duration filtering.
 - `PrivateVaultSecurityTest`: Validates file physical isolation and PIN verification logic.
+
+---
+
+## 🌐 Dual-Language Parity (English & বাংলা)
+
+THRYNX provides 100% natural localization parity between **English** and **বাংলা (Bangla)** without robotic phrasing or mixed languages.
 
 ---
 
