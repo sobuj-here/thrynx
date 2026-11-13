@@ -1,171 +1,187 @@
-# THRYNX — Professional Video Player for Android
+# THRYNX — High-Performance Native Video Player for Android
 
 <p align="center">
   <img src="docs/screenshots/thrynx_hero_banner.svg" alt="THRYNX Hero Banner" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://github.com/sobuj-here/thrynx/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
+  <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk">
+    <img src="https://img.shields.io/badge/⚡%20Download%20APK-v1.0.0%20(21.6%20MB)-00E5FF?style=for-the-badge&logo=android&logoColor=0B0E14" alt="Download APK" />
   </a>
-  <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-green?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
-  <img src="https://img.shields.io/badge/Engine-Media3%20ExoPlayer-00E5FF?style=for-the-badge" alt="Engine" />
-  <img src="https://img.shields.io/badge/Privacy-100%25%20Offline--First-00E676?style=for-the-badge" alt="Privacy" />
-  <img src="https://img.shields.io/badge/Languages-English%20%7C%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-orange?style=for-the-badge" alt="Languages" />
-  <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge" alt="License" />
+  <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0">
+    <img src="https://img.shields.io/badge/📦%20Release%20Notes-v1.0.0-2979FF?style=for-the-badge&logo=github&logoColor=white" alt="Release Notes" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-green?style=flat-square&logo=android&logoColor=white" alt="Platform" />
+  <img src="https://img.shields.io/badge/Engine-Media3%20ExoPlayer-00E5FF?style=flat-square" alt="Engine" />
+  <img src="https://img.shields.io/badge/Architecture-Kotlin%20%7C%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Privacy-100%25%20Offline--First-00E676?style=flat-square" alt="Privacy" />
+  <img src="https://img.shields.io/badge/Languages-English%20%7C%20%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE-orange?style=flat-square" alt="Languages" />
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" alt="License" />
 </p>
 
 ---
 
-## 📥 Download & Installation
+## 📥 Production Release & Installation
 
-Pre-compiled production binaries for Android 8.0+ (API 26–34) are available on [GitHub Releases](https://github.com/sobuj-here/thrynx/releases/latest).
+The official release binary for Android 8.0+ (API 26–34) is hosted on [GitHub Releases](https://github.com/sobuj-here/thrynx/releases/tag/v1.0.0).
 
-| Package | Target Architecture | File Size | Direct Download |
-| :--- | :--- | :--- | :--- |
-| **THRYNX v1.0.0 APK** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | ~22.1 MB | [**Download APK (`app-debug.apk`)**](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk) |
+| Package | Version | Binary Size | Target Architecture | Direct Download |
+| :--- | :--- | :--- | :--- | :--- |
+| **THRYNX Universal APK** | `v1.0.0` | **21.67 MB** | Universal (`arm64-v8a`, `armeabi-v7a`, `x86_64`) | [**Download APK (`app-debug.apk`)**](https://github.com/sobuj-here/thrynx/releases/download/v1.0.0/app-debug.apk) |
 
-### Quick Installation Steps
-1. Download `app-debug.apk` directly on your Android device or transfer from PC.
-2. Open the downloaded APK and confirm installation (allow "Install Unknown Apps" in system settings if prompted).
-3. Launch **THRYNX** (`PROFESSIONAL VIDEO PLAYER`).
-
----
-
-## 🌟 Executive Overview
-**THRYNX** is a dedicated, premium native Android **Video Player** inspired by the feature set, gesture responsiveness, and usability of **MX Player**. 
-
-Built with modern **Kotlin**, **Jetpack Compose (Material 3)**, and **AndroidX Media3 ExoPlayer**, THRYNX is engineered with a strict single-focus mission: delivering high-performance, rock-solid video playback and video library management without cloud bloat, intrusive telemetry, or unnecessary editing baggage.
-
-### Core Architecture Pillars:
-- **MX Player-Style Gestures**: Intuitive vertical swipes for brightness (left) and volume (right), horizontal scrubbing for timeline seek, double-tap seek, and long-press 2x speed.
-- **Advanced Media3 Playback Engine**: Zero-lag hardware-accelerated playback with extension renderer support for 4K UHD, 1080p FHD, H.264/AVC, H.265/HEVC, VP9, and AV1.
-- **Real Multi-Audio Track Switching**: Detects embedded multi-language audio streams (English, বাংলা, Hindi, Spanish, etc.) and switches audio tracks seamlessly without re-buffering or losing playback position.
-- **Subtitle System & Synchronization**: Embedded track discovery, external `.srt` / `.vtt` / `.ass` subtitle loading, real-time sync delay offset (+/- 100ms, 500ms), and visual styling (font size, color, background opacity).
-- **Private Vault & Hidden Folders**: Secure PIN-protected vault allowing users to hide sensitive videos from the standard library with local Room database persistence.
-- **4 Clean Navigation Tabs**: Home, Videos, Folders, and Settings.
-- **100% Offline-First Privacy**: Operates fully on-device. No analytics, no ads, no trackers, and zero external cloud dependencies.
+### Installation Instructions:
+1. Download `app-debug.apk` directly to your Android device.
+2. Open the downloaded package. If prompted, grant system permission to "Install Unknown Apps" for your browser or file manager.
+3. Launch **THRYNX** and enjoy seamless, hardware-accelerated video playback.
 
 ---
 
-## 🚀 Key Capabilities & Feature Matrix
+## 🌟 Product Overview
 
-### 🎬 1. Advanced Video Playback Engine
-- **Media3 ExoPlayer Pipeline**: Low-latency rendering, adaptive buffering (15s minimum buffer, 60s maximum buffer, 1.5s fast playback start), and automatic recovery on network/playback interruptions.
-- **Multiple Embedded Audio Tracks**: Automatically discovers real audio tracks within video containers and allows instant switching with language labels, channel count, and sample rate.
-- **Aspect Ratio & Display Modes**:
-  - `Fit to Screen` (Preserves video aspect ratio with letterboxing)
-  - `Fill Screen / Crop` (Fills the entire display, eliminating black bars)
-  - `Stretch to Window` (Stretches video frames to match display bounds)
-  - `16:9 Widescreen` & `4:3 Standard` aspect frames
-- **Playback Speed Controller**: 0.25x, 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 1.75x, 2.0x, 2.5x, and 3.0x.
-- **Sleep Timer**: Configurable auto-pause timer (10m, 15m, 30m, 45m, 60m) with live remaining time display.
-- **Screenshot Capture**: Lossless frame capture using hardware `PixelCopy`, saved directly into `Pictures/THRYNX_Screenshots`.
-- **Picture-in-Picture (PiP)**: Smooth system PiP mode for seamless multitasking.
-- **Orientation Control**: Instant portrait ⟷ landscape orientation toggle, plus auto-rotation sensor support.
-- **Lock Controls**: One-tap control lock preventing accidental touch events during video playback.
+**THRYNX** is a native, modern **Video Player** engineered for Android. Built entirely in **Kotlin** with **Jetpack Compose (Material 3)** and **AndroidX Media3 ExoPlayer**, THRYNX delivers an ultra-responsive, zero-latency playback experience backed by a clean local media library.
+
+Designed with a strict offline-first philosophy, THRYNX contains zero telemetry, zero analytics trackers, and zero background cloud sync — ensuring your personal media stays strictly private on your device.
+
+### Core Architectural Highlights:
+- **Precision Dual-Axis Gesture HUD**: Intuitive touch controls for brightness (left screen axis), volume (right screen axis), precise timeline scrubbing, double-tap jump seek, and instant 2x fast-forward on hold.
+- **Hardware-Accelerated Decoding**: High-efficiency decoding pipeline with extension renderer prefer mode supporting 4K UHD, 1080p FHD, H.264/AVC, H.265/HEVC, VP9, and AV1 video codecs.
+- **Dynamic Multi-Audio Track Switching**: In-stream audio track selection (English, বাংলা, Hindi, Spanish, Original) without video reload or buffer stalls.
+- **Sub-Frame Subtitle Synchronization**: Auto-detects embedded subtitle streams, supports external `.srt`, `.vtt`, and `.ass` file loading, and provides millisecond sync offset tuning (+/- 100ms, 500ms).
+- **Hardware-Backed Private Vault**: Isolated, 4-digit PIN-protected hidden storage using SHA-256 hashing. Private media is completely excluded from public library queries and MediaStore indexers.
+- **Dedicated 4-Tab Navigation**: Clean, uncluttered UI featuring Home, Videos, Folders, and Settings.
+- **100% Offline-First Privacy**: Operates fully on-device with local Room SQLite storage and DataStore preferences.
 
 ---
 
-### 👆 2. MX Player-Style Gesture Controls
-| Gesture Action | Area of Screen | Result |
+## 🚀 Key Features & Capabilities
+
+### 🎬 1. Advanced Playback Engine
+- **Media3 ExoPlayer Core**: Adaptive buffering pipeline (15s minimum buffer, 60s maximum buffer, 1.5s fast startup buffer) with automatic network recovery.
+- **Multi-Track Audio Engine**: Inspects embedded audio streams with language tags, channel configurations, and sample rates for instant switching.
+- **Flexible Display & Aspect Ratios**:
+  - `Fit to Screen`: Maintains native aspect ratio with letterboxing.
+  - `Fill Screen / Crop`: Expands frame to eliminate black bars.
+  - `Stretch to Window`: Fills entire screen dimensions.
+  - `16:9 Widescreen` & `4:3 Standard` fixed aspect ratios.
+- **Speed Controller**: Fine-grained playback speed adjustment from `0.25x` to `3.0x`.
+- **Sleep Timer**: Configurable auto-pause timer (`10m`, `15m`, `30m`, `45m`, `60m`) with live countdown display.
+- **Lossless Screenshot**: One-tap hardware frame capture via Android `PixelCopy` saved to `Pictures/THRYNX_Screenshots`.
+- **Picture-in-Picture (PiP)**: Smooth system PiP mode for effortless multitasking.
+- **Screen Touch Lock**: Single-tap control lock to prevent accidental touches during media playback.
+
+---
+
+### 👆 2. Precision Touch Gesture Controls
+
+| Gesture Action | Screen Zone | Function & HUD Feedback |
 | :--- | :--- | :--- |
-| **Vertical Swipe (Up/Down)** | Left Side | Smooth screen brightness adjustment (0% – 100%) with HUD badge |
-| **Vertical Swipe (Up/Down)** | Right Side | Device media volume adjustment (0% – 100%) with HUD badge |
-| **Horizontal Swipe (Left/Right)** | Anywhere | Precision timeline seek with time delta indicator (`+00:15 / -00:10`) |
-| **Double Tap** | Left Side | Instant rewind (configurable: 5s, 10s, 15s, 30s) |
-| **Double Tap** | Right Side | Instant forward seek (configurable: 5s, 10s, 15s, 30s) |
-| **Double Tap** | Center | Play / Pause |
-| **Long Press** | Anywhere | Temporary 2.0x fast-forward playback (returns to normal on release) |
-| **Single Tap** | Anywhere | Toggle on-screen controls overlay (auto-hides after 4.5s of inactivity) |
+| **Vertical Swipe (Up / Down)** | Left Side | Smooth display brightness adjustment (0% – 100%) with live HUD card |
+| **Vertical Swipe (Up / Down)** | Right Side | Device media volume adjustment (0% – 100%) with live HUD card |
+| **Horizontal Swipe (Left / Right)** | Center Area | High-precision timeline scrub seeking with time delta indicator (`+00:15 / -00:10`) |
+| **Double Tap** | Left Zone | Instant rewind jump (configurable: 5s, 10s, 15s, 30s) |
+| **Double Tap** | Right Zone | Instant forward jump (configurable: 5s, 10s, 15s, 30s) |
+| **Double Tap** | Center Zone | Instant Play / Pause toggle |
+| **Long Press & Hold** | Anywhere | Temporary 2.0x fast-forward playback (reverts to normal on finger lift) |
+| **Single Tap** | Anywhere | Toggle on-screen control overlays (auto-hides after 4.5 seconds of inactivity) |
 
 ---
 
-### 💬 3. Subtitle System & Real-Time Synchronization
-- **Embedded Subtitle Tracks**: Automatic detection of embedded subtitle streams with language tags.
-- **External Subtitle File Loader**: File picker supporting external `.srt`, `.vtt`, and `.ass` subtitle files.
-- **Real-Time Subtitle Delay Sync**: Adjust subtitle timing offset dynamically in real-time (`-500ms`, `-100ms`, `Reset`, `+100ms`, `+500ms`) to fix out-of-sync audio/subtitles.
-- **Visual Appearance Customizer**:
-  - Font Size: 12sp to 32sp slider
-  - Text Color: White, Yellow, Cyan, Green
-  - Background Opacity: Transparent to Solid Black
+### 💬 3. Subtitle System & Real-Time Sync
+
+- **Embedded Subtitle Detection**: Scans and parses embedded subtitle tracks with language and format identification.
+- **External Subtitle File Loader**: Storage Access Framework (SAF) integration supporting `.srt`, `.vtt`, and `.ass` files.
+- **Real-Time Timing Offset**: Adjust subtitle synchronization on-the-fly (`-500ms`, `-100ms`, `Reset`, `+100ms`, `+500ms`) to correct desynced dialog.
+- **Customizable Subtitle Styling**:
+  - Font Size: Adjustable from `12sp` to `32sp`.
+  - Color Palette: High-contrast White, Yellow, Cyan, Green.
+  - Background Opacity: Fully transparent to solid black container.
 
 ---
 
-### 📂 4. Video Library & Organization
-The application is organized into **4 dedicated navigation tabs**:
+### 📂 4. Media Library Organization
+
+The application is structured into **4 focused navigation tabs**:
 
 #### 1. Home (`Screen.Home`)
-- **Continue Watching**: Quick-resume card displaying the last watched video with a progress bar and exact saved timestamp.
-- **Recently Played**: Horizontal scroll carousel of recently watched videos.
-- **Recently Added**: Carousel of newly discovered videos on device.
-- **Favorite Videos**: Starred videos collection for instant access.
-- **Video Folders**: Quick-access folder cards.
-- **Open Network Stream**: Stream dialog supporting direct HLS (`.m3u8`), DASH (`.mpd`), and progressive MP4/MKV video links.
+- **Continue Watching Hero Card**: Instant resume card for the last played video with live progress bar and exact millisecond playhead recovery.
+- **Recently Played**: Carousel of recently accessed videos with progress badges.
+- **Recently Added**: Carousel of newly discovered media files on the device.
+- **Favorite Videos**: Dedicated carousel for starred media.
+- **Video Folders**: Quick-access shortcuts to frequently opened directories.
+- **Network Stream Player**: Built-in network player for direct HTTP, HTTPS, HLS (`.m3u8`), and DASH (`.mpd`) video streams.
 
 #### 2. Videos (`Screen.Videos`)
-- Complete device video library with thumbnail caching.
-- **Grid & List Views**: Instant toggle between single-column list and adaptive multi-column grid layouts.
-- **Search & Duration Filter**: Real-time title search and duration chips (`All`, `< 2 mins`, `2–10 mins`, `> 10 mins`).
-- **Sorting Options**: Date (Newest/Oldest), Name (A-Z/Z-A), Size (Largest/Smallest), and Duration (Longest/Shortest).
-- **Video Action Menu**: Play, Play Next, Add to Favorites, Move to Private Vault, Video Details, Rename, Delete with confirmation, and Share via secure `FileProvider`.
+- Complete local video catalog with fast thumbnail caching.
+- **Adaptive Layouts**: Toggle between single-column List view and responsive multi-column Grid view.
+- **Search & Duration Filters**: Instant search by filename and duration filter chips (`All`, `< 5 mins`, `5–20 mins`, `> 20 mins`).
+- **Multi-Factor Sorting**: Sort by Date (Newest/Oldest), Name (A-Z/Z-A), Size (Largest/Smallest), and Duration (Longest/Shortest).
+- **Contextual Action Sheet**: Play, Play Next, Favorite, Move to Private Vault, File Details & Codec Info, Rename, Delete with confirmation, and Share via `FileProvider`.
 
 #### 3. Folders (`Screen.Folders`)
-- Organized directory view grouping videos by storage folder with video counts and latest thumbnail preview.
-- **Folder Details View**: Drill down into any folder with dedicated search and video listing.
-- **Add Custom Folder**: Add custom directories via Android Storage Access Framework (SAF).
-- **Private Vault**: Secure hidden video storage protected by a 4-digit PIN. Hidden videos are removed from the public library and only accessible upon entering the correct PIN.
+- Automatic directory grouping with video count badges and latest thumbnail previews.
+- **Folder Drill-Down**: Dedicated folder detail view with search and custom sorting.
+- **Custom Directory Import (SAF)**: Add custom directories or external SD card locations via Android's Storage Access Framework.
+- **Private Vault**: Isolated, PIN-protected hidden storage with SHA-256 verification. Media moved into the vault is removed from public gallery queries.
 
 #### 4. Settings (`Screen.Settings`)
-- **Player Controls**: Default playback speed, double-tap seek duration (5s–30s), resume playback toggle, auto-play next video toggle, background audio toggle.
-- **Gestures & Display**: MX gesture toggle, default orientation, default aspect ratio, hardware acceleration mode (Auto, Hardware, Software).
-- **Subtitles**: Appearance customizer (font size, text color, background opacity).
-- **Security & Vault**: Setup or change 4-digit vault PIN.
-- **Library & Storage**: Manual library rescan, clear application cache, clear playback history.
-- **App & Language**: Color theme (Dark, Light, System), language toggle (English, বাংলা), and app info.
+- **Playback Controls**: Default playback speed, jump interval (5s–30s), resume playback preference, auto-play next video toggle, background playback toggle.
+- **Display & Gestures**: Gesture controls toggle, default orientation, default aspect ratio, hardware acceleration mode (Auto, Hardware, Software).
+- **Subtitles**: Styling preferences (font size, font color, background opacity).
+- **Security & Vault**: Setup or modify 4-digit Private Vault PIN.
+- **Storage & Maintenance**: Manual library rescan, clear app cache, wipe playback history.
+- **Language & Theme**: Obsidian Dark theme, system theme, and instant **English ⟷ বাংলা (Bangla)** language toggle.
 
 ---
 
 ## 🔒 Security, Privacy & Android Compliance
-- **100% Offline-First Architecture**: THRYNX requires zero cloud servers, zero analytics SDKs, and zero telemetry tracking.
-- **Scoped Storage & FileProvider**: Media sharing is performed using `androidx.core.content.FileProvider` with temporary read permission grants (`FLAG_GRANT_READ_URI_PERMISSION`), preventing `FileUriExposedException`.
-- **Backup Data Protection**: Configured with `data_extraction_rules.xml` and `backup_rules.xml` to prevent leaking private vault PINs or credentials during cloud device transfers.
-- **Minimal Permissions**: Strictly requests `READ_MEDIA_VIDEO` (Android 13+) or `READ_EXTERNAL_STORAGE` (Android 8–12), with no microphone or extraneous permissions.
+
+- **100% Offline-First Architecture**: THRYNX operates completely on-device. No cloud servers, no analytics SDKs, and no telemetry tracking.
+- **Secure File Sharing**: Media sharing utilizes `androidx.core.content.FileProvider` with temporary read permission grants (`FLAG_GRANT_READ_URI_PERMISSION`).
+- **Data Protection Rules**: Configured with `data_extraction_rules.xml` and `backup_rules.xml` to prevent leaking private vault PINs during cloud backups or device transfers.
+- **Targeted Permissions**: Strictly requests `READ_MEDIA_VIDEO` (Android 13+) or `READ_EXTERNAL_STORAGE` (Android 8–12), with zero microphone or background location access.
 
 ---
 
 ## 🌐 Dual-Language Parity (English & বাংলা)
-THRYNX features 100% localization parity between **English** and **বাংলা (Bangla)**. All player HUD badges, settings descriptions, dialogs, folder names, and gesture hints adapt seamlessly according to the selected in-app language.
+
+THRYNX provides 100% localization parity between **English** and **বাংলা (Bangla)**. All UI strings, HUD alerts, settings descriptions, dialog messages, and gesture tooltips dynamically adapt to the user's selected language.
 
 ---
 
-## 🛠️ Tech Stack & Dependencies
+## 🛠️ Technology Stack
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Language & Concurrency** | Kotlin 1.9.22, Kotlin Coroutines, StateFlow |
-| **UI Framework** | Jetpack Compose (BOM 2024.02.00), Material Design 3, Accompanist |
-| **Media Playback** | AndroidX Media3 ExoPlayer 1.2.1, Media3 UI, Media3 Session, HLS, DASH |
-| **Architecture** | MVVM / Clean Architecture, Single Activity Navigation |
-| **Local Persistence** | Room SQLite Database v3 (`fallbackToDestructiveMigration`), Jetpack DataStore Preferences |
-| **Image & Thumbnail Loading** | Coil Compose 2.5.0 |
-| **Build System** | Android Gradle Plugin 8.2.2, Target SDK 34 (Android 14), Min SDK 26 (Android 8.0 Oreo) |
+| Layer | Component | Version / Specification |
+| :--- | :--- | :--- |
+| **Language & Concurrency** | Kotlin, Coroutines, StateFlow | 1.9.22 |
+| **UI Framework** | Jetpack Compose (Material Design 3) | BOM 2024.02.00 |
+| **Media Playback Engine** | AndroidX Media3 ExoPlayer | 1.2.1 (Core, UI, Session, HLS, DASH) |
+| **Architecture** | MVVM / Clean Architecture | Single-Activity Architecture |
+| **Local Persistence** | Room SQLite Database | Version 3 (`fallbackToDestructiveMigration`) |
+| **Preferences** | Jetpack DataStore Preferences | Proto/Key-Value Datastore |
+| **Image Loading** | Coil Compose | 2.5.0 |
+| **Build Configuration** | AGP 8.2.2 | Target SDK 34 (Android 14) \| Min SDK 26 (Android 8.0) |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Unit tests cover the core player state machine, library sorting, and private vault security:
+Comprehensive unit test suites validate the core player state machine, library sorting, and private vault security:
+
 ```bash
 ./gradlew testDebugUnitTest
 ```
-- `VideoPlayerStateTest`: Validates audio/subtitle language resolution, queue navigation, repeat mode transitions, and resolution badge classification.
+
+- `VideoPlayerStateTest`: Validates audio/subtitle stream resolution, queue navigation, repeat mode transitions, and resolution badge classification.
 - `VideoLibraryRepositoryTest`: Validates sorting algorithms (Date, Name, Size, Duration), duration filtering, and folder grouping.
-- `PrivateVaultSecurityTest`: Validates private video exclusion from public library queries and 4-digit PIN verification.
+- `PrivateVaultSecurityTest`: Validates private video exclusion from public library queries and 4-digit SHA-256 PIN validation.
 
 ---
 
 ## 📄 License
+
 ```
 Copyright 2026 THRYNX Contributors
 
