@@ -66,11 +66,14 @@ Designed with a strict offline-first philosophy, THRYNX contains zero telemetry,
   - `Fill Screen / Crop`: Expands frame to eliminate black bars.
   - `Stretch to Window`: Fills entire screen dimensions.
   - `16:9 Widescreen` & `4:3 Standard` fixed aspect ratios.
+- **Video Canvas Rotation & Zoom**: Quick-cycle canvas rotation (0°, 90°, 180°, 270°) and zoom presets (1.0x, 1.25x, 1.5x, 2.0x).
+- **Player Screen Orientation**: On-screen toggle between Landscape, Portrait, and Sensor Auto-rotate.
+- **Top Bar Info HUD**: Displays current system clock (HH:mm) and real-time battery status with charging icon (can be toggled in Settings).
 - **Speed Controller**: Fine-grained playback speed adjustment from `0.25x` to `3.0x`.
 - **Sleep Timer**: Configurable auto-pause timer (`10m`, `15m`, `30m`, `45m`, `60m`) with live countdown display.
 - **Lossless Screenshot**: One-tap hardware frame capture via Android `PixelCopy` saved to `Pictures/THRYNX_Screenshots`.
 - **Picture-in-Picture (PiP)**: Smooth system PiP mode for effortless multitasking.
-- **Screen Touch Lock**: Single-tap control lock to prevent accidental touches during media playback.
+- **Screen Touch Lock**: Single-tap lock preventing accidental touches; system back press is disabled while locked to prevent unexpected exit, and unlocks only via the floating unlock button.
 
 ---
 
@@ -110,21 +113,23 @@ The application is structured into **4 focused navigation tabs**:
 - **Recently Played**: Carousel of recently accessed videos with progress badges.
 - **Recently Added**: Carousel of newly discovered media files on the device.
 - **Favorite Videos**: Dedicated carousel for starred media.
+- **Private Vault**: Isolated, PIN-protected hidden storage with SHA-256 verification. Media moved into the vault is removed from public gallery queries.
 - **Video Folders**: Quick-access shortcuts to frequently opened directories.
-- **Network Stream Player**: Built-in network player for direct HTTP, HTTPS, HLS (`.m3u8`), and DASH (`.mpd`) video streams.
+- **Network Stream Player**: Built-in network player for direct HTTP, HTTPS, HLS (`.m3u8`), and DASH (`.mpd`) video streams with instant sample stream options.
 
 #### 2. Videos (`Screen.Videos`)
-- Complete local video catalog with fast thumbnail caching.
+- Complete local video catalog auto-scanned from device storage with fast thumbnail caching.
 - **Adaptive Layouts**: Toggle between single-column List view and responsive multi-column Grid view.
 - **Search & Duration Filters**: Instant search by filename and duration filter chips (`All`, `< 5 mins`, `5–20 mins`, `> 20 mins`).
 - **Multi-Factor Sorting**: Sort by Date (Newest/Oldest), Name (A-Z/Z-A), Size (Largest/Smallest), and Duration (Longest/Shortest).
+- **Resume Playback Dialog**: Option to resume from saved position or restart, with customizable default behavior in Settings.
 - **Contextual Action Sheet**: Play, Play Next, Favorite, Move to Private Vault, File Details & Codec Info, Rename, Delete with confirmation, and Share via `FileProvider`.
 
 #### 3. Folders (`Screen.Folders`)
-- Automatic directory grouping with video count badges and latest thumbnail previews.
+- **Automatic Directory Discovery**: Automatically scans and displays all folders containing video files across device storage.
+- **Folder Management**: Options to Hide folders (with management in Settings) or Delete folders and their media files with confirmation.
+- **Multi-Select Mode**: Batch selection mode to hide or delete multiple folders at once.
 - **Folder Drill-Down**: Dedicated folder detail view with search and custom sorting.
-- **Custom Directory Import (SAF)**: Add custom directories or external SD card locations via Android's Storage Access Framework.
-- **Private Vault**: Isolated, PIN-protected hidden storage with SHA-256 verification. Media moved into the vault is removed from public gallery queries.
 
 #### 4. Settings (`Screen.Settings`)
 - **Playback Controls**: Default playback speed, jump interval (5s–30s), resume playback preference, auto-play next video toggle, background playback toggle.
