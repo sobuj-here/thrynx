@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.thrynx.app.ui.components.VideoThumbnail
 import com.thrynx.app.R
 import com.thrynx.app.core.database.FavoriteMediaEntity
 import com.thrynx.app.core.database.PlaybackHistoryEntity
@@ -58,20 +59,10 @@ fun HomeScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showStreamDialog by remember { mutableStateOf(false) }
     var streamUrlInput by remember { mutableStateOf("") }
-    var videoToResumePrompt by remember { mutableStateOf<Pair<MediaItemModel, Long>?>(null) }
-    var rememberResumeChoice by remember { mutableStateOf(false) }
 
     fun handlePlayRequest(media: MediaItemModel, requestedPosition: Long = 0L) {
         val targetPos = if (requestedPosition > 0L) requestedPosition else media.lastPositionMs
-        if (targetPos > 5000L && (media.durationMs == 0L || targetPos < media.durationMs - 5000L)) {
-            when (resumeMode) {
-                "resume" -> onOpenMedia(media, targetPos)
-                "beginning" -> onOpenMedia(media, 0L)
-                else -> videoToResumePrompt = Pair(media, targetPos)
-            }
-        } else {
-            onOpenMedia(media, requestedPosition)
-        }
+        onOpenMedia(media, targetPos)
     }
 
     val lastWatched = recentHistory.firstOrNull()
@@ -608,63 +599,6 @@ fun HomeScreen(
         )
     }
 
-    // Resume Playback Confirmation Dialog
-    videoToResumePrompt?.let { (media, pos) ->
-        AlertDialog(
-            onDismissRequest = { videoToResumePrompt = null },
-            title = { Text(stringResource(id = R.string.dialog_resume_title)) },
-            text = {
-                Column {
-                    Text(
-                        text = stringResource(id = R.string.dialog_resume_message, formatDuration(pos)),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { rememberResumeChoice = !rememberResumeChoice }
-                    ) {
-                        Checkbox(
-                            checked = rememberResumeChoice,
-                            onCheckedChange = { rememberResumeChoice = it }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(id = R.string.dialog_resume_remember),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (rememberResumeChoice) {
-                            coroutineScope.launch { preferencesManager.setResumeMode("resume") }
-                        }
-                        videoToResumePrompt = null
-                        onOpenMedia(media, pos)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
-                ) {
-                    Text(stringResource(id = R.string.dialog_resume_action_resume, formatDuration(pos)), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        if (rememberResumeChoice) {
-                            coroutineScope.launch { preferencesManager.setResumeMode("beginning") }
-                        }
-                        videoToResumePrompt = null
-                        onOpenMedia(media, 0L)
-                    }
-                ) {
-                    Text(stringResource(id = R.string.dialog_resume_action_restart))
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -690,10 +624,9 @@ fun RecentVideoCard(
                     .background(Color(0xFF141C2B)),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = uri,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                VideoThumbnail(
+                    uri = try { Uri.parse(uri) } catch (_: Exception) { null },
+                    path = uri,
                     modifier = Modifier.fillMaxSize()
                 )
                 Box(
@@ -828,10 +761,9 @@ fun VideoRowItem(
                 .background(Color(0xFF141C2B)),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = video.uri ?: video.path,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            VideoThumbnail(
+                uri = video.uri,
+                path = video.path,
                 modifier = Modifier.fillMaxSize()
             )
             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))

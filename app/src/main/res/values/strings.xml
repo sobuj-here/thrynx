@@ -9,6 +9,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_videos">Videos</string>
     <string name="nav_folders">Folders</string>
+    <string name="nav_audio">Audio</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Home Screen -->
@@ -173,5 +174,54 @@
     <string name="action_save">Save</string>
     <string name="action_close">Close</string>
     <string name="action_ok">OK</string>
+    <!-- Categorized Settings Sections -->
+    <string name="settings_section_list">List</string>
+    <string name="settings_section_decoder">Decoder</string>
+    <string name="settings_section_audio">Audio</string>
+    <string name="settings_section_general">General</string>
+    <string name="settings_section_dev">Development</string>
+    <string name="settings_section_language">App Language</string>
+    <string name="settings_show_played_time">Show Played Time &amp; Progress</string>
+    <string name="settings_show_played_time_desc">Display playback progress badges on video cards</string>
+    <string name="settings_video_view_mode">Video View Mode</string>
+    <string name="settings_audio_view_mode">Audio View Mode</string>
+    <string name="settings_pause_on_headset">Pause on Disconnect</string>
+    <string name="settings_pause_on_headset_desc">Pause playback when headphones or Bluetooth disconnect</string>
+
+    <!-- Video Filter & Actions -->
+    <string name="filter_all">All</string>
+    <string name="filter_short">&lt; 5m</string>
+    <string name="filter_medium">5–20m</string>
+    <string name="filter_long">&gt; 20m</string>
+    <string name="sort_date_desc">Date (Newest)</string>
+    <string name="sort_date_asc">Date (Oldest)</string>
+    <string name="sort_name_asc">Name (A–Z)</string>
+    <string name="sort_name_desc">Name (Z–A)</string>
+    <string name="sort_size_desc">Size (Largest)</string>
+    <string name="sort_duration_desc">Duration (Longest)</string>
+    <string name="permission_grant">Grant Permission</string>
+    <string name="permission_storage_title">Storage Permission Required</string>
+    <string name="permission_storage_desc">Grant permission to scan and play video files on your device.</string>
+
     <string name="action_done">Done</string>
+
+    <!-- Settings extra keys used in SettingsScreen -->
+    <string name="settings_resume_mode_always">Always Resume</string>
+    <string name="settings_resume_mode_never">Start from Beginning</string>
+    <string name="settings_resume_mode_ask">Ask Every Time</string>
+    <string name="settings_default_orientation">Default Orientation</string>
+    <string name="settings_orientation_auto">Auto-Rotate (Sensor)</string>
+    <string name="settings_orientation_landscape">Landscape</string>
+    <string name="settings_orientation_portrait">Portrait</string>
+    <string name="settings_player_hud_info">Player Clock &amp; Battery</string>
+    <string name="settings_player_hud_info_desc">Show system clock and battery indicator in player</string>
+    <string name="settings_auto_play_next">Auto-Play Next Video</string>
+    <string name="settings_gestures_enabled">Enable Gestures</string>
+    <string name="settings_decoder_auto">Auto (Recommended)</string>
+    <string name="settings_decoder_hw">Hardware (HW)</string>
+    <string name="settings_decoder_sw">Software (SW)</string>
+    <string name="settings_background_audio">Background Playback</string>
+    <string name="settings_background_audio_desc">Continue audio playback when screen turns off</string>
+    <string name="settings_subtitle_style">Subtitle Appearance</string>
+    <string name="settings_rescan_media">Rescan Media Library</string>
 </resources>

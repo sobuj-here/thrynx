@@ -23,6 +23,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import java.io.File
+import java.io.OutputStream
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.thrynx.app.core.database.CustomFolderEntity
@@ -88,6 +90,7 @@ class MainActivity : FragmentActivity() {
                 val navController = rememberNavController()
 
                 var rawVideos by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
+                var rawAudios by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
 
                 val recentHistory by app.database.historyDao().getRecentHistory(30).collectAsState(initial = emptyList())
                 val favorites by app.database.favoriteDao().getAllFavorites().collectAsState(initial = emptyList())
@@ -108,6 +111,10 @@ class MainActivity : FragmentActivity() {
                     app.mediaScanner.groupIntoFolders(visibleVideos)
                 }
 
+                val audioFolders = remember(rawAudios) {
+                    app.mediaScanner.loadAudioFolders(rawAudios)
+                }
+
                 fun refreshVideos() {
                     lifecycleScope.launch {
                         val foldersToScan = try {
@@ -117,6 +124,8 @@ class MainActivity : FragmentActivity() {
                         }
                         val v = app.mediaScanner.loadVideos(customFolders = foldersToScan)
                         rawVideos = v
+                        val a = app.mediaScanner.loadAudios()
+                        rawAudios = a
                     }
                 }
 
@@ -142,7 +151,9 @@ class MainActivity : FragmentActivity() {
                         navController = navController,
                         playerManager = app.playerManager,
                         videos = visibleVideos,
+                        audios = rawAudios,
                         folders = folders,
+                        audioFolders = audioFolders,
                         recentHistory = recentHistory,
                         favorites = favorites,
                         privateVideos = privateVideos,
@@ -165,13 +176,28 @@ class MainActivity : FragmentActivity() {
                         },
                         onHideInVault = { media ->
                             lifecycleScope.launch {
+                                val vaultDir = File(filesDir, "vault").also { it.mkdirs() }
+                                File(vaultDir, ".nomedia").createNewFile()
+                                val destFile = File(vaultDir, "vault_${System.currentTimeMillis()}_${File(media.path).name}")
+                                try {
+                                    val input = if (media.uri != null) contentResolver.openInputStream(media.uri) else if (media.path.isNotBlank()) File(media.path).inputStream() else null
+                                    input?.use { inStream ->
+                                        destFile.outputStream().use { outStream: OutputStream ->
+                                            inStream.copyTo(outStream)
+                                        }
+                                    }
+                                    app.mediaScanner.deleteVideo(media)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+
                                 app.database.privateVaultDao().addPrivateVideo(
                                     PrivateVideoEntity(
-                                        mediaUri = media.mediaUriString,
-                                        originalPath = media.path,
+                                        mediaUri = Uri.fromFile(destFile).toString(),
+                                        originalPath = destFile.absolutePath,
                                         title = media.title,
                                         durationMs = media.durationMs,
-                                        sizeBytes = media.sizeBytes
+                                        sizeBytes = if (destFile.exists()) destFile.length() else media.sizeBytes
                                     )
                                 )
                                 Toast.makeText(this@MainActivity, "Video hidden in vault", Toast.LENGTH_SHORT).show()
@@ -182,11 +208,52 @@ class MainActivity : FragmentActivity() {
                             lifecycleScope.launch {
                                 val success = app.mediaScanner.deleteVideo(media)
                                 if (success) {
-                                    Toast.makeText(this@MainActivity, "Video deleted", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@MainActivity, "Media deleted", Toast.LENGTH_SHORT).show()
                                     refreshVideos()
                                 } else {
                                     Toast.makeText(this@MainActivity, "Could not delete file", Toast.LENGTH_SHORT).show()
                                 }
+                            }
+                        },
+                        onDeleteMultipleVideos = { list ->
+                            lifecycleScope.launch {
+                                for (item in list) {
+                                    app.mediaScanner.deleteVideo(item)
+                                }
+                                Toast.makeText(this@MainActivity, "${list.size} files deleted", Toast.LENGTH_SHORT).show()
+                                refreshVideos()
+                            }
+                        },
+                        onHideMultipleVideosInVault = { list ->
+                            lifecycleScope.launch {
+                                val vaultDir = File(filesDir, "vault").also { it.mkdirs() }
+                                File(vaultDir, ".nomedia").createNewFile()
+                                for (media in list) {
+                                    val destFile = File(vaultDir, "vault_${System.currentTimeMillis()}_${File(media.path).name}")
+                                    try {
+                                        val input = if (media.uri != null) contentResolver.openInputStream(media.uri) else if (media.path.isNotBlank()) File(media.path).inputStream() else null
+                                        input?.use { inStream ->
+                                            destFile.outputStream().use { outStream: OutputStream ->
+                                                inStream.copyTo(outStream)
+                                            }
+                                        }
+                                        app.mediaScanner.deleteVideo(media)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+
+                                    app.database.privateVaultDao().addPrivateVideo(
+                                        PrivateVideoEntity(
+                                            mediaUri = Uri.fromFile(destFile).toString(),
+                                            originalPath = destFile.absolutePath,
+                                            title = media.title,
+                                            durationMs = media.durationMs,
+                                            sizeBytes = if (destFile.exists()) destFile.length() else media.sizeBytes
+                                        )
+                                    )
+                                }
+                                Toast.makeText(this@MainActivity, "${list.size} videos hidden in vault", Toast.LENGTH_SHORT).show()
+                                refreshVideos()
                             }
                         },
                         onRenameMedia = { media, newName ->
@@ -314,10 +381,12 @@ class MainActivity : FragmentActivity() {
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+            permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
             permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+            permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         } else {
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -361,6 +430,13 @@ class MainActivity : FragmentActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         app.playerManager.setControlsLocked(isInPictureInPictureMode)
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (app.playerManager.playbackState.value.isPlaying && app.playerManager.playbackState.value.currentMedia?.isVideo == true) {
+            enterPictureInPicture()
+        }
     }
 
     override fun onStop() {

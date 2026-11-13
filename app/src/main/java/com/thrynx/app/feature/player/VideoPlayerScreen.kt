@@ -2,6 +2,7 @@ package com.thrynx.app.feature.player
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.media.AudioManager
@@ -23,6 +24,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -134,6 +136,8 @@ fun VideoPlayerScreen(
         }
     }
 
+    var showRemainingTime by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         val timeFormat = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
         while (true) {
@@ -205,6 +209,27 @@ fun VideoPlayerScreen(
     fun showHud(text: String, icon: ImageVector) {
         hudText = text
         hudIcon = icon
+    }
+
+    // Audio Disconnect / Becoming Noisy Listener (Headphones unplugged or Bluetooth turned off)
+    DisposableEffect(Unit) {
+        val audioReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: Context?, intent: Intent?) {
+                if (intent?.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY ||
+                    intent?.action == android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED) {
+                    playerManager.pause()
+                    showHud("Paused (Audio Disconnected)", Icons.Default.Headphones)
+                }
+            }
+        }
+        val filter = android.content.IntentFilter().apply {
+            addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+            addAction(android.bluetooth.BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        }
+        context.registerReceiver(audioReceiver, filter)
+        onDispose {
+            try { context.unregisterReceiver(audioReceiver) } catch (e: Exception) {}
+        }
     }
 
     // Unified Back Navigation Handler
@@ -295,13 +320,12 @@ fun VideoPlayerScreen(
                     },
                     onDoubleTap = { offset ->
                         if (!playbackState.isControlsLocked && gesturesEnabledPref) {
-                            val third = size.width / 3f
                             when {
-                                offset.x < third -> {
+                                offset.x < size.width * 0.45f -> {
                                     playerManager.seekBackward(seekDeltaMs)
                                     showHud("-$doubleTapSeekSec s", Icons.Default.Replay10)
                                 }
-                                offset.x > third * 2 -> {
+                                offset.x > size.width * 0.55f -> {
                                     playerManager.seekForward(seekDeltaMs)
                                     showHud("+$doubleTapSeekSec s", Icons.Default.Forward10)
                                 }
@@ -319,6 +343,19 @@ fun VideoPlayerScreen(
                         }
                     }
                 )
+            }
+            // Multi-touch Pinch to Zoom
+            .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
+                if (!playbackState.isControlsLocked && gesturesEnabledPref) {
+                    detectTransformGestures { _, _, zoom: Float, _ ->
+                        if (zoom != 1.0f) {
+                            val currentZoom: Float = playbackState.zoomScale
+                            val newZoom: Float = (currentZoom * zoom).coerceIn(0.5f, 4.0f)
+                            playerManager.setZoomScale(newZoom)
+                            showHud("Zoom: ${(newZoom * 100).toInt()}%", Icons.Default.ZoomIn)
+                        }
+                    }
+                }
             }
             // Vertical Drag for Brightness (left) & Volume (right), Horizontal Drag for Seek
             .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
@@ -734,6 +771,41 @@ fun VideoPlayerScreen(
                     }
                 }
 
+                // Bottom-Left Screen Orientation Button (accessible in both Portrait & Landscape)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 20.dp, bottom = 86.dp)
+                ) {
+                    Surface(
+                        onClick = {
+                            if (isLandscape) {
+                                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                                isLandscape = false
+                            } else {
+                                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                isLandscape = true
+                            }
+                            showHud(
+                                if (isLandscape) "Landscape" else "Portrait",
+                                Icons.Default.ScreenRotation
+                            )
+                        },
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.65f),
+                        contentColor = ThrynxCyan,
+                        modifier = Modifier.size(46.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.ScreenRotation,
+                                contentDescription = "Screen Orientation",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
                 // Bottom Timeline & Scrubber Bar
                 Column(
                     modifier = Modifier
@@ -747,11 +819,17 @@ fun VideoPlayerScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val remainingMs = (playbackState.durationMs - playbackState.currentPositionMs).coerceAtLeast(0L)
                         Text(
-                            text = "${formatDuration(playbackState.currentPositionMs)} / ${formatDuration(playbackState.durationMs)}",
+                            text = if (showRemainingTime) {
+                                "${formatDuration(playbackState.currentPositionMs)} / -${formatDuration(remainingMs)}"
+                            } else {
+                                "${formatDuration(playbackState.currentPositionMs)} / ${formatDuration(playbackState.durationMs)}"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             color = Color.White,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { showRemainingTime = !showRemainingTime }
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {

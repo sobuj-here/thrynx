@@ -50,7 +50,6 @@ fun SettingsScreen(
     val currentTheme by preferencesManager.themeFlow.collectAsState(initial = "dark")
     val defaultSpeed by preferencesManager.defaultSpeedFlow.collectAsState(initial = 1.0f)
     val doubleTapSeekSec by preferencesManager.doubleTapSeekSecFlow.collectAsState(initial = 10)
-    val resumePlayback by preferencesManager.resumePlaybackFlow.collectAsState(initial = true)
     val resumeMode by preferencesManager.resumeModeFlow.collectAsState(initial = "ask")
     val showPlayerInfoHud by preferencesManager.showPlayerInfoHudFlow.collectAsState(initial = true)
     val hiddenFolders by preferencesManager.hiddenFoldersFlow.collectAsState(initial = emptySet())
@@ -63,19 +62,25 @@ fun SettingsScreen(
     val vaultPin by preferencesManager.privateVaultPinFlow.collectAsState(initial = "")
     val subtitleStyle by preferencesManager.subtitleStyleFlow.collectAsState(initial = com.thrynx.app.core.model.SubtitleStyle())
 
+    val showPlayedTime by preferencesManager.showPlayedTimeFlow.collectAsState(initial = true)
+    val videoViewMode by preferencesManager.videoViewModeFlow.collectAsState(initial = "files")
+    val audioViewMode by preferencesManager.audioViewModeFlow.collectAsState(initial = "files")
+    val pauseOnHeadsetDisconnect by preferencesManager.pauseOnHeadsetDisconnectFlow.collectAsState(initial = true)
+
     // Dialog states
     var showLanguageDialog by remember { mutableStateOf(false) }
-    var showThemeDialog by remember { mutableStateOf(false) }
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSeekDialog by remember { mutableStateOf(false) }
     var showOrientationDialog by remember { mutableStateOf(false) }
-    var showResizeDialog by remember { mutableStateOf(false) }
     var showDecoderDialog by remember { mutableStateOf(false) }
     var showPinDialog by remember { mutableStateOf(false) }
     var pinInput by remember { mutableStateOf("") }
     var showSubtitleDialog by remember { mutableStateOf(false) }
     var showResumeModeDialog by remember { mutableStateOf(false) }
     var showHiddenFoldersDialog by remember { mutableStateOf(false) }
+    var showVideoViewModeDialog by remember { mutableStateOf(false) }
+    var showAudioViewModeDialog by remember { mutableStateOf(false) }
+    var showDevInfoDialog by remember { mutableStateOf(false) }
 
     // Dynamic Cache Size calculation
     var cacheSizeBytes by remember { mutableLongStateOf(0L) }
@@ -104,9 +109,60 @@ fun SettingsScreen(
             )
         }
 
-        // Section: Player Controls
+        // 1. SECTION: LIST
+        item {
+            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_list)) {
+                SettingsClickableRow(
+                    icon = Icons.Default.VideoLibrary,
+                    title = stringResource(id = R.string.settings_video_view_mode),
+                    value = if (videoViewMode == "folders") "By Folders" else "All Videos",
+                    onClick = { showVideoViewModeDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsClickableRow(
+                    icon = Icons.Default.Audiotrack,
+                    title = stringResource(id = R.string.settings_audio_view_mode),
+                    value = if (audioViewMode == "folders") "By Folders" else "All Songs",
+                    onClick = { showAudioViewModeDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsSwitchRow(
+                    icon = Icons.Default.AvTimer,
+                    title = stringResource(id = R.string.settings_show_played_time),
+                    description = stringResource(id = R.string.settings_show_played_time_desc),
+                    checked = showPlayedTime,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { preferencesManager.setShowPlayedTime(checked) }
+                    }
+                )
+            }
+        }
+
+        // 2. SECTION: PLAYER
         item {
             SettingsCategoryCard(title = stringResource(id = R.string.settings_section_player)) {
+                SettingsClickableRow(
+                    icon = Icons.Default.Restore,
+                    title = stringResource(id = R.string.dialog_resume_title),
+                    value = when (resumeMode) {
+                        "resume" -> stringResource(id = R.string.settings_resume_mode_always)
+                        "beginning" -> stringResource(id = R.string.settings_resume_mode_never)
+                        else -> stringResource(id = R.string.settings_resume_mode_ask)
+                    },
+                    onClick = { showResumeModeDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsClickableRow(
+                    icon = Icons.Default.ScreenRotation,
+                    title = stringResource(id = R.string.settings_default_orientation),
+                    value = when (defaultOrientation) {
+                        "landscape" -> stringResource(id = R.string.settings_orientation_landscape)
+                        "portrait" -> stringResource(id = R.string.settings_orientation_portrait)
+                        else -> stringResource(id = R.string.settings_orientation_auto)
+                    },
+                    onClick = { showOrientationDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsClickableRow(
                     icon = Icons.Default.Speed,
                     title = stringResource(id = R.string.settings_default_speed),
@@ -121,217 +177,450 @@ fun SettingsScreen(
                     onClick = { showSeekDialog = true }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
-                    icon = Icons.Default.Restore,
-                    title = stringResource(id = R.string.settings_resume_mode_title),
-                    value = when (resumeMode) {
-                        "resume" -> stringResource(id = R.string.settings_resume_always)
-                        "beginning" -> stringResource(id = R.string.settings_resume_beginning)
-                        else -> stringResource(id = R.string.settings_resume_ask)
-                    },
-                    onClick = { showResumeModeDialog = true }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsToggleRow(
+                SettingsSwitchRow(
                     icon = Icons.Default.Schedule,
-                    title = stringResource(id = R.string.settings_show_player_hud),
-                    subtitle = stringResource(id = R.string.settings_show_player_hud_desc),
+                    title = stringResource(id = R.string.settings_player_hud_info),
+                    description = stringResource(id = R.string.settings_player_hud_info_desc),
                     checked = showPlayerInfoHud,
-                    onCheckedChange = { coroutineScope.launch { preferencesManager.setShowPlayerInfoHud(it) } }
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { preferencesManager.setShowPlayerInfoHud(checked) }
+                    }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsToggleRow(
+                SettingsSwitchRow(
                     icon = Icons.Default.SkipNext,
-                    title = stringResource(id = R.string.settings_auto_next),
-                    subtitle = stringResource(id = R.string.settings_auto_next_desc),
+                    title = stringResource(id = R.string.settings_auto_play_next),
                     checked = autoPlayNext,
-                    onCheckedChange = { coroutineScope.launch { preferencesManager.setAutoPlayNext(it) } }
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { preferencesManager.setAutoPlayNext(checked) }
+                    }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsToggleRow(
-                    icon = Icons.Default.Headphones,
-                    title = stringResource(id = R.string.settings_background_play),
-                    subtitle = stringResource(id = R.string.settings_background_play_desc),
-                    checked = backgroundAudio,
-                    onCheckedChange = { coroutineScope.launch { preferencesManager.setBackgroundAudio(it) } }
+                SettingsSwitchRow(
+                    icon = Icons.Default.TouchApp,
+                    title = stringResource(id = R.string.settings_gestures_enabled),
+                    checked = gesturesEnabled,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { preferencesManager.setGesturesEnabled(checked) }
+                    }
                 )
             }
         }
 
-        // Section: Gestures & Display
+        // 3. SECTION: DECODER
         item {
-            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_gestures)) {
-                SettingsToggleRow(
-                    icon = Icons.Default.TouchApp,
-                    title = stringResource(id = R.string.settings_gestures),
-                    subtitle = stringResource(id = R.string.settings_gestures_desc),
-                    checked = gesturesEnabled,
-                    onCheckedChange = { coroutineScope.launch { preferencesManager.setGesturesEnabled(it) } }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
-                    icon = Icons.Default.ScreenRotation,
-                    title = stringResource(id = R.string.settings_orientation),
-                    value = defaultOrientation.replaceFirstChar { it.uppercase() },
-                    onClick = { showOrientationDialog = true }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
-                    icon = Icons.Default.AspectRatio,
-                    title = stringResource(id = R.string.settings_resize_mode),
-                    value = defaultResizeMode.replaceFirstChar { it.uppercase() },
-                    onClick = { showResizeDialog = true }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_decoder)) {
                 SettingsClickableRow(
                     icon = Icons.Default.Memory,
                     title = stringResource(id = R.string.settings_hw_decoder),
-                    value = hwDecoderMode.replaceFirstChar { it.uppercase() },
+                    value = when (hwDecoderMode) {
+                        "hardware" -> stringResource(id = R.string.settings_decoder_hw)
+                        "software" -> stringResource(id = R.string.settings_decoder_sw)
+                        else -> stringResource(id = R.string.settings_decoder_auto)
+                    },
                     onClick = { showDecoderDialog = true }
                 )
             }
         }
 
-        // Section: Subtitles
+        // 4. SECTION: AUDIO
+        item {
+            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_audio)) {
+                SettingsSwitchRow(
+                    icon = Icons.Default.Headphones,
+                    title = stringResource(id = R.string.settings_pause_on_headset),
+                    description = stringResource(id = R.string.settings_pause_on_headset_desc),
+                    checked = pauseOnHeadsetDisconnect,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { preferencesManager.setPauseOnHeadsetDisconnect(checked) }
+                    }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsSwitchRow(
+                    icon = Icons.Default.Audiotrack,
+                    title = stringResource(id = R.string.settings_background_audio),
+                    description = stringResource(id = R.string.settings_background_audio_desc),
+                    checked = backgroundAudio,
+                    onCheckedChange = { checked ->
+                        coroutineScope.launch { preferencesManager.setBackgroundAudio(checked) }
+                    }
+                )
+            }
+        }
+
+        // 5. SECTION: SUBTITLES
         item {
             SettingsCategoryCard(title = stringResource(id = R.string.settings_section_subtitles)) {
                 SettingsClickableRow(
                     icon = Icons.Default.Subtitles,
-                    title = stringResource(id = R.string.player_subtitle_styling),
-                    value = "${subtitleStyle.fontSizeSp.toInt()} sp • ${subtitleStyle.textColorHex}",
+                    title = stringResource(id = R.string.settings_subtitle_style),
+                    value = "${subtitleStyle.fontSizeSp.toInt()}sp, ${subtitleStyle.textColorHex}",
                     onClick = { showSubtitleDialog = true }
                 )
             }
         }
 
-        // Section: Security & Vault
+        // 6. SECTION: GENERAL
         item {
-            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_security)) {
-                SettingsClickableRow(
-                    icon = Icons.Default.Lock,
-                    title = stringResource(id = R.string.settings_private_pin),
-                    value = if (vaultPin.isBlank()) "Not Set" else "Active (••••)",
-                    onClick = {
-                        pinInput = ""
-                        showPinDialog = true
-                    }
-                )
-            }
-        }
-
-        // Section: Library & Storage
-        item {
-            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_library)) {
-                SettingsClickableRow(
-                    icon = Icons.Default.Refresh,
-                    title = stringResource(id = R.string.settings_rescan),
-                    value = "Run Now",
-                    onClick = {
-                        onRescanLibrary()
-                        Toast.makeText(context, "Scanning library…", Toast.LENGTH_SHORT).show()
-                    }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
-                    icon = Icons.Default.CleaningServices,
-                    title = stringResource(id = R.string.settings_clear_cache),
-                    value = formatFileSize(cacheSizeBytes),
-                    onClick = {
-                        coroutineScope.launch(Dispatchers.IO) {
-                            deleteFolderContents(context.cacheDir)
-                            context.externalCacheDir?.let { deleteFolderContents(it) }
-                            withContext(Dispatchers.Main) {
-                                refreshCacheSize()
-                                Toast.makeText(context, context.getString(R.string.settings_clear_cache_confirm), Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_general)) {
                 SettingsClickableRow(
                     icon = Icons.Default.FolderOff,
                     title = stringResource(id = R.string.settings_hidden_folders_title),
-                    value = if (hiddenFolders.isEmpty()) "0" else "${hiddenFolders.size}",
+                    value = "${hiddenFolders.size} hidden",
                     onClick = { showHiddenFoldersDialog = true }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
+                SettingsActionRow(
+                    icon = Icons.Default.Refresh,
+                    title = stringResource(id = R.string.settings_rescan_media),
+                    onClick = {
+                        onRescanLibrary()
+                        Toast.makeText(context, context.getString(R.string.settings_rescan_media), Toast.LENGTH_SHORT).show()
+                    }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsActionRow(
                     icon = Icons.Default.History,
                     title = stringResource(id = R.string.settings_clear_history),
-                    value = "Clear",
                     onClick = {
                         onClearHistory()
                         Toast.makeText(context, context.getString(R.string.settings_clear_history_confirm), Toast.LENGTH_SHORT).show()
                     }
                 )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsActionRow(
+                    icon = Icons.Default.CleaningServices,
+                    title = stringResource(id = R.string.settings_clear_cache),
+                    value = formatFileSize(cacheSizeBytes),
+                    onClick = {
+                        coroutineScope.launch(Dispatchers.IO) {
+                            context.cacheDir.deleteRecursively()
+                            context.externalCacheDir?.deleteRecursively()
+                            refreshCacheSize()
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, context.getString(R.string.settings_clear_cache_confirm), Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                )
             }
         }
 
-        // Section: App & Language
+        // 7. SECTION: DEVELOPMENT & SECURITY
         item {
-            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_app)) {
+            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_dev)) {
+                SettingsClickableRow(
+                    icon = Icons.Default.Lock,
+                    title = stringResource(id = R.string.settings_private_pin),
+                    value = if (vaultPin.isBlank()) "Not Set" else "Active (••••)",
+                    onClick = { showPinDialog = true }
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsClickableRow(
+                    icon = Icons.Default.Info,
+                    title = stringResource(id = R.string.settings_app_info),
+                    value = "Architecture & Licenses",
+                    onClick = { showDevInfoDialog = true }
+                )
+            }
+        }
+
+        // 8. SECTION: APP LANGUAGE
+        item {
+            SettingsCategoryCard(title = stringResource(id = R.string.settings_section_language)) {
                 SettingsClickableRow(
                     icon = Icons.Default.Translate,
                     title = stringResource(id = R.string.settings_language),
                     value = if (currentLang == "bn") "বাংলা (Bangla)" else "English",
                     onClick = { showLanguageDialog = true }
                 )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                SettingsClickableRow(
-                    icon = Icons.Default.DarkMode,
-                    title = stringResource(id = R.string.settings_theme),
-                    value = currentTheme.replaceFirstChar { it.uppercase() },
-                    onClick = { showThemeDialog = true }
-                )
             }
         }
     }
 
-    // Resume Mode Dialog
-    if (showResumeModeDialog) {
-        val options = listOf(
-            Pair("ask", stringResource(id = R.string.settings_resume_ask)),
-            Pair("resume", stringResource(id = R.string.settings_resume_always)),
-            Pair("beginning", stringResource(id = R.string.settings_resume_beginning))
-        )
+    // Language Dialog
+    if (showLanguageDialog) {
         AlertDialog(
-            onDismissRequest = { showResumeModeDialog = false },
-            title = { Text(stringResource(id = R.string.settings_resume_mode_title)) },
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(stringResource(id = R.string.settings_language)) },
             text = {
                 Column {
-                    options.forEach { (mode, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch {
+                                    preferencesManager.setLanguage("en")
+                                    onLanguageChanged("en")
+                                    showLanguageDialog = false
+                                }
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = currentLang == "en", onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("English", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch {
+                                    preferencesManager.setLanguage("bn")
+                                    onLanguageChanged("bn")
+                                    showLanguageDialog = false
+                                }
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = currentLang == "bn", onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("বাংলা (Bangla)", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Video View Mode Dialog
+    if (showVideoViewModeDialog) {
+        AlertDialog(
+            onDismissRequest = { showVideoViewModeDialog = false },
+            title = { Text(stringResource(id = R.string.settings_video_view_mode)) },
+            text = {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch { preferencesManager.setVideoViewMode("files") }
+                                showVideoViewModeDialog = false
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = videoViewMode == "files", onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("All Videos (Flat List)", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch { preferencesManager.setVideoViewMode("folders") }
+                                showVideoViewModeDialog = false
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = videoViewMode == "folders", onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("By Folders", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Audio View Mode Dialog
+    if (showAudioViewModeDialog) {
+        AlertDialog(
+            onDismissRequest = { showAudioViewModeDialog = false },
+            title = { Text(stringResource(id = R.string.settings_audio_view_mode)) },
+            text = {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch { preferencesManager.setAudioViewMode("files") }
+                                showAudioViewModeDialog = false
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = audioViewMode == "files", onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("All Songs (Flat List)", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch { preferencesManager.setAudioViewMode("folders") }
+                                showAudioViewModeDialog = false
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = audioViewMode == "folders", onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("By Folders", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Resume Mode Dialog
+    if (showResumeModeDialog) {
+        AlertDialog(
+            onDismissRequest = { showResumeModeDialog = false },
+            title = { Text(stringResource(id = R.string.dialog_resume_title)) },
+            text = {
+                Column {
+                    listOf(
+                        "ask" to stringResource(id = R.string.settings_resume_mode_ask),
+                        "resume" to stringResource(id = R.string.settings_resume_mode_always),
+                        "beginning" to stringResource(id = R.string.settings_resume_mode_never)
+                    ).forEach { (mode, label) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setResumeMode(mode)
-                                        showResumeModeDialog = false
-                                    }
+                                    coroutineScope.launch { preferencesManager.setResumeMode(mode) }
+                                    showResumeModeDialog = false
                                 }
                                 .padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            RadioButton(
-                                selected = resumeMode == mode,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setResumeMode(mode)
-                                        showResumeModeDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(label, fontWeight = FontWeight.Medium)
+                            RadioButton(selected = resumeMode == mode, onClick = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(label, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             },
-            confirmButton = {
-                TextButton(onClick = { showResumeModeDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
+            confirmButton = {}
+        )
+    }
+
+    // Speed Dialog
+    if (showSpeedDialog) {
+        AlertDialog(
+            onDismissRequest = { showSpeedDialog = false },
+            title = { Text(stringResource(id = R.string.settings_default_speed)) },
+            text = {
+                Column {
+                    listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f).forEach { speed ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch { preferencesManager.setDefaultSpeed(speed) }
+                                    showSpeedDialog = false
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = defaultSpeed == speed, onClick = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("${speed}x", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
                 }
-            }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Seek Dialog
+    if (showSeekDialog) {
+        AlertDialog(
+            onDismissRequest = { showSeekDialog = false },
+            title = { Text(stringResource(id = R.string.settings_double_tap_seek)) },
+            text = {
+                Column {
+                    listOf(5, 10, 15, 30).forEach { sec ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch { preferencesManager.setDoubleTapSeekSec(sec) }
+                                    showSeekDialog = false
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = doubleTapSeekSec == sec, onClick = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("$sec seconds", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Orientation Dialog
+    if (showOrientationDialog) {
+        AlertDialog(
+            onDismissRequest = { showOrientationDialog = false },
+            title = { Text(stringResource(id = R.string.settings_default_orientation)) },
+            text = {
+                Column {
+                    listOf(
+                        "auto" to stringResource(id = R.string.settings_orientation_auto),
+                        "landscape" to stringResource(id = R.string.settings_orientation_landscape),
+                        "portrait" to stringResource(id = R.string.settings_orientation_portrait)
+                    ).forEach { (mode, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch { preferencesManager.setDefaultOrientation(mode) }
+                                    showOrientationDialog = false
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = defaultOrientation == mode, onClick = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Decoder Dialog
+    if (showDecoderDialog) {
+        AlertDialog(
+            onDismissRequest = { showDecoderDialog = false },
+            title = { Text(stringResource(id = R.string.settings_hw_decoder)) },
+            text = {
+                Column {
+                    listOf(
+                        "auto" to stringResource(id = R.string.settings_decoder_auto),
+                        "hardware" to stringResource(id = R.string.settings_decoder_hw),
+                        "software" to stringResource(id = R.string.settings_decoder_sw)
+                    ).forEach { (mode, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch { preferencesManager.setHwDecoderMode(mode) }
+                                    showDecoderDialog = false
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = hwDecoderMode == mode, onClick = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {}
         )
     }
 
@@ -342,13 +631,12 @@ fun SettingsScreen(
             title = { Text(stringResource(id = R.string.settings_hidden_folders_title)) },
             text = {
                 if (hiddenFolders.isEmpty()) {
-                    Text(
-                        stringResource(id = R.string.settings_hidden_folders_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(stringResource(id = R.string.settings_hidden_folders_empty))
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         hiddenFolders.forEach { folderName ->
                             Row(
                                 modifier = Modifier
@@ -359,22 +647,12 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(Icons.Default.FolderOff, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(folderName, fontWeight = FontWeight.Medium, maxLines = 1)
-                                }
-                                TextButton(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            preferencesManager.unhideFolder(folderName)
-                                            onRescanLibrary()
-                                        }
+                                Text(folderName, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                                TextButton(onClick = {
+                                    coroutineScope.launch {
+                                        preferencesManager.unhideFolder(folderName)
                                     }
-                                ) {
+                                }) {
                                     Text(stringResource(id = R.string.folders_unhide), color = ThrynxCyan)
                                 }
                             }
@@ -384,358 +662,27 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showHiddenFoldersDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
+                    Text(stringResource(id = R.string.action_done))
                 }
             }
         )
     }
 
-    // Language Dialog
-    if (showLanguageDialog) {
-        val languages = listOf(
-            Pair("en", "English"),
-            Pair("bn", "বাংলা (Bangla)")
-        )
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text(stringResource(id = R.string.settings_language)) },
-            text = {
-                Column {
-                    languages.forEach { (code, name) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setLanguage(code)
-                                        showLanguageDialog = false
-                                        onLanguageChanged(code)
-                                    }
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = currentLang == code,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setLanguage(code)
-                                        showLanguageDialog = false
-                                        onLanguageChanged(code)
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(name, fontWeight = FontWeight.Medium)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Theme Dialog
-    if (showThemeDialog) {
-        val themes = listOf(
-            Pair("dark", "Dark Mode (Recommended)"),
-            Pair("light", "Light Mode"),
-            Pair("system", "Follow System")
-        )
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            title = { Text(stringResource(id = R.string.settings_theme)) },
-            text = {
-                Column {
-                    themes.forEach { (code, name) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setTheme(code)
-                                        showThemeDialog = false
-                                    }
-                                }
-                                .padding(vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = currentTheme == code,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setTheme(code)
-                                        showThemeDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(name)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Default Speed Dialog
-    if (showSpeedDialog) {
-        val speedOptions = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
-        AlertDialog(
-            onDismissRequest = { showSpeedDialog = false },
-            title = { Text(stringResource(id = R.string.settings_default_speed)) },
-            text = {
-                Column {
-                    speedOptions.forEach { sp ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDefaultSpeed(sp)
-                                        showSpeedDialog = false
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = defaultSpeed == sp,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDefaultSpeed(sp)
-                                        showSpeedDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("${sp}x")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showSpeedDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Seek Duration Dialog
-    if (showSeekDialog) {
-        val seekOptions = listOf(5, 10, 15, 30)
-        AlertDialog(
-            onDismissRequest = { showSeekDialog = false },
-            title = { Text(stringResource(id = R.string.settings_double_tap_seek)) },
-            text = {
-                Column {
-                    seekOptions.forEach { sec ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDoubleTapSeekSec(sec)
-                                        showSeekDialog = false
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = doubleTapSeekSec == sec,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDoubleTapSeekSec(sec)
-                                        showSeekDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("$sec seconds")
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showSeekDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Orientation Dialog
-    if (showOrientationDialog) {
-        val options = listOf("auto", "portrait", "landscape")
-        AlertDialog(
-            onDismissRequest = { showOrientationDialog = false },
-            title = { Text(stringResource(id = R.string.settings_orientation)) },
-            text = {
-                Column {
-                    options.forEach { opt ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDefaultOrientation(opt)
-                                        showOrientationDialog = false
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = defaultOrientation == opt,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDefaultOrientation(opt)
-                                        showOrientationDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(opt.replaceFirstChar { it.uppercase() })
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showOrientationDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Resize Mode Dialog
-    if (showResizeDialog) {
-        val options = listOf(
-            Pair("fit", "Fit to Screen"),
-            Pair("fill", "Fill Screen (Crop)"),
-            Pair("stretch", "Stretch to Window")
-        )
-        AlertDialog(
-            onDismissRequest = { showResizeDialog = false },
-            title = { Text(stringResource(id = R.string.settings_resize_mode)) },
-            text = {
-                Column {
-                    options.forEach { (mode, label) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDefaultResizeMode(mode)
-                                        showResizeDialog = false
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = defaultResizeMode == mode,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setDefaultResizeMode(mode)
-                                        showResizeDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(label)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showResizeDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Decoder Mode Dialog
-    if (showDecoderDialog) {
-        val options = listOf(
-            Pair("auto", "Automatic (Default)"),
-            Pair("hardware", "Hardware Accelerated"),
-            Pair("software", "Software Decoder")
-        )
-        AlertDialog(
-            onDismissRequest = { showDecoderDialog = false },
-            title = { Text(stringResource(id = R.string.settings_hw_decoder)) },
-            text = {
-                Column {
-                    options.forEach { (mode, label) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    coroutineScope.launch {
-                                        preferencesManager.setHwDecoderMode(mode)
-                                        showDecoderDialog = false
-                                    }
-                                }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = hwDecoderMode == mode,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        preferencesManager.setHwDecoderMode(mode)
-                                        showDecoderDialog = false
-                                    }
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(label)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showDecoderDialog = false }) {
-                    Text(stringResource(id = R.string.action_close))
-                }
-            }
-        )
-    }
-
-    // Private PIN Setup Dialog
+    // Private Vault PIN Dialog
     if (showPinDialog) {
         AlertDialog(
             onDismissRequest = { showPinDialog = false },
-            title = { Text(stringResource(id = R.string.settings_private_pin_setup)) },
+            title = { Text(stringResource(id = R.string.settings_private_pin)) },
             text = {
                 Column {
-                    Text(
-                        text = "Enter a 4-digit PIN for your private video vault.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("Enter a 4-digit PIN for your private video vault.")
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
                         value = pinInput,
-                        onValueChange = {
-                            if (it.length <= 4 && it.all { char -> char.isDigit() }) pinInput = it
-                        },
+                        onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) pinInput = it },
+                        label = { Text("4-digit PIN") },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        placeholder = { Text("••••") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -748,18 +695,43 @@ fun SettingsScreen(
                             coroutineScope.launch {
                                 preferencesManager.setPrivateVaultPin(pinInput)
                                 showPinDialog = false
+                                pinInput = ""
                                 Toast.makeText(context, "PIN updated", Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                    enabled = pinInput.length == 4
                 ) {
-                    Text(stringResource(id = R.string.action_save), fontWeight = FontWeight.Bold)
+                    Text(stringResource(id = R.string.action_save))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showPinDialog = false }) {
+                TextButton(onClick = { showPinDialog = false; pinInput = "" }) {
                     Text(stringResource(id = R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    // Development & Architecture Dialog
+    if (showDevInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showDevInfoDialog = false },
+            title = { Text("THRYNX Video Player") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Engine: AndroidX Media3 ExoPlayer", fontWeight = FontWeight.Bold)
+                    Text("Architecture: Jetpack Compose + Room + DataStore")
+                    Text("Language: Kotlin 1.9.22")
+                    Text("Target SDK: Android 14 (API 34)")
+                    Text("Min SDK: Android 8.0 (API 26)")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("Built for smooth local playback, pinch-to-zoom, gesture HUD, and hardware decoding.", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDevInfoDialog = false }) {
+                    Text("OK")
                 }
             }
         )
@@ -768,37 +740,47 @@ fun SettingsScreen(
     // Subtitle Customization Dialog
     if (showSubtitleDialog) {
         var fontSize by remember { mutableFloatStateOf(subtitleStyle.fontSizeSp) }
-        var textColor by remember { mutableStateOf(subtitleStyle.textColorHex) }
+        var selectedColor by remember { mutableStateOf(subtitleStyle.textColorHex) }
+        var bgOpacity by remember { mutableFloatStateOf(subtitleStyle.backgroundOpacity) }
+
         AlertDialog(
             onDismissRequest = { showSubtitleDialog = false },
-            title = { Text(stringResource(id = R.string.player_subtitle_styling)) },
+            title = { Text(stringResource(id = R.string.settings_subtitle_style)) },
             text = {
-                Column {
-                    Text("Font Size: ${fontSize.toInt()} sp", fontWeight = FontWeight.SemiBold)
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("Font Size: ${fontSize.toInt()}sp", fontWeight = FontWeight.SemiBold)
                     Slider(
                         value = fontSize,
                         onValueChange = { fontSize = it },
                         valueRange = 12f..32f,
-                        steps = 5,
-                        colors = SliderDefaults.colors(thumbColor = ThrynxCyan, activeTrackColor = ThrynxCyan)
+                        steps = 9
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Text Color", fontWeight = FontWeight.SemiBold)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("#FFFFFF", "#FFFF00", "#00E5FF", "#00E676").forEach { hex ->
+
+                    Text("Color", fontWeight = FontWeight.SemiBold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        listOf("#FFFFFF" to Color.White, "#FFEB3B" to Color.Yellow, "#00E5FF" to Color.Cyan, "#00E676" to Color.Green).forEach { (hex, color) ->
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(Color(android.graphics.Color.parseColor(hex)))
-                                    .clickable { textColor = hex }
+                                    .background(color)
+                                    .clickable { selectedColor = hex }
                                     .then(
-                                        if (textColor == hex) Modifier.padding(2.dp) else Modifier
+                                        if (selectedColor == hex) Modifier.clip(CircleShape).background(Color.Gray.copy(alpha = 0.5f)) else Modifier
                                     )
                             )
                         }
                     }
+
+                    Text("Background Opacity: ${(bgOpacity * 100).toInt()}%", fontWeight = FontWeight.SemiBold)
+                    Slider(
+                        value = bgOpacity,
+                        onValueChange = { bgOpacity = it },
+                        valueRange = 0f..1f
+                    )
                 }
             },
             confirmButton = {
@@ -806,12 +788,15 @@ fun SettingsScreen(
                     onClick = {
                         coroutineScope.launch {
                             preferencesManager.updateSubtitleStyle(
-                                subtitleStyle.copy(fontSizeSp = fontSize, textColorHex = textColor)
+                                subtitleStyle.copy(
+                                    fontSizeSp = fontSize,
+                                    textColorHex = selectedColor,
+                                    backgroundOpacity = bgOpacity
+                                )
                             )
                             showSubtitleDialog = false
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                    }
                 ) {
                     Text(stringResource(id = R.string.action_save))
                 }
@@ -830,20 +815,20 @@ fun SettingsCategoryCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = ThrynxCyan,
-            modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(content = content)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = ThrynxCyan,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            content()
         }
     }
 }
@@ -859,68 +844,98 @@ fun SettingsClickableRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
-        Spacer(modifier = Modifier.width(14.dp))
-        Text(text = title, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+        }
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.width(4.dp))
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
     }
 }
 
 @Composable
-fun SettingsToggleRow(
+fun SettingsSwitchRow(
     icon: ImageVector,
     title: String,
-    subtitle: String,
+    description: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(title, style = MaterialTheme.typography.bodyLarge)
+                description?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = ThrynxBgDark, checkedTrackColor = ThrynxCyan)
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = ThrynxBgDark,
+                checkedTrackColor = ThrynxCyan
+            )
         )
     }
 }
 
-fun getFolderSize(dir: File?): Long {
-    if (dir == null || !dir.exists()) return 0L
-    var size = 0L
-    dir.listFiles()?.forEach { file ->
-        size += if (file.isDirectory) getFolderSize(file) else file.length()
+@Composable
+fun SettingsActionRow(
+    icon: ImageVector,
+    title: String,
+    value: String? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+        }
+        value?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
-    return size
 }
 
-fun deleteFolderContents(dir: File?) {
-    if (dir == null || !dir.exists()) return
-    dir.listFiles()?.forEach { file ->
-        if (file.isDirectory) deleteFolderContents(file)
-        file.delete()
+private fun getFolderSize(file: File): Long {
+    var size = 0L
+    file.listFiles()?.forEach {
+        size += if (it.isDirectory) getFolderSize(it) else it.length()
     }
+    return size
 }

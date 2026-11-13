@@ -42,6 +42,12 @@ class PreferencesManager(private val context: Context) {
 
         // Sleep Timer
         val KEY_SLEEP_TIMER_MINUTES = intPreferencesKey("key_sleep_timer_minutes")
+
+        // List & View Options
+        val KEY_SHOW_PLAYED_TIME = booleanPreferencesKey("key_show_played_time")
+        val KEY_VIDEO_VIEW_MODE = stringPreferencesKey("key_video_view_mode") // "files" or "folders"
+        val KEY_AUDIO_VIEW_MODE = stringPreferencesKey("key_audio_view_mode") // "files" or "folders"
+        val KEY_PAUSE_ON_HEADSET_DISCONNECT = booleanPreferencesKey("key_pause_on_headset_disconnect")
     }
 
     val languageFlow: Flow<String> = context.dataStore.data
@@ -128,6 +134,22 @@ class PreferencesManager(private val context: Context) {
     val sleepTimerMinutesFlow: Flow<Int> = context.dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_SLEEP_TIMER_MINUTES] ?: 0 }
+
+    val showPlayedTimeFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_SHOW_PLAYED_TIME] ?: true }
+
+    val videoViewModeFlow: Flow<String> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_VIDEO_VIEW_MODE] ?: "files" }
+
+    val audioViewModeFlow: Flow<String> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_AUDIO_VIEW_MODE] ?: "files" }
+
+    val pauseOnHeadsetDisconnectFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_PAUSE_ON_HEADSET_DISCONNECT] ?: true }
 
     suspend fun setLanguage(langCode: String) {
         context.dataStore.edit { it[KEY_LANGUAGE] = langCode }
@@ -218,6 +240,22 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun setSleepTimerMinutes(minutes: Int) {
         context.dataStore.edit { it[KEY_SLEEP_TIMER_MINUTES] = minutes }
+    }
+
+    suspend fun setShowPlayedTime(show: Boolean) {
+        context.dataStore.edit { it[KEY_SHOW_PLAYED_TIME] = show }
+    }
+
+    suspend fun setVideoViewMode(mode: String) {
+        context.dataStore.edit { it[KEY_VIDEO_VIEW_MODE] = mode }
+    }
+
+    suspend fun setAudioViewMode(mode: String) {
+        context.dataStore.edit { it[KEY_AUDIO_VIEW_MODE] = mode }
+    }
+
+    suspend fun setPauseOnHeadsetDisconnect(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_PAUSE_ON_HEADSET_DISCONNECT] = enabled }
     }
 
     suspend fun updateSubtitleStyle(style: SubtitleStyle) {

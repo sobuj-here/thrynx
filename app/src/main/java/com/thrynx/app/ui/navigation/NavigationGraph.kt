@@ -31,6 +31,7 @@ import com.thrynx.app.core.model.FolderItemModel
 import com.thrynx.app.core.model.MediaItemModel
 import com.thrynx.app.core.model.PlaybackState
 import com.thrynx.app.core.player.ThrynxPlayerManager
+import com.thrynx.app.feature.audio.AudioScreen
 import com.thrynx.app.feature.folders.FoldersScreen
 import com.thrynx.app.feature.home.HomeScreen
 import com.thrynx.app.feature.player.VideoPlayerScreen
@@ -40,6 +41,7 @@ import com.thrynx.app.feature.videos.VideosScreen
 sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
     object Home : Screen("home", R.string.nav_home, Icons.Default.Home)
     object Videos : Screen("videos", R.string.nav_videos, Icons.Default.VideoLibrary)
+    object Audio : Screen("audio", R.string.nav_audio, Icons.Default.Audiotrack)
     object Folders : Screen("folders", R.string.nav_folders, Icons.Default.Folder)
     object Settings : Screen("settings", R.string.nav_settings, Icons.Default.Settings)
     object Player : Screen("player", R.string.player_title, Icons.Default.PlayCircle)
@@ -51,7 +53,9 @@ fun ThrynxNavigationApp(
     navController: NavHostController,
     playerManager: ThrynxPlayerManager,
     videos: List<MediaItemModel>,
+    audios: List<MediaItemModel> = emptyList(),
     folders: List<FolderItemModel>,
+    audioFolders: List<FolderItemModel> = emptyList(),
     recentHistory: List<PlaybackHistoryEntity>,
     favorites: List<FavoriteMediaEntity>,
     privateVideos: List<PrivateVideoEntity>,
@@ -64,6 +68,8 @@ fun ThrynxNavigationApp(
     onUnhidePrivateVideo: (PrivateVideoEntity) -> Unit,
     onHideInVault: (MediaItemModel) -> Unit,
     onDeleteMedia: (MediaItemModel) -> Unit,
+    onDeleteMultipleVideos: (List<MediaItemModel>) -> Unit = {},
+    onHideMultipleVideosInVault: (List<MediaItemModel>) -> Unit = {},
     onRenameMedia: (MediaItemModel, String) -> Unit,
     onAddCustomFolder: (android.net.Uri) -> Unit,
     onRemoveCustomFolder: (String) -> Unit = {},
@@ -89,7 +95,7 @@ fun ThrynxNavigationApp(
     val bottomNavItems = listOf(
         Screen.Home,
         Screen.Videos,
-        Screen.Folders,
+        Screen.Audio,
         Screen.Settings
     )
 
@@ -201,7 +207,9 @@ fun ThrynxNavigationApp(
             composable(Screen.Videos.route) {
                 VideosScreen(
                     videos = videos,
+                    folders = folders,
                     favoritesUris = favoritesUris,
+                    currentPlayingUri = playbackState.currentMedia?.uri,
                     hasStoragePermission = hasStoragePermission,
                     onRequestPermission = onRequestPermission,
                     onOpenMedia = { media ->
@@ -216,12 +224,37 @@ fun ThrynxNavigationApp(
                     onToggleFavorite = onToggleFavorite,
                     onHideInVault = onHideInVault,
                     onDeleteMedia = onDeleteMedia,
+                    onDeleteMultipleVideos = onDeleteMultipleVideos,
+                    onHideMultipleVideosInVault = onHideMultipleVideosInVault,
                     onRenameMedia = onRenameMedia,
                     onRescanLibrary = onRescanLibrary
                 )
             }
 
-            // 3. Folders Screen
+            // 3. Audio Screen (Music Player)
+            composable(Screen.Audio.route) {
+                AudioScreen(
+                    audios = audios,
+                    audioFolders = audioFolders,
+                    playbackState = playbackState,
+                    playerManager = playerManager,
+                    hasStoragePermission = hasStoragePermission,
+                    onRequestPermission = onRequestPermission,
+                    onPlayAudio = { audio ->
+                        val idx = audios.indexOf(audio)
+                        if (idx >= 0) {
+                            playerManager.playQueue(audios, idx)
+                        } else {
+                            playerManager.playMedia(audio)
+                        }
+                    },
+                    onDeleteAudio = onDeleteMedia,
+                    onDeleteMultipleAudios = onDeleteMultipleVideos,
+                    onRescanLibrary = onRescanLibrary
+                )
+            }
+
+            // Folders Screen (Accessible via route if needed)
             composable(Screen.Folders.route) {
                 FoldersScreen(
                     folders = folders,

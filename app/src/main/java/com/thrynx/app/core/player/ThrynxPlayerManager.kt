@@ -94,6 +94,13 @@ class ThrynxPlayerManager(private val context: Context) {
     private var currentPlaylistIndex: Int = 0
 
     init {
+        val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
+            .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+            .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
+            .build()
+        exoPlayer.setAudioAttributes(audioAttributes, true)
+        exoPlayer.setHandleAudioBecomingNoisy(true)
+
         setupPlayerListeners()
     }
 

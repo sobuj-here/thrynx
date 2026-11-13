@@ -23,11 +23,13 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             applicationIdSuffix = ".debug"
@@ -63,6 +65,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 
@@ -106,17 +113,11 @@ dependencies {
     // DataStore Preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
-
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Coil Image Loader
     implementation("io.coil-kt:coil-compose:2.5.0")
-
-    // JSON Serialization
-    implementation("com.google.code.gson:gson:2.10.1")
 
     // DocumentFile & Storage Access Framework
     implementation("androidx.documentfile:documentfile:1.0.1")

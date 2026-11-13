@@ -45,6 +45,17 @@ class MediaStoreScanner(private val context: Context) {
                 }
             }
         }
+
+        fun hasAudioPermission(context: Context): Boolean {
+            return when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED
+                }
+                else -> {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                }
+            }
+        }
     }
 
     /**
@@ -383,6 +394,109 @@ class MediaStoreScanner(private val context: Context) {
             e.printStackTrace()
             null
         }
+    }
+
+    /**
+     * Discovers all local audio/music files on device via MediaStore.
+     */
+    suspend fun loadAudios(): List<MediaItemModel> = withContext(Dispatchers.IO) {
+        val audios = mutableListOf<MediaItemModel>()
+        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        } else {
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        }
+
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DISPLAY_NAME,
+            MediaStore.Audio.Media.TITLE,
+            MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.DATE_ADDED
+        )
+
+        try {
+            val cursor = context.contentResolver.query(
+                collection,
+                projection,
+                "${MediaStore.Audio.Media.DURATION} >= ?",
+                arrayOf("5000"), // Filter out audio clips shorter than 5 seconds
+                "${MediaStore.Audio.Media.DATE_ADDED} DESC"
+            )
+
+            cursor?.use { c ->
+                val idCol = c.getColumnIndex(MediaStore.Audio.Media._ID)
+                val nameCol = c.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+                val titleCol = c.getColumnIndex(MediaStore.Audio.Media.TITLE)
+                val artistCol = c.getColumnIndex(MediaStore.Audio.Media.ARTIST)
+                val dataCol = c.getColumnIndex(MediaStore.Audio.Media.DATA)
+                val durationCol = c.getColumnIndex(MediaStore.Audio.Media.DURATION)
+                val sizeCol = c.getColumnIndex(MediaStore.Audio.Media.SIZE)
+                val dateCol = c.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
+
+                while (c.moveToNext()) {
+                    val id = if (idCol >= 0) c.getLong(idCol) else 0L
+                    val uri = ContentUris.withAppendedId(collection, id)
+                    val rawName = if (nameCol >= 0) c.getString(nameCol) else ""
+                    val title = if (titleCol >= 0) c.getString(titleCol) ?: rawName else rawName
+                    val artist = if (artistCol >= 0) c.getString(artistCol) ?: "<unknown>" else "<unknown>"
+                    val path = if (dataCol >= 0) c.getString(dataCol) ?: "" else ""
+                    val duration = if (durationCol >= 0) c.getLong(durationCol) else 0L
+                    val size = if (sizeCol >= 0) c.getLong(sizeCol) else 0L
+                    val dateAdded = if (dateCol >= 0) c.getLong(dateCol) * 1000L else System.currentTimeMillis()
+
+                    val cleanTitle = if (title.isBlank()) {
+                        if (rawName.isNotBlank()) rawName.substringBeforeLast(".") else "Audio $id"
+                    } else title
+
+                    audios.add(
+                        MediaItemModel(
+                            id = id,
+                            title = cleanTitle,
+                            uri = uri,
+                            path = path,
+                            durationMs = duration,
+                            sizeBytes = size,
+                            dateAdded = dateAdded,
+                            mimeType = "audio/*",
+                            isVideo = false
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        audios
+    }
+
+    /**
+     * Groups audio files into folder models.
+     */
+    fun loadAudioFolders(audios: List<MediaItemModel>): List<FolderItemModel> {
+        val folderMap = mutableMapOf<String, MutableList<MediaItemModel>>()
+        for (audio in audios) {
+            val folderPath = if (audio.path.isNotBlank()) {
+                File(audio.path).parent ?: "Internal Storage"
+            } else {
+                "Music"
+            }
+            folderMap.getOrPut(folderPath) { mutableListOf() }.add(audio)
+        }
+
+        return folderMap.map { (path, items) ->
+            val name = File(path).name.ifBlank { "Music" }
+            FolderItemModel(
+                name = name,
+                path = path,
+                videoCount = items.size,
+                latestMedia = items.firstOrNull()
+            )
+        }.sortedByDescending { it.videoCount }
     }
 
     /**

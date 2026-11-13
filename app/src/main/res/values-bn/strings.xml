@@ -9,6 +9,7 @@
     <string name="nav_home">হোম</string>
     <string name="nav_videos">ভিডিও</string>
     <string name="nav_folders">ফোল্ডার</string>
+    <string name="nav_audio">অডিও</string>
     <string name="nav_settings">সেটিংস</string>
 
     <!-- Home Screen -->
@@ -173,5 +174,54 @@
     <string name="action_save">সংরক্ষণ করুন</string>
     <string name="action_close">বন্ধ করুন</string>
     <string name="action_ok">ঠিক আছে</string>
+    <!-- Categorized Settings Sections -->
+    <string name="settings_section_list">তালিকা</string>
+    <string name="settings_section_decoder">ডিকোডার</string>
+    <string name="settings_section_audio">অডিও</string>
+    <string name="settings_section_general">সাধারণ</string>
+    <string name="settings_section_dev">ডেভেলপমেন্ট</string>
+    <string name="settings_section_language">অ্যাপের ভাষা</string>
+    <string name="settings_show_played_time">দেখা সময় ও প্রগ্রেস প্রদর্শন</string>
+    <string name="settings_show_played_time_desc">ভিডিও কার্ডের উপর দেখা সময় ও প্রগ্রেস দেখান</string>
+    <string name="settings_video_view_mode">ভিডিও প্রদর্শনের ধরন</string>
+    <string name="settings_audio_view_mode">অডিও প্রদর্শনের ধরন</string>
+    <string name="settings_pause_on_headset">সংযোগ বিচ্ছিন্ন হলে থামান</string>
+    <string name="settings_pause_on_headset_desc">হেডফোন বা ব্লুটুথ সংযোগ বিচ্ছিন্ন হলে প্লেয়ার স্বয়ংক্রিয়ভাবে বন্ধ হবে</string>
+
+    <!-- Video Filter & Actions -->
+    <string name="filter_all">সকল</string>
+    <string name="filter_short">&lt; ৫ মিনিট</string>
+    <string name="filter_medium">৫–২০ মিনিট</string>
+    <string name="filter_long">&gt; ২০ মিনিট</string>
+    <string name="sort_date_desc">তারিখ (নতুন আগে)</string>
+    <string name="sort_date_asc">তারিখ (পুরোনো আগে)</string>
+    <string name="sort_name_asc">নাম (A–Z)</string>
+    <string name="sort_name_desc">নাম (Z–A)</string>
+    <string name="sort_size_desc">আকার (বড় আগে)</string>
+    <string name="sort_duration_desc">দৈর্ঘ্য (বড় আগে)</string>
+    <string name="permission_grant">অনুমতি দিন</string>
+    <string name="permission_storage_title">স্টোরেজ অনুমতি প্রয়োজন</string>
+    <string name="permission_storage_desc">ডিভাইসের ভিডিও খুঁজে পেতে ও চালাতে অনুমতি প্রদান করুন।</string>
+
     <string name="action_done">সম্পন্ন</string>
+
+    <!-- Settings extra keys used in SettingsScreen -->
+    <string name="settings_resume_mode_always">সর্বদা চালু করুন</string>
+    <string name="settings_resume_mode_never">শুরু থেকে চালান</string>
+    <string name="settings_resume_mode_ask">প্রতিবার জিজ্ঞেস করুন</string>
+    <string name="settings_default_orientation">ডিফল্ট স্ক্রিন ওরিয়েন্টেশন</string>
+    <string name="settings_orientation_auto">স্বয়ংক্রিয় (সেন্সর)</string>
+    <string name="settings_orientation_landscape">ল্যান্ডস্কেপ</string>
+    <string name="settings_orientation_portrait">পোর্ট্রেট</string>
+    <string name="settings_player_hud_info">প্লেয়ারে ঘড়ি ও ব্যাটারি</string>
+    <string name="settings_player_hud_info_desc">ভিডিও চলার সময় ঘড়ি ও ব্যাটারি লেভেল প্রদর্শন</string>
+    <string name="settings_auto_play_next">পরের ভিডিও স্বয়ংক্রিয়ভাবে চালান</string>
+    <string name="settings_gestures_enabled">জেসচার চালু রাখুন</string>
+    <string name="settings_decoder_auto">অটো (সুপারিশকৃত)</string>
+    <string name="settings_decoder_hw">হার্ডওয়্যার (HW)</string>
+    <string name="settings_decoder_sw">সফটওয়্যার (SW)</string>
+    <string name="settings_background_audio">ব্যাকগ্রাউন্ডে অডিও প্লে</string>
+    <string name="settings_background_audio_desc">স্ক্রিন বন্ধ থাকলেও ব্যাকগ্রাউন্ডে অডিও চলতে থাকবে</string>
+    <string name="settings_subtitle_style">সাবটাইটেল স্টাইল</string>
+    <string name="settings_rescan_media">মিডিয়া লাইব্রেরি রিস্ক্যান</string>
 </resources>
