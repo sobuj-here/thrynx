@@ -20,8 +20,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -48,6 +51,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.roundToInt
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -312,28 +318,42 @@ fun VideoPlayerScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Black)
-            // Taps & Double Taps
-            .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
+            // Tap & Double Tap gestures
+            .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref, playbackState.zoomScale) {
                 detectTapGestures(
                     onTap = {
-                        showControls = !showControls
+                        if (!playbackState.isControlsLocked) {
+                            showControls = !showControls
+                        } else {
+                            showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
+                        }
                     },
                     onDoubleTap = { offset ->
-                        if (!playbackState.isControlsLocked && gesturesEnabledPref) {
-                            when {
-                                offset.x < size.width * 0.45f -> {
-                                    playerManager.seekBackward(seekDeltaMs)
-                                    showHud("-$doubleTapSeekSec s", Icons.Default.Replay10)
-                                }
-                                offset.x > size.width * 0.55f -> {
-                                    playerManager.seekForward(seekDeltaMs)
-                                    showHud("+$doubleTapSeekSec s", Icons.Default.Forward10)
-                                }
-                                else -> {
-                                    playerManager.togglePlayPause()
-                                    showHud(if (playbackState.isPlaying) "Pause" else "Play", if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow)
+                        if (!playbackState.isControlsLocked) {
+                            if (playbackState.zoomScale > 1.05f) {
+                                playerManager.resetZoom()
+                                showHud("Zoom: 100% (Fit)", Icons.Default.ZoomOutMap)
+                            } else if (gesturesEnabledPref) {
+                                when {
+                                    offset.x < size.width * 0.45f -> {
+                                        playerManager.seekBackward(seekDeltaMs)
+                                        showHud("-$doubleTapSeekSec s", Icons.Default.Replay10)
+                                    }
+                                    offset.x > size.width * 0.55f -> {
+                                        playerManager.seekForward(seekDeltaMs)
+                                        showHud("+$doubleTapSeekSec s", Icons.Default.Forward10)
+                                    }
+                                    else -> {
+                                        playerManager.togglePlayPause()
+                                        showHud(
+                                            if (playbackState.isPlaying) "Pause" else "Play",
+                                            if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow
+                                        )
+                                    }
                                 }
                             }
+                        } else {
+                            showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
                         }
                     },
                     onLongPress = {
@@ -344,88 +364,99 @@ fun VideoPlayerScreen(
                     }
                 )
             }
-            // Multi-touch Pinch to Zoom
+            // Unified Gesture Detector: Multi-touch Pinch Zoom (1.0x..4.0x) and Single-pointer Vertical/Horizontal Drag
             .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
-                if (!playbackState.isControlsLocked && gesturesEnabledPref) {
-                    detectTransformGestures { _, _, zoom: Float, _ ->
-                        if (zoom != 1.0f) {
-                            val currentZoom: Float = playbackState.zoomScale
-                            val newZoom: Float = (currentZoom * zoom).coerceIn(0.5f, 4.0f)
-                            playerManager.setZoomScale(newZoom)
-                            showHud("Zoom: ${(newZoom * 100).toInt()}%", Icons.Default.ZoomIn)
-                        }
-                    }
-                }
-            }
-            // Vertical Drag for Brightness (left) & Volume (right), Horizontal Drag for Seek
-            .pointerInput(playbackState.isControlsLocked, gesturesEnabledPref) {
-                if (!playbackState.isControlsLocked && gesturesEnabledPref) {
+                if (playbackState.isControlsLocked || !gesturesEnabledPref) return@pointerInput
+
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var isMultiTouch = false
+                    var prevDistance = 0f
+                    var isDragStarted = false
+                    var isDragHorizontal: Boolean? = null
                     var totalDragX = 0f
                     var totalDragY = 0f
-                    var isDragHorizontal: Boolean? = null
+                    val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                    val initialVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                    var initialBrightness = activity?.window?.attributes?.screenBrightness ?: 0.5f
+                    if (initialBrightness < 0f) initialBrightness = 0.5f
+                    val initialSeekPosition = playerManager.exoPlayer.currentPosition
+                    val startX = down.position.x
 
-                    detectDragGestures(
-                        onDragStart = {
-                            totalDragX = 0f
-                            totalDragY = 0f
-                            isDragHorizontal = null
-                        },
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            totalDragX += dragAmount.x
-                            totalDragY += dragAmount.y
+                    do {
+                        val event = awaitPointerEvent()
+                        val pressedPointers = event.changes.filter { it.pressed }
 
-                            if (isDragHorizontal == null) {
-                                if (Math.abs(totalDragX) > 20f || Math.abs(totalDragY) > 20f) {
-                                    isDragHorizontal = Math.abs(totalDragX) > Math.abs(totalDragY)
+                        if (pressedPointers.size >= 2) {
+                            // 2+ Fingers: Pinch-to-zoom (inward to zoom out, outward to zoom in)
+                            isMultiTouch = true
+                            val p1 = pressedPointers[0].position
+                            val p2 = pressedPointers[1].position
+                            val currentDistance = hypot(p1.x - p2.x, p1.y - p2.y)
+
+                            if (prevDistance > 0f && currentDistance > 0f) {
+                                val scaleDelta = currentDistance / prevDistance
+                                val newZoom = (playerManager.playbackState.value.zoomScale * scaleDelta).coerceIn(1.0f, 4.0f)
+                                playerManager.setZoomScale(newZoom)
+                                showHud("Zoom: ${(newZoom * 100).roundToInt()}%", Icons.Default.ZoomIn)
+                            }
+                            prevDistance = currentDistance
+                            event.changes.forEach { it.consume() }
+                        } else if (pressedPointers.size == 1 && !isMultiTouch) {
+                            // 1 Finger: Smooth Drag (Volume, Brightness, Seek)
+                            prevDistance = 0f
+                            val change = pressedPointers[0]
+                            val dragDelta = change.position - change.previousPosition
+                            totalDragX += dragDelta.x
+                            totalDragY += dragDelta.y
+
+                            if (!isDragStarted) {
+                                if (abs(totalDragX) > 20f || abs(totalDragY) > 20f) {
+                                    isDragStarted = true
+                                    isDragHorizontal = abs(totalDragX) > abs(totalDragY)
                                 }
                             }
 
-                            if (isDragHorizontal == true) {
-                                // Horizontal Seek Gesture
-                                val deltaSec = (dragAmount.x / 10f).toInt()
-                                if (deltaSec != 0) {
-                                    val newPos = (playerManager.exoPlayer.currentPosition + (deltaSec * 1000L)).coerceIn(0L, playerManager.exoPlayer.duration)
-                                    playerManager.seekTo(newPos)
-                                    showHud("${formatDuration(newPos)} / ${formatDuration(playerManager.exoPlayer.duration)}", Icons.Default.SwapHoriz)
-                                }
-                            } else if (isDragHorizontal == false) {
-                                // Vertical Swipe for Brightness or Volume
-                                val isLeftSide = change.position.x < size.width / 2
-
-                                if (isLeftSide) {
-                                    // Brightness
-                                    activity?.let { act ->
-                                        val lp = act.window.attributes
-                                        var currentBrightness = lp.screenBrightness
-                                        if (currentBrightness < 0f) currentBrightness = 0.5f
-                                        val delta = -dragAmount.y / (size.height * 0.7f)
-                                        val newBrightness = (currentBrightness + delta).coerceIn(0.02f, 1.0f)
-                                        lp.screenBrightness = newBrightness
-                                        act.window.attributes = lp
-                                        showHud("Brightness: ${(newBrightness * 100).toInt()}%", Icons.Default.BrightnessMedium)
-                                    }
-                                } else {
-                                    // Volume
-                                    val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                                    val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                                    val delta = -dragAmount.y / (size.height / maxVol)
-                                    if (Math.abs(delta) >= 1f) {
-                                        val targetVol = (currentVol + delta.toInt()).coerceIn(0, maxVol)
+                            if (isDragStarted) {
+                                change.consume()
+                                if (isDragHorizontal == true) {
+                                    // Horizontal Seek Gesture
+                                    val seekFactor = 90_000L
+                                    val seekOffset = ((totalDragX / size.width) * seekFactor).toLong()
+                                    val duration = playerManager.exoPlayer.duration.coerceAtLeast(0L)
+                                    val targetPos = (initialSeekPosition + seekOffset).coerceIn(0L, duration)
+                                    playerManager.seekTo(targetPos)
+                                    showHud("${formatDuration(targetPos)} / ${formatDuration(duration)}", Icons.Default.SwapHoriz)
+                                } else if (isDragHorizontal == false) {
+                                    // Vertical Swipe: Volume on right, Brightness on left
+                                    val isRightSide = startX >= size.width * 0.5f
+                                    if (isRightSide) {
+                                        // Volume: smooth accumulation over ~60% screen height
+                                        val stepHeight = (size.height * 0.6f) / maxVol.coerceAtLeast(1)
+                                        val volOffset = (-totalDragY / stepHeight).toInt()
+                                        val targetVol = (initialVolume + volOffset).coerceIn(0, maxVol)
                                         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, 0)
-                                        val pct = ((targetVol.toFloat() / maxVol) * 100).toInt()
+                                        val pct = ((targetVol.toFloat() / maxVol) * 100).roundToInt()
                                         showHud(
                                             "Volume: $pct%",
                                             if (targetVol == 0) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
                                         )
+                                    } else {
+                                        // Brightness: smooth accumulation over ~60% screen height
+                                        val brightOffset = -totalDragY / (size.height * 0.6f)
+                                        val targetBrightness = (initialBrightness + brightOffset).coerceIn(0.01f, 1.0f)
+                                        activity?.let { act ->
+                                            val lp = act.window.attributes
+                                            lp.screenBrightness = targetBrightness
+                                            act.window.attributes = lp
+                                            val pct = (targetBrightness * 100).roundToInt()
+                                            showHud("Brightness: $pct%", Icons.Default.BrightnessMedium)
+                                        }
                                     }
                                 }
                             }
-                        },
-                        onDragEnd = {
-                            isDragHorizontal = null
                         }
-                    )
+                    } while (event.changes.any { it.pressed })
                 }
             }
     ) {
@@ -480,26 +511,127 @@ fun VideoPlayerScreen(
             }
         }
 
-        // Dedicated Floating Unlock Button when screen is locked
+        // Dedicated Full-screen Interceptor & Floating Unlock Button when screen is locked
         if (playbackState.isControlsLocked) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
-                    .padding(24.dp),
-                contentAlignment = Alignment.TopStart
+                    .background(Color.Black.copy(alpha = 0.2f))
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
+                            },
+                            onDoubleTap = {
+                                showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
+                            }
+                        )
+                    }
             ) {
                 FloatingActionButton(
                     onClick = {
                         playerManager.setControlsLocked(false)
                         showHud(context.getString(R.string.player_unlock_controls), Icons.Default.LockOpen)
                     },
-                    containerColor = Color.Black.copy(alpha = 0.7f),
+                    containerColor = Color.Black.copy(alpha = 0.75f),
                     contentColor = ThrynxCyan,
                     shape = CircleShape,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(24.dp)
+                        .size(56.dp)
                 ) {
                     Icon(Icons.Default.Lock, contentDescription = "Unlock", modifier = Modifier.size(28.dp))
+                }
+            }
+        }
+
+        // Quick Reset-to-Fit Zoom Button (shown whenever zoomed in and unlocked)
+        if (playbackState.zoomScale > 1.05f && !playbackState.isControlsLocked) {
+            Surface(
+                onClick = {
+                    playerManager.resetZoom()
+                    showHud("Zoom: 100% (Fit)", Icons.Default.ZoomOutMap)
+                },
+                shape = RoundedCornerShape(20.dp),
+                color = Color.Black.copy(alpha = 0.75f),
+                border = BorderStroke(1.dp, ThrynxCyan),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 64.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.ZoomOutMap, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Reset Zoom (${(playbackState.zoomScale * 100).roundToInt()}%)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Centered Buffering Indicator
+        if (playbackState.isBuffering && playbackState.errorMessage == null) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(56.dp)
+                    .align(Alignment.Center),
+                color = ThrynxCyan,
+                strokeWidth = 4.dp
+            )
+        }
+
+        // Centered Playback / Network Error Card with Retry & Go Back
+        playbackState.errorMessage?.let { errorMsg ->
+            Card(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(32.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.88f)),
+                border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.7f)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = Color.Red, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Playback Error",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMsg,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(onClick = handleBackPress) {
+                            Text("Go Back")
+                        }
+                        Button(
+                            onClick = { playerManager.retry() },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Retry", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }

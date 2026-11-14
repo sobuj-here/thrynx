@@ -37,6 +37,7 @@ import com.thrynx.app.core.media.MediaStoreScanner
 import com.thrynx.app.core.model.MediaItemModel
 import com.thrynx.app.core.service.ThrynxMediaPlaybackService
 import com.thrynx.app.ui.navigation.ThrynxNavigationApp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -93,17 +94,34 @@ class MainActivity : FragmentActivity() {
                 var rawAudios by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
 
                 val recentHistory by app.database.historyDao().getRecentHistory(30).collectAsState(initial = emptyList())
+                val recentAudioHistory by app.database.historyDao().getRecentAudioHistory(50).collectAsState(initial = emptyList())
+                val lastPlayedVideo by app.database.historyDao().getLastPlayedVideoFlow().collectAsState(initial = null)
+                val lastPlayedAudio by app.database.historyDao().getLastPlayedAudioFlow().collectAsState(initial = null)
+
                 val favorites by app.database.favoriteDao().getAllFavorites().collectAsState(initial = emptyList())
                 val privateVideos by app.database.privateVaultDao().getAllPrivateVideosFlow().collectAsState(initial = emptyList())
                 val customFolders by app.database.customFolderDao().getAllCustomFoldersFlow().collectAsState(initial = emptyList())
                 val vaultPin by preferencesManager.privateVaultPinFlow.collectAsState(initial = "")
                 val hiddenFolders by preferencesManager.hiddenFoldersFlow.collectAsState(initial = emptySet())
 
-                // Filter out private videos and hidden folders from public list
-                val visibleVideos = remember(rawVideos, privateVideos, hiddenFolders) {
+                // Attach persistent playback positions from Room DB to videos
+                val videoHistoryMap = remember(recentHistory) { recentHistory.associateBy({ it.uri }, { it.lastPositionMs }) }
+                val visibleVideos = remember(rawVideos, privateVideos, hiddenFolders, videoHistoryMap) {
                     val privateUris = privateVideos.map { it.mediaUri }.toSet()
                     rawVideos.filter {
                         !privateUris.contains(it.mediaUriString) && !hiddenFolders.contains(it.folderName)
+                    }.map { video ->
+                        val savedPos = videoHistoryMap[video.mediaUriString]
+                        if (savedPos != null && savedPos > 0L) video.copy(lastPositionMs = savedPos) else video
+                    }
+                }
+
+                // Attach persistent playback positions from Room DB to audios
+                val audioHistoryMap = remember(recentAudioHistory) { recentAudioHistory.associateBy({ it.uri }, { it.lastPositionMs }) }
+                val mappedAudios = remember(rawAudios, audioHistoryMap) {
+                    rawAudios.map { audio ->
+                        val savedPos = audioHistoryMap[audio.mediaUriString]
+                        if (savedPos != null && savedPos > 0L) audio.copy(lastPositionMs = savedPos) else audio
                     }
                 }
 
@@ -111,8 +129,8 @@ class MainActivity : FragmentActivity() {
                     app.mediaScanner.groupIntoFolders(visibleVideos)
                 }
 
-                val audioFolders = remember(rawAudios) {
-                    app.mediaScanner.loadAudioFolders(rawAudios)
+                val audioFolders = remember(mappedAudios) {
+                    app.mediaScanner.loadAudioFolders(mappedAudios)
                 }
 
                 fun refreshVideos() {
@@ -151,7 +169,7 @@ class MainActivity : FragmentActivity() {
                         navController = navController,
                         playerManager = app.playerManager,
                         videos = visibleVideos,
-                        audios = rawAudios,
+                        audios = mappedAudios,
                         folders = folders,
                         audioFolders = audioFolders,
                         recentHistory = recentHistory,
@@ -159,6 +177,8 @@ class MainActivity : FragmentActivity() {
                         privateVideos = privateVideos,
                         customFolders = customFolders,
                         vaultPin = vaultPin,
+                        lastPlayedVideoUri = lastPlayedVideo?.uri,
+                        lastPlayedAudioUri = lastPlayedAudio?.uri,
                         hasStoragePermission = hasStoragePermissionState.value,
                         canUseBiometric = canUseBiometric(),
                         onRequestPermission = { checkAndRequestPermissions() },
@@ -420,8 +440,17 @@ class MainActivity : FragmentActivity() {
 
     private fun enterPictureInPicture() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val currentMedia = app.playerManager.playbackState.value.currentMedia
+            val rational = if (currentMedia != null && currentMedia.width > 0 && currentMedia.height > 0) {
+                val aspect = currentMedia.width.toFloat() / currentMedia.height.toFloat()
+                // Coerce aspect ratio within Android limits (1/2.39 to 2.39/1)
+                val clampedAspect = aspect.coerceIn(0.4184f, 2.39f)
+                Rational((clampedAspect * 1000).toInt(), 1000)
+            } else {
+                Rational(16, 9)
+            }
             val params = PictureInPictureParams.Builder()
-                .setAspectRatio(Rational(16, 9))
+                .setAspectRatio(rational)
                 .build()
             enterPictureInPictureMode(params)
         }
@@ -441,21 +470,35 @@ class MainActivity : FragmentActivity() {
 
     override fun onStop() {
         saveCurrentPlaybackPosition()
-        val backgroundEnabled = runBlocking {
-            try {
-                app.preferencesManager.backgroundPlaybackFlow.first()
-            } catch (e: Exception) {
-                false
-            }
-        }
-        if (!backgroundEnabled && !isInPictureInPictureMode) {
-            app.playerManager.pause()
-        } else if (backgroundEnabled && app.playerManager.playbackState.value.isPlaying) {
+        val currentMedia = app.playerManager.playbackState.value.currentMedia
+        val isPlaying = app.playerManager.playbackState.value.isPlaying
+        val isVideo = currentMedia?.isVideo == true
+
+        if (!isVideo && isPlaying) {
+            // Audio background playback ALWAYS continues seamlessly via foreground service
             val serviceIntent = Intent(this, ThrynxMediaPlaybackService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(serviceIntent)
             } else {
                 startService(serviceIntent)
+            }
+        } else if (isVideo) {
+            val backgroundVideoEnabled = runBlocking {
+                try {
+                    app.preferencesManager.backgroundPlaybackFlow.first()
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            if (!backgroundVideoEnabled && !isInPictureInPictureMode) {
+                app.playerManager.pause()
+            } else if (backgroundVideoEnabled && isPlaying) {
+                val serviceIntent = Intent(this, ThrynxMediaPlaybackService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(serviceIntent)
+                } else {
+                    startService(serviceIntent)
+                }
             }
         }
         super.onStop()
@@ -469,17 +512,23 @@ class MainActivity : FragmentActivity() {
     private fun saveCurrentPlaybackPosition() {
         val state = app.playerManager.playbackState.value
         state.currentMedia?.let { media ->
-            lifecycleScope.launch {
-                app.database.historyDao().upsertHistory(
-                    PlaybackHistoryEntity(
-                        uri = media.mediaUriString,
-                        title = media.title,
-                        durationMs = state.durationMs,
-                        lastPositionMs = state.currentPositionMs,
-                        isVideo = true,
-                        lastWatchedTimestamp = System.currentTimeMillis()
-                    )
-                )
+            val pos = state.currentPositionMs
+            val duration = state.durationMs
+            if (pos > 1000L || duration > 0L) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        app.database.historyDao().upsertHistory(
+                            PlaybackHistoryEntity(
+                                uri = media.mediaUriString,
+                                title = media.title,
+                                durationMs = if (duration > 0L) duration else media.durationMs,
+                                lastPositionMs = pos,
+                                isVideo = media.isVideo,
+                                lastWatchedTimestamp = System.currentTimeMillis()
+                            )
+                        )
+                    } catch (ignored: Exception) {}
+                }
             }
         }
     }

@@ -49,6 +49,7 @@ fun VideosScreen(
     folders: List<FolderItemModel> = emptyList(),
     favoritesUris: Set<String>,
     currentPlayingUri: Uri? = null,
+    lastPlayedUri: String? = null,
     hasStoragePermission: Boolean = true,
     onRequestPermission: () -> Unit = {},
     onOpenMedia: (MediaItemModel) -> Unit,
@@ -438,11 +439,13 @@ fun VideosScreen(
                             val isSelected = selectedUris.contains(itemKey)
                             val isFav = favoritesUris.contains(video.uri?.toString() ?: "")
                             val isPlaying = video.uri != null && video.uri == currentPlayingUri
+                            val isLastPlayed = (video.mediaUriString == lastPlayedUri)
 
                             VideoGridItem(
                                 video = video,
                                 isFavorite = isFav,
                                 isPlaying = isPlaying,
+                                isLastPlayed = isLastPlayed,
                                 showPlayedTime = showPlayedTime,
                                 isSelectionMode = isSelectionMode,
                                 isSelected = isSelected,
@@ -473,11 +476,13 @@ fun VideosScreen(
                             val isSelected = selectedUris.contains(itemKey)
                             val isFav = favoritesUris.contains(video.uri?.toString() ?: "")
                             val isPlaying = video.uri != null && video.uri == currentPlayingUri
+                            val isLastPlayed = (video.mediaUriString == lastPlayedUri)
 
                             VideoListItem(
                                 video = video,
                                 isFavorite = isFav,
                                 isPlaying = isPlaying,
+                                isLastPlayed = isLastPlayed,
                                 showPlayedTime = showPlayedTime,
                                 isSelectionMode = isSelectionMode,
                                 isSelected = isSelected,
@@ -796,6 +801,7 @@ fun VideoListItem(
     video: MediaItemModel,
     isFavorite: Boolean,
     isPlaying: Boolean,
+    isLastPlayed: Boolean = false,
     showPlayedTime: Boolean,
     isSelectionMode: Boolean,
     isSelected: Boolean,
@@ -805,8 +811,8 @@ fun VideoListItem(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = if (isPlaying) ThrynxCyan.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant,
-        border = if (isPlaying) BorderStroke(1.5.dp, ThrynxCyan) else null,
+        color = if (isPlaying) ThrynxCyan.copy(alpha = 0.12f) else if (isLastPlayed) ThrynxCobalt.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+        border = if (isPlaying || isLastPlayed) BorderStroke(1.5.dp, ThrynxCyan) else null,
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
@@ -882,6 +888,22 @@ fun VideoListItem(
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isLastPlayed && !isPlaying) {
+                        Surface(
+                            color = ThrynxCyan.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = "LAST PLAYED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ThrynxCyan,
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                        Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     Text(
                         text = video.resolutionLabel,
                         style = MaterialTheme.typography.labelSmall,
@@ -930,6 +952,7 @@ fun VideoGridItem(
     video: MediaItemModel,
     isFavorite: Boolean,
     isPlaying: Boolean,
+    isLastPlayed: Boolean = false,
     showPlayedTime: Boolean,
     isSelectionMode: Boolean,
     isSelected: Boolean,
@@ -942,9 +965,9 @@ fun VideoGridItem(
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         shape = RoundedCornerShape(12.dp),
-        border = if (isPlaying) BorderStroke(1.5.dp, ThrynxCyan) else null,
+        border = if (isPlaying || isLastPlayed) BorderStroke(1.5.dp, ThrynxCyan) else null,
         colors = CardDefaults.cardColors(
-            containerColor = if (isPlaying) ThrynxCyan.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isPlaying) ThrynxCyan.copy(alpha = 0.12f) else if (isLastPlayed) ThrynxCobalt.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column {
@@ -961,7 +984,24 @@ fun VideoGridItem(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                if (isSelectionMode) {
+                if (isLastPlayed && !isPlaying && !isSelectionMode) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ThrynxCyan)
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = "LAST PLAYED",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ThrynxBgDark,
+                            fontSize = 7.5.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                } else if (isSelectionMode) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)

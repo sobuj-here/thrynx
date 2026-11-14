@@ -195,7 +195,9 @@ data class PlaybackState(
     val subtitleDelayMs: Long = 0L,
     val rotationDegrees: Int = 0,
     val zoomScale: Float = 1.0f,
-    val isPipActive: Boolean = false
+    val isPipActive: Boolean = false,
+    val isBuffering: Boolean = false,
+    val errorMessage: String? = null
 ) {
     val hasNext: Boolean get() = queueIndex < queue.size - 1
     val hasPrevious: Boolean get() = queueIndex > 0

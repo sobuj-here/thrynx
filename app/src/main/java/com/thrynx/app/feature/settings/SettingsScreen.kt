@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -818,16 +819,17 @@ fun SettingsCategoryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelMedium,
                 color = ThrynxCyan,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.2.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             content()
         }
     }
@@ -844,22 +846,39 @@ fun SettingsClickableRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 4.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(ThrynxCyan.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
         }
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp)
         )
     }
 }
@@ -875,23 +894,35 @@ fun SettingsSwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 4.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(ThrynxCyan.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
-                description?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            description?.let {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
+        Spacer(modifier = Modifier.width(12.dp))
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -914,21 +945,40 @@ fun SettingsActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 4.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(ThrynxCyan.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(22.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Icon(icon, contentDescription = null, tint = ThrynxCyan, modifier = Modifier.size(20.dp))
         }
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
+        )
         value?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
+        Spacer(modifier = Modifier.width(6.dp))
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 

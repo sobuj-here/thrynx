@@ -61,6 +61,8 @@ fun ThrynxNavigationApp(
     privateVideos: List<PrivateVideoEntity>,
     customFolders: List<com.thrynx.app.core.database.CustomFolderEntity> = emptyList(),
     vaultPin: String,
+    lastPlayedVideoUri: String? = null,
+    lastPlayedAudioUri: String? = null,
     hasStoragePermission: Boolean = true,
     canUseBiometric: Boolean = false,
     onRequestPermission: () -> Unit = {},
@@ -210,6 +212,7 @@ fun ThrynxNavigationApp(
                     folders = folders,
                     favoritesUris = favoritesUris,
                     currentPlayingUri = playbackState.currentMedia?.uri,
+                    lastPlayedUri = lastPlayedVideoUri,
                     hasStoragePermission = hasStoragePermission,
                     onRequestPermission = onRequestPermission,
                     onOpenMedia = { media ->
@@ -238,6 +241,7 @@ fun ThrynxNavigationApp(
                     audioFolders = audioFolders,
                     playbackState = playbackState,
                     playerManager = playerManager,
+                    lastPlayedUri = lastPlayedAudioUri,
                     hasStoragePermission = hasStoragePermission,
                     onRequestPermission = onRequestPermission,
                     onPlayAudio = { audio ->

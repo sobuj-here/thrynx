@@ -25,9 +25,31 @@ class ThrynxMediaPlaybackService : MediaSessionService() {
         const val ACTION_STOP = "com.thrynx.app.ACTION_STOP"
     }
 
+    private val playerListener = object : androidx.media3.common.Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updateNotification()
+        }
+        override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+            updateNotification()
+        }
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            updateNotification()
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        try {
+            ThrynxApplication.instance.playerManager.exoPlayer.addListener(playerListener)
+        } catch (ignored: Exception) {}
+    }
+
+    override fun onDestroy() {
+        try {
+            ThrynxApplication.instance.playerManager.exoPlayer.removeListener(playerListener)
+        } catch (ignored: Exception) {}
+        super.onDestroy()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -88,6 +110,12 @@ class ThrynxMediaPlaybackService : MediaSessionService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val prevAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_media_previous,
+            "Previous",
+            getServicePendingIntent(ACTION_PREV)
+        ).build()
+
         val playPauseAction = if (isPlaying) {
             NotificationCompat.Action.Builder(
                 android.R.drawable.ic_media_pause,
@@ -102,6 +130,12 @@ class ThrynxMediaPlaybackService : MediaSessionService() {
             ).build()
         }
 
+        val nextAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_media_next,
+            "Next",
+            getServicePendingIntent(ACTION_NEXT)
+        ).build()
+
         val stopAction = NotificationCompat.Action.Builder(
             android.R.drawable.ic_menu_close_clear_cancel,
             "Stop",
@@ -113,11 +147,13 @@ class ThrynxMediaPlaybackService : MediaSessionService() {
             .setContentTitle(media.title)
             .setContentText(if (isPlaying) "Playing in background" else "Paused")
             .setContentIntent(contentIntent)
+            .addAction(prevAction)
             .addAction(playPauseAction)
+            .addAction(nextAction)
             .addAction(stopAction)
             .setStyle(
                 androidx.media3.session.MediaStyleNotificationHelper.MediaStyle(playerManager.mediaSession)
-                    .setShowActionsInCompactView(0, 1)
+                    .setShowActionsInCompactView(0, 1, 2)
             )
             .setOngoing(isPlaying)
             .setPriority(NotificationCompat.PRIORITY_LOW)

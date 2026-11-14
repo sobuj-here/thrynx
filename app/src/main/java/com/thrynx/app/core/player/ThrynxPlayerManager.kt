@@ -117,14 +117,23 @@ class ThrynxPlayerManager(private val context: Context) {
 
             override fun onPlaybackStateChanged(state: Int) {
                 when (state) {
+                    Player.STATE_BUFFERING -> {
+                        _playbackState.value = _playbackState.value.copy(isBuffering = true)
+                    }
                     Player.STATE_READY -> {
                         _playbackState.value = _playbackState.value.copy(
+                            isBuffering = false,
+                            errorMessage = null,
                             durationMs = exoPlayer.duration.coerceAtLeast(0L),
                             bufferedPositionMs = exoPlayer.bufferedPosition
                         )
                     }
                     Player.STATE_ENDED -> {
+                        _playbackState.value = _playbackState.value.copy(isBuffering = false)
                         handlePlaybackEnded()
+                    }
+                    Player.STATE_IDLE -> {
+                        _playbackState.value = _playbackState.value.copy(isBuffering = false)
                     }
                 }
             }
@@ -134,14 +143,19 @@ class ThrynxPlayerManager(private val context: Context) {
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                // Retry automatically if network recoverable
-                if (error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT) {
-                    val pos = exoPlayer.currentPosition
-                    exoPlayer.prepare()
-                    exoPlayer.seekTo(pos)
-                    exoPlayer.play()
+                val message = when (error.errorCode) {
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
+                        "Network connection failed. Please check your internet connection."
+                    PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
+                    PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED ->
+                        "Unsupported media format. Please enter a valid MP4, HLS (.m3u8), or DASH (.mpd) stream."
+                    else -> error.localizedMessage ?: "Playback Error (${error.errorCodeName})"
                 }
+                _playbackState.value = _playbackState.value.copy(
+                    isBuffering = false,
+                    errorMessage = message
+                )
             }
         })
     }
@@ -173,12 +187,19 @@ class ThrynxPlayerManager(private val context: Context) {
     private fun startProgressTracker() {
         stopProgressTracker()
         progressTrackerJob = scope.launch {
+            var counter = 0
             while (isActive) {
                 if (exoPlayer.isPlaying) {
+                    val pos = exoPlayer.currentPosition
                     _playbackState.value = _playbackState.value.copy(
-                        currentPositionMs = exoPlayer.currentPosition,
+                        currentPositionMs = pos,
                         bufferedPositionMs = exoPlayer.bufferedPosition
                     )
+                    counter++
+                    // Persist position every ~2.5 seconds (10 ticks)
+                    if (counter % 10 == 0) {
+                        persistCurrentPosition()
+                    }
                 }
                 delay(250)
             }
@@ -188,6 +209,28 @@ class ThrynxPlayerManager(private val context: Context) {
     private fun stopProgressTracker() {
         progressTrackerJob?.cancel()
         progressTrackerJob = null
+    }
+
+    fun persistCurrentPosition() {
+        val media = _playbackState.value.currentMedia ?: return
+        val pos = exoPlayer.currentPosition
+        val duration = exoPlayer.duration.coerceAtLeast(0L)
+        if (pos > 1000L || duration > 0L) {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    com.thrynx.app.ThrynxApplication.instance.database.historyDao().upsertHistory(
+                        com.thrynx.app.core.database.PlaybackHistoryEntity(
+                            uri = media.mediaUriString,
+                            title = media.title,
+                            durationMs = if (duration > 0L) duration else media.durationMs,
+                            lastPositionMs = pos,
+                            isVideo = media.isVideo,
+                            lastWatchedTimestamp = System.currentTimeMillis()
+                        )
+                    )
+                } catch (ignored: Exception) {}
+            }
+        }
     }
 
     private fun resolveMediaUri(media: MediaItemModel): Uri {
@@ -225,15 +268,23 @@ class ThrynxPlayerManager(private val context: Context) {
         currentPlaylist = listOf(media)
         currentPlaylistIndex = 0
 
+        val resolvedStartPos = if (startPositionMs > 0L) {
+            startPositionMs
+        } else if (media.lastPositionMs > 2000L) {
+            media.lastPositionMs
+        } else {
+            0L
+        }
+
         val mediaItem = buildMediaItem(media)
 
-        exoPlayer.setMediaItem(mediaItem, startPositionMs)
+        exoPlayer.setMediaItem(mediaItem, resolvedStartPos)
         exoPlayer.prepare()
         exoPlayer.play()
 
         _playbackState.value = _playbackState.value.copy(
             currentMedia = media,
-            currentPositionMs = startPositionMs,
+            currentPositionMs = resolvedStartPos,
             isPlaying = true,
             queue = currentPlaylist,
             queueIndex = 0
@@ -246,15 +297,23 @@ class ThrynxPlayerManager(private val context: Context) {
         currentPlaylistIndex = startIndex.coerceIn(0, mediaList.size - 1)
 
         val target = currentPlaylist[currentPlaylistIndex]
+        val resolvedStartPos = if (startPositionMs > 0L) {
+            startPositionMs
+        } else if (target.lastPositionMs > 2000L) {
+            target.lastPositionMs
+        } else {
+            0L
+        }
+
         val mediaItems = mediaList.map { media -> buildMediaItem(media) }
 
-        exoPlayer.setMediaItems(mediaItems, currentPlaylistIndex, startPositionMs)
+        exoPlayer.setMediaItems(mediaItems, currentPlaylistIndex, resolvedStartPos)
         exoPlayer.prepare()
         exoPlayer.play()
 
         _playbackState.value = _playbackState.value.copy(
             currentMedia = target,
-            currentPositionMs = startPositionMs,
+            currentPositionMs = resolvedStartPos,
             isPlaying = true,
             queue = currentPlaylist,
             queueIndex = currentPlaylistIndex
@@ -262,6 +321,7 @@ class ThrynxPlayerManager(private val context: Context) {
     }
 
     fun playNext() {
+        persistCurrentPosition()
         if (currentPlaylistIndex < currentPlaylist.size - 1) {
             currentPlaylistIndex++
             val nextMedia = currentPlaylist[currentPlaylistIndex]
@@ -292,6 +352,7 @@ class ThrynxPlayerManager(private val context: Context) {
     }
 
     fun playPrevious() {
+        persistCurrentPosition()
         if (exoPlayer.currentPosition > 3000L) {
             seekTo(0L)
             return
@@ -316,7 +377,7 @@ class ThrynxPlayerManager(private val context: Context) {
 
     fun togglePlayPause() {
         if (exoPlayer.isPlaying) {
-            exoPlayer.pause()
+            pause()
         } else {
             exoPlayer.play()
         }
@@ -325,13 +386,21 @@ class ThrynxPlayerManager(private val context: Context) {
     fun pause() {
         if (exoPlayer.isPlaying) {
             exoPlayer.pause()
+            persistCurrentPosition()
         }
+    }
+
+    fun retry() {
+        _playbackState.value = _playbackState.value.copy(errorMessage = null, isBuffering = true)
+        exoPlayer.prepare()
+        exoPlayer.play()
     }
 
     /**
      * Completely stops playback, clears media queue, and dismisses active playback state.
      */
     fun stop() {
+        persistCurrentPosition()
         exoPlayer.stop()
         exoPlayer.clearMediaItems()
         stopProgressTracker()
@@ -397,13 +466,18 @@ class ThrynxPlayerManager(private val context: Context) {
             cur < 1.15f -> 1.25f
             cur < 1.4f -> 1.5f
             cur < 1.85f -> 2.0f
+            cur < 2.85f -> 3.0f
             else -> 1.0f
         }
         _playbackState.value = _playbackState.value.copy(zoomScale = nextZoom)
     }
 
     fun setZoomScale(scale: Float) {
-        _playbackState.value = _playbackState.value.copy(zoomScale = scale.coerceIn(0.5f, 3.0f))
+        _playbackState.value = _playbackState.value.copy(zoomScale = scale.coerceIn(1.0f, 4.0f))
+    }
+
+    fun resetZoom() {
+        _playbackState.value = _playbackState.value.copy(zoomScale = 1.0f)
     }
 
     fun toggleRepeatMode() {

@@ -117,4 +117,50 @@ class VideoPlayerStateTest {
         }
         assertEquals(RepeatMode.OFF, mode)
     }
+
+    @Test
+    fun testZoomScaleClamping() {
+        val minScale = 0.5f.coerceIn(1.0f, 4.0f)
+        assertEquals(1.0f, minScale, 0.001f)
+
+        val maxScale = 5.5f.coerceIn(1.0f, 4.0f)
+        assertEquals(4.0f, maxScale, 0.001f)
+
+        val validScale = 2.5f.coerceIn(1.0f, 4.0f)
+        assertEquals(2.5f, validScale, 0.001f)
+    }
+
+    @Test
+    fun testPlaybackStateBufferingAndError() {
+        val normalState = PlaybackState()
+        assertFalse(normalState.isBuffering)
+        assertNull(normalState.errorMessage)
+
+        val bufferingState = PlaybackState(isBuffering = true)
+        assertTrue(bufferingState.isBuffering)
+
+        val errorState = PlaybackState(errorMessage = "Network connection failed")
+        assertEquals("Network connection failed", errorState.errorMessage)
+    }
+
+    @Test
+    fun testAudioVsVideoMediaItemDistinction() {
+        val video = MediaItemModel(id = 100L, title = "Movie.mp4", isVideo = true, durationMs = 120_000L)
+        val audio = MediaItemModel(id = 200L, title = "Song.mp3", isVideo = false, durationMs = 180_000L)
+
+        assertTrue(video.isVideo)
+        assertFalse(audio.isVideo)
+        assertNotEquals(video.id, audio.id)
+    }
+
+    @Test
+    fun testAutoResumePositionThreshold() {
+        val freshMedia = MediaItemModel(lastPositionMs = 500L)
+        val shouldResumeFresh = freshMedia.lastPositionMs > 2000L
+        assertFalse(shouldResumeFresh)
+
+        val playedMedia = MediaItemModel(lastPositionMs = 45_000L)
+        val shouldResumePlayed = playedMedia.lastPositionMs > 2000L
+        assertTrue(shouldResumePlayed)
+    }
 }

@@ -8,6 +8,15 @@ interface HistoryDao {
     @Query("SELECT * FROM playback_history WHERE isVideo = 1 ORDER BY lastWatchedTimestamp DESC LIMIT :limit")
     fun getRecentHistory(limit: Int = 30): Flow<List<PlaybackHistoryEntity>>
 
+    @Query("SELECT * FROM playback_history WHERE isVideo = 0 ORDER BY lastWatchedTimestamp DESC LIMIT :limit")
+    fun getRecentAudioHistory(limit: Int = 30): Flow<List<PlaybackHistoryEntity>>
+
+    @Query("SELECT * FROM playback_history WHERE isVideo = 1 ORDER BY lastWatchedTimestamp DESC LIMIT 1")
+    fun getLastPlayedVideoFlow(): Flow<PlaybackHistoryEntity?>
+
+    @Query("SELECT * FROM playback_history WHERE isVideo = 0 ORDER BY lastWatchedTimestamp DESC LIMIT 1")
+    fun getLastPlayedAudioFlow(): Flow<PlaybackHistoryEntity?>
+
     @Query("SELECT * FROM playback_history WHERE uri = :uri LIMIT 1")
     suspend fun getHistoryForUri(uri: String): PlaybackHistoryEntity?
 

@@ -1,5 +1,6 @@
 package com.thrynx.app.feature.home
 
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -524,8 +525,14 @@ fun HomeScreen(
         }
     }
 
-    // Network Stream Dialog with URL auto-sanitization & test streams
+    // Network Stream Dialog with URL auto-sanitization, YouTube detection & test streams
     if (showStreamDialog) {
+        val context = LocalContext.current
+        val isYouTubeUrl = remember(streamUrlInput) {
+            val lower = streamUrlInput.trim().lowercase()
+            lower.contains("youtube.com") || lower.contains("youtu.be")
+        }
+
         AlertDialog(
             onDismissRequest = { showStreamDialog = false },
             title = { Text(stringResource(id = R.string.stream_title)) },
@@ -545,9 +552,58 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
+
+                    // YouTube URL Warning & External Launch Handoff
+                    if (isYouTubeUrl) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "YouTube Link Detected",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "YouTube pages are encrypted web streams and cannot be streamed directly. Open it directly in the YouTube app or browser below.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        var url = streamUrlInput.trim()
+                                        if (!url.contains("://")) url = "https://$url"
+                                        try {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                            context.startActivity(intent)
+                                            showStreamDialog = false
+                                        } catch (e: Exception) {
+                                            // Handle activity not found
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = ThrynxCyan,
+                                        contentColor = ThrynxBgDark
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Open in YouTube / Browser", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Quick Sample Streams:",
+                        text = "Quick Sample Streams (Direct Media):",
                         style = MaterialTheme.typography.labelSmall,
                         color = ThrynxCyan,
                         fontWeight = FontWeight.SemiBold
@@ -555,40 +611,49 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         OutlinedButton(
                             onClick = { streamUrlInput = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
                             modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp)
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
                         ) {
-                            Text("HLS (.m3u8)", fontSize = 11.sp)
+                            Text("HLS (.m3u8)", fontSize = 10.sp, maxLines = 1)
                         }
                         OutlinedButton(
                             onClick = { streamUrlInput = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
                             modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp)
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
                         ) {
-                            Text("MP4 Stream", fontSize = 11.sp)
+                            Text("MP4 Stream", fontSize = 10.sp, maxLines = 1)
+                        }
+                        OutlinedButton(
+                            onClick = { streamUrlInput = "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd" },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+                        ) {
+                            Text("DASH (.mpd)", fontSize = 10.sp, maxLines = 1)
                         }
                     }
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        var trimmed = streamUrlInput.trim()
-                        if (trimmed.isNotBlank()) {
-                            if (!trimmed.contains("://")) {
-                                trimmed = "https://$trimmed"
+                if (!isYouTubeUrl) {
+                    Button(
+                        onClick = {
+                            var trimmed = streamUrlInput.trim()
+                            if (trimmed.isNotBlank()) {
+                                if (!trimmed.contains("://")) {
+                                    trimmed = "https://$trimmed"
+                                }
+                                showStreamDialog = false
+                                onOpenStreamUrl(trimmed)
                             }
-                            showStreamDialog = false
-                            onOpenStreamUrl(trimmed)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
-                ) {
-                    Text(stringResource(id = R.string.stream_play), fontWeight = FontWeight.Bold)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
+                    ) {
+                        Text(stringResource(id = R.string.stream_play), fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             dismissButton = {

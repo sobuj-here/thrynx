@@ -41,6 +41,7 @@ fun AudioScreen(
     audioFolders: List<FolderItemModel>,
     playbackState: PlaybackState,
     playerManager: ThrynxPlayerManager,
+    lastPlayedUri: String? = null,
     hasStoragePermission: Boolean = true,
     onRequestPermission: () -> Unit = {},
     onPlayAudio: (MediaItemModel) -> Unit,
@@ -344,11 +345,12 @@ fun AudioScreen(
                             val isSelected = selectedAudioIds.contains(audio.id)
                             val isPlaying = playbackState.currentMedia?.uri == audio.uri ||
                                     (playbackState.currentMedia?.id == audio.id)
+                            val isLastPlayed = (audio.mediaUriString == lastPlayedUri)
 
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = if (isPlaying) ThrynxCyan.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant,
-                                border = if (isPlaying) androidx.compose.foundation.BorderStroke(1.5.dp, ThrynxCyan) else null,
+                                color = if (isPlaying) ThrynxCyan.copy(alpha = 0.12f) else if (isLastPlayed) ThrynxCobalt.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                                border = if (isPlaying || isLastPlayed) androidx.compose.foundation.BorderStroke(1.5.dp, ThrynxCyan) else null,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .combinedClickable(
@@ -421,6 +423,22 @@ fun AudioScreen(
                                         )
                                         Spacer(modifier = Modifier.height(3.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (isLastPlayed && !isPlaying) {
+                                                Surface(
+                                                    color = ThrynxCyan.copy(alpha = 0.2f),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "LAST PLAYED",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = ThrynxCyan,
+                                                        fontSize = 8.sp,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                                Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
                                             Text(
                                                 text = formatDuration(audio.durationMs),
                                                 style = MaterialTheme.typography.labelSmall,
@@ -436,6 +454,32 @@ fun AudioScreen(
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+                                            if (audio.lastPositionMs > 0L) {
+                                                Text(
+                                                    text = " • ",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Text(
+                                                    text = "${formatDuration(audio.lastPositionMs)} played",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = ThrynxCyan,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        }
+                                        if (audio.lastPositionMs > 0L && audio.durationMs > 0L) {
+                                            val progress = (audio.lastPositionMs.toFloat() / audio.durationMs.toFloat()).coerceIn(0f, 1f)
+                                            LinearProgressIndicator(
+                                                progress = { progress },
+                                                color = ThrynxCyan,
+                                                trackColor = Color.DarkGray,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(top = 4.dp)
+                                                    .height(2.5.dp)
+                                                    .clip(RoundedCornerShape(2.dp))
+                                            )
                                         }
                                     }
 
@@ -447,92 +491,6 @@ fun AudioScreen(
                                 }
                             }
                         }
-                    }
-                }
-            }
-        }
-
-        // Floating Audio Mini-Player Bar (shown when an audio is currently playing)
-        if (playbackState.currentMedia != null && playbackState.currentMedia?.isVideo == false) {
-            val currentMedia = playbackState.currentMedia!!
-            Surface(
-                color = Color(0xFF161F2E),
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, ThrynxCyan.copy(alpha = 0.5f)),
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(ThrynxCyan),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Audiotrack, contentDescription = null, tint = ThrynxBgDark, modifier = Modifier.size(22.dp))
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = currentMedia.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = "${formatDuration(playbackState.currentPositionMs)} / ${formatDuration(playbackState.durationMs)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ThrynxCyan
-                            )
-                        }
-                        // Rewind 10s
-                        IconButton(onClick = { playerManager.seekBackward(10000L) }) {
-                            Icon(Icons.Default.Replay10, contentDescription = "-10s", tint = Color.White)
-                        }
-                        // Play/Pause
-                        IconButton(
-                            onClick = { playerManager.togglePlayPause() },
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(ThrynxCyan)
-                        ) {
-                            Icon(
-                                imageVector = if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = "Play/Pause",
-                                tint = ThrynxBgDark,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        // Forward 10s
-                        IconButton(onClick = { playerManager.seekForward(10000L) }) {
-                            Icon(Icons.Default.Forward10, contentDescription = "+10s", tint = Color.White)
-                        }
-                    }
-
-                    // Progress Slider
-                    if (playbackState.durationMs > 0L) {
-                        val progress = (playbackState.currentPositionMs.toFloat() / playbackState.durationMs.toFloat()).coerceIn(0f, 1f)
-                        LinearProgressIndicator(
-                            progress = { progress },
-                            color = ThrynxCyan,
-                            trackColor = Color.DarkGray,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp)
-                                .height(3.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                        )
                     }
                 }
             }
