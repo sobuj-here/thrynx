@@ -2,6 +2,7 @@ package com.thrynx.app.feature.audio
 
 import android.net.Uri
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -337,7 +338,7 @@ fun AudioScreen(
                     }
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 150.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -421,7 +422,7 @@ fun AudioScreen(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
-                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             if (isLastPlayed && !isPlaying) {
                                                 Surface(
@@ -454,19 +455,17 @@ fun AudioScreen(
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-                                            if (audio.lastPositionMs > 0L) {
-                                                Text(
-                                                    text = " • ",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                                Text(
-                                                    text = "${formatDuration(audio.lastPositionMs)} played",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = ThrynxCyan,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
+                                        }
+                                        if (audio.lastPositionMs > 0L) {
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "Played ${formatDuration(audio.lastPositionMs)} / ${formatDuration(audio.durationMs)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = ThrynxCyan,
+                                                fontWeight = FontWeight.Medium,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
                                         }
                                         if (audio.lastPositionMs > 0L && audio.durationMs > 0L) {
                                             val progress = (audio.lastPositionMs.toFloat() / audio.durationMs.toFloat()).coerceIn(0f, 1f)
@@ -489,6 +488,141 @@ fun AudioScreen(
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Frozen Audio Bottom Bar (Pinned/Docked at the bottom of AudioScreen)
+        AnimatedVisibility(
+            visible = playbackState.currentMedia != null && !playbackState.currentMedia!!.isVideo,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            playbackState.currentMedia?.let { activeSong ->
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = ThrynxCardDark,
+                    tonalElevation = 12.dp,
+                    shadowElevation = 8.dp,
+                    border = BorderStroke(1.dp, ThrynxCyan.copy(alpha = 0.35f))
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        val currentPos = playbackState.currentPositionMs.toFloat()
+                        val duration = playbackState.durationMs.toFloat().coerceAtLeast(1f)
+                        val progressFraction = (currentPos / duration).coerceIn(0f, 1f)
+
+                        LinearProgressIndicator(
+                            progress = { progressFraction },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp),
+                            color = ThrynxCyan,
+                            trackColor = ThrynxTimelineTrack
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(ThrynxCyan.copy(alpha = 0.35f), Color(0xFF1E2838))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MusicNote,
+                                    contentDescription = null,
+                                    tint = ThrynxCyan,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = activeSong.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${formatDuration(playbackState.currentPositionMs)} / ${formatDuration(playbackState.durationMs)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = ThrynxCyan,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { playerManager.seekTo((playbackState.currentPositionMs - 10000L).coerceAtLeast(0L)) },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Replay10,
+                                    contentDescription = "Replay 10s",
+                                    tint = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            FilledIconButton(
+                                onClick = { playerManager.togglePlayPause() },
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = ThrynxCyan,
+                                    contentColor = ThrynxBgDark
+                                ),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (playbackState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = if (playbackState.isPlaying) "Pause" else "Play",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { playerManager.seekTo((playbackState.currentPositionMs + 10000L).coerceAtMost(playbackState.durationMs)) },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Forward10,
+                                    contentDescription = "Forward 10s",
+                                    tint = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { playerManager.playNext() },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.SkipNext,
+                                    contentDescription = "Next Track",
+                                    tint = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(22.dp)
+                                )
                             }
                         }
                     }

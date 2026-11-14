@@ -106,19 +106,27 @@ fun ThrynxNavigationApp(
         bottomBar = {
             if (currentRoute != Screen.Player.route) {
                 Column {
-                    // Persistent Mini-Player Bar
-                    playbackState.currentMedia?.let {
-                        MiniPlayerBar(
-                            playbackState = playbackState,
-                            onTogglePlayPause = { playerManager.togglePlayPause() },
-                            onStop = { playerManager.stop() },
-                            onDismiss = { playerManager.dismiss() },
-                            onClick = {
-                                navController.navigate(Screen.Player.route) {
-                                    launchSingleTop = true
+                    // Persistent Mini-Player Bar (Suppressed on Audio screen because AudioScreen has its own dedicated frozen player)
+                    if (currentRoute != Screen.Audio.route) {
+                        playbackState.currentMedia?.let { currentMedia ->
+                            MiniPlayerBar(
+                                playbackState = playbackState,
+                                onTogglePlayPause = { playerManager.togglePlayPause() },
+                                onStop = { playerManager.stop() },
+                                onDismiss = { playerManager.dismiss() },
+                                onClick = {
+                                    if (!currentMedia.isVideo) {
+                                        navController.navigate(Screen.Audio.route) {
+                                            launchSingleTop = true
+                                        }
+                                    } else {
+                                        navController.navigate(Screen.Player.route) {
+                                            launchSingleTop = true
+                                        }
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
 
                     // Bottom Navigation Bar
@@ -494,7 +502,7 @@ fun MiniPlayerBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (playbackState.isPlaying) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        imageVector = if (playbackState.isPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
                         contentDescription = null,
                         tint = ThrynxCyan,
                         modifier = Modifier.size(20.dp)

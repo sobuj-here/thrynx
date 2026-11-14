@@ -1,7 +1,9 @@
 package com.thrynx.app
 
 import android.Manifest
+import android.app.Activity
 import android.app.PictureInPictureParams
+import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,9 +11,11 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Rational
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -56,6 +60,81 @@ class MainActivity : FragmentActivity() {
         hasStoragePermissionState.value = granted
         if (granted) {
             onPermissionGrantedCallback?.invoke()
+        }
+    }
+
+    private var pendingDeleteCallback: (() -> Unit)? = null
+
+    private val deleteResultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            pendingDeleteCallback?.invoke()
+            pendingDeleteCallback = null
+            Toast.makeText(this, "Media deleted", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun performDeleteMediaItems(items: List<MediaItemModel>, onComplete: () -> Unit) {
+        if (items.isEmpty()) return
+        lifecycleScope.launch {
+            val nonMediaStoreItems = mutableListOf<MediaItemModel>()
+            val mediaStoreItems = mutableListOf<MediaItemModel>()
+
+            for (item in items) {
+                if (item.path.startsWith(filesDir.absolutePath)) {
+                    try {
+                        File(item.path).delete()
+                        nonMediaStoreItems.add(item)
+                    } catch (_: Exception) {}
+                } else {
+                    mediaStoreItems.add(item)
+                }
+            }
+
+            if (mediaStoreItems.isEmpty()) {
+                Toast.makeText(this@MainActivity, "${nonMediaStoreItems.size} file(s) deleted", Toast.LENGTH_SHORT).show()
+                onComplete()
+                return@launch
+            }
+
+            val uris = mediaStoreItems.mapNotNull {
+                it.uri ?: if (it.mediaUriString.isNotBlank()) Uri.parse(it.mediaUriString) else null
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    val pendingIntent = MediaStore.createDeleteRequest(contentResolver, uris)
+                    pendingDeleteCallback = onComplete
+                    val request = IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+                    deleteResultLauncher.launch(request)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this@MainActivity, "Could not delete file", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                var count = 0
+                try {
+                    for (u in uris) {
+                        val deleted = contentResolver.delete(u, null, null)
+                        if (deleted > 0) count++
+                    }
+                    if (count > 0 || nonMediaStoreItems.isNotEmpty()) {
+                        Toast.makeText(this@MainActivity, "${count + nonMediaStoreItems.size} file(s) deleted", Toast.LENGTH_SHORT).show()
+                        onComplete()
+                    }
+                } catch (e: SecurityException) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && e is RecoverableSecurityException) {
+                        pendingDeleteCallback = onComplete
+                        val request = IntentSenderRequest.Builder(e.userAction.actionIntent.intentSender).build()
+                        deleteResultLauncher.launch(request)
+                    } else {
+                        Toast.makeText(this@MainActivity, "Could not delete file", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@MainActivity, "Could not delete file", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -225,24 +304,10 @@ class MainActivity : FragmentActivity() {
                             }
                         },
                         onDeleteMedia = { media ->
-                            lifecycleScope.launch {
-                                val success = app.mediaScanner.deleteVideo(media)
-                                if (success) {
-                                    Toast.makeText(this@MainActivity, "Media deleted", Toast.LENGTH_SHORT).show()
-                                    refreshVideos()
-                                } else {
-                                    Toast.makeText(this@MainActivity, "Could not delete file", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            performDeleteMediaItems(listOf(media)) { refreshVideos() }
                         },
                         onDeleteMultipleVideos = { list ->
-                            lifecycleScope.launch {
-                                for (item in list) {
-                                    app.mediaScanner.deleteVideo(item)
-                                }
-                                Toast.makeText(this@MainActivity, "${list.size} files deleted", Toast.LENGTH_SHORT).show()
-                                refreshVideos()
-                            }
+                            performDeleteMediaItems(list) { refreshVideos() }
                         },
                         onHideMultipleVideosInVault = { list ->
                             lifecycleScope.launch {
@@ -352,14 +417,8 @@ class MainActivity : FragmentActivity() {
                             }
                         },
                         onDeleteFolder = { folder ->
-                            lifecycleScope.launch {
-                                val folderVideos = rawVideos.filter { it.folderName.equals(folder.name, ignoreCase = true) }
-                                for (v in folderVideos) {
-                                    app.mediaScanner.deleteVideo(v)
-                                }
-                                Toast.makeText(this@MainActivity, "Folder videos deleted", Toast.LENGTH_SHORT).show()
-                                refreshVideos()
-                            }
+                            val folderVideos = rawVideos.filter { it.folderName.equals(folder.name, ignoreCase = true) }
+                            performDeleteMediaItems(folderVideos) { refreshVideos() }
                         },
                         onHideMultipleFolders = { list ->
                             lifecycleScope.launch {
@@ -370,15 +429,9 @@ class MainActivity : FragmentActivity() {
                             }
                         },
                         onDeleteMultipleFolders = { list ->
-                            lifecycleScope.launch {
-                                val names = list.map { it.name.lowercase() }.toSet()
-                                val targets = rawVideos.filter { names.contains(it.folderName.lowercase()) }
-                                for (v in targets) {
-                                    app.mediaScanner.deleteVideo(v)
-                                }
-                                Toast.makeText(this@MainActivity, "Videos deleted from ${list.size} folders", Toast.LENGTH_SHORT).show()
-                                refreshVideos()
-                            }
+                            val names = list.map { it.name.lowercase() }.toSet()
+                            val targets = rawVideos.filter { names.contains(it.folderName.lowercase()) }
+                            performDeleteMediaItems(targets) { refreshVideos() }
                         }
                     )
                 }

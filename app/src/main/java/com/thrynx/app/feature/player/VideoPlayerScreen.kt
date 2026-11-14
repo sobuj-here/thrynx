@@ -211,6 +211,14 @@ fun VideoPlayerScreen(
     // Gesture HUD overlay state
     var hudText by remember { mutableStateOf<String?>(null) }
     var hudIcon by remember { mutableStateOf<ImageVector?>(null) }
+    var showLockIndicator by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showLockIndicator) {
+        if (showLockIndicator) {
+            kotlinx.coroutines.delay(3500)
+            showLockIndicator = false
+        }
+    }
 
     fun showHud(text: String, icon: ImageVector) {
         hudText = text
@@ -516,33 +524,42 @@ fun VideoPlayerScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.2f))
+                    .background(if (showLockIndicator) Color.Black.copy(alpha = 0.25f) else Color.Transparent)
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = {
+                                showLockIndicator = true
                                 showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
                             },
                             onDoubleTap = {
+                                showLockIndicator = true
                                 showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
                             }
                         )
                     }
             ) {
-                FloatingActionButton(
-                    onClick = {
-                        playerManager.setControlsLocked(false)
-                        showHud(context.getString(R.string.player_unlock_controls), Icons.Default.LockOpen)
-                    },
-                    containerColor = Color.Black.copy(alpha = 0.75f),
-                    contentColor = ThrynxCyan,
-                    shape = CircleShape,
+                AnimatedVisibility(
+                    visible = showLockIndicator,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .statusBarsPadding()
                         .padding(24.dp)
-                        .size(56.dp)
                 ) {
-                    Icon(Icons.Default.Lock, contentDescription = "Unlock", modifier = Modifier.size(28.dp))
+                    FloatingActionButton(
+                        onClick = {
+                            playerManager.setControlsLocked(false)
+                            showLockIndicator = false
+                            showHud(context.getString(R.string.player_unlock_controls), Icons.Default.LockOpen)
+                        },
+                        containerColor = Color.Black.copy(alpha = 0.75f),
+                        contentColor = ThrynxCyan,
+                        shape = CircleShape,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(Icons.Default.Lock, contentDescription = "Unlock", modifier = Modifier.size(28.dp))
+                    }
                 }
             }
         }
@@ -979,7 +996,14 @@ fun VideoPlayerScreen(
                             }
 
                             // Lock Screen Controls
-                            IconButton(onClick = { playerManager.setControlsLocked(!playbackState.isControlsLocked) }) {
+                            IconButton(onClick = {
+                                val willLock = !playbackState.isControlsLocked
+                                playerManager.setControlsLocked(willLock)
+                                if (willLock) {
+                                    showLockIndicator = true
+                                    showHud(context.getString(R.string.player_lock_notification), Icons.Default.Lock)
+                                }
+                            }) {
                                 Icon(
                                     imageVector = if (playbackState.isControlsLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                                     contentDescription = "Lock",

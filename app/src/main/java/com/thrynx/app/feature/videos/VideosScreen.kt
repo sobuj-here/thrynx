@@ -842,6 +842,25 @@ fun VideoListItem(
                     modifier = Modifier.fillMaxSize()
                 )
 
+                if (isLastPlayed && !isPlaying) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(3.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ThrynxCyan.copy(alpha = 0.9f))
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = "LAST PLAYED",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ThrynxBgDark,
+                            fontSize = 7.5.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+
                 if (video.durationMs > 0) {
                     Box(
                         modifier = Modifier
@@ -886,24 +905,8 @@ fun VideoListItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isLastPlayed && !isPlaying) {
-                        Surface(
-                            color = ThrynxCyan.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = "LAST PLAYED",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ThrynxCyan,
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                            )
-                        }
-                        Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
                     Text(
                         text = video.resolutionLabel,
                         style = MaterialTheme.typography.labelSmall,
@@ -916,15 +919,17 @@ fun VideoListItem(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (showPlayedTime && video.lastPositionMs > 0L) {
-                        Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(
-                            text = "${formatDuration(video.lastPositionMs)} played",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ThrynxCyan,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                }
+                if (showPlayedTime && video.lastPositionMs > 0L) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Played ${formatDuration(video.lastPositionMs)} / ${formatDuration(video.durationMs)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ThrynxCyan,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
@@ -1077,9 +1082,12 @@ fun VideoGridItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (showPlayedTime && video.lastPositionMs > 0L) "${formatDuration(video.lastPositionMs)} played" else formatFileSize(video.sizeBytes),
+                        text = if (showPlayedTime && video.lastPositionMs > 0L) "${formatDuration(video.lastPositionMs)} / ${formatDuration(video.durationMs)}" else formatFileSize(video.sizeBytes),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (showPlayedTime && video.lastPositionMs > 0L) ThrynxCyan else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (showPlayedTime && video.lastPositionMs > 0L) ThrynxCyan else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     IconButton(
                         onClick = onMoreClick,
