@@ -1,6 +1,7 @@
 package com.thrynx.app.feature.audio
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -66,6 +67,29 @@ fun AudioScreen(
     var singleAudioToDelete by remember { mutableStateOf<MediaItemModel?>(null) }
     var selectedAudioForAction by remember { mutableStateOf<MediaItemModel?>(null) }
     var selectedFolderDrillDown by remember { mutableStateOf<FolderItemModel?>(null) }
+
+    // Apple Music style Now Playing sheet and 10-band Equalizer sheet states
+    var showNowPlayingSheet by remember { mutableStateOf(false) }
+    var showEqualizerSheet by remember { mutableStateOf(false) }
+
+    BackHandler(
+        enabled = showEqualizerSheet || showNowPlayingSheet || selectedFolderDrillDown != null || isSelectionMode || selectedAudioForAction != null || searchQuery.isNotEmpty()
+    ) {
+        if (showEqualizerSheet) {
+            showEqualizerSheet = false
+        } else if (showNowPlayingSheet) {
+            showNowPlayingSheet = false
+        } else if (selectedAudioForAction != null) {
+            selectedAudioForAction = null
+        } else if (isSelectionMode) {
+            isSelectionMode = false
+            selectedAudioIds = emptySet()
+        } else if (searchQuery.isNotEmpty()) {
+            searchQuery = ""
+        } else if (selectedFolderDrillDown != null) {
+            selectedFolderDrillDown = null
+        }
+    }
 
     // Active audio list (either flat or filtered by folder)
     val baseList = remember(audios, selectedFolderDrillDown) {
@@ -199,6 +223,11 @@ fun AudioScreen(
                                             tint = ThrynxCyan
                                         )
                                     }
+                                }
+
+                                // Equalizer Button
+                                IconButton(onClick = { showEqualizerSheet = true }) {
+                                    Icon(Icons.Default.GraphicEq, contentDescription = "Equalizer", tint = ThrynxCyan)
                                 }
 
                                 // Sort Button
@@ -508,7 +537,8 @@ fun AudioScreen(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .clickable { showNowPlayingSheet = true },
                     shape = RoundedCornerShape(16.dp),
                     color = ThrynxCardDark,
                     tonalElevation = 12.dp,
@@ -751,6 +781,26 @@ fun AudioScreen(
                     Text("Cancel")
                 }
             }
+        )
+    }
+
+    // Apple Music Style Now Playing Fullscreen Sheet
+    if (showNowPlayingSheet) {
+        NowPlayingSheet(
+            playerManager = playerManager,
+            onDismiss = { showNowPlayingSheet = false },
+            onOpenEqualizer = {
+                showNowPlayingSheet = false
+                showEqualizerSheet = true
+            }
+        )
+    }
+
+    // 10-Band Parametric Equalizer & DSP Sheet
+    if (showEqualizerSheet) {
+        EqualizerSheet(
+            playerManager = playerManager,
+            onDismiss = { showEqualizerSheet = false }
         )
     }
 }

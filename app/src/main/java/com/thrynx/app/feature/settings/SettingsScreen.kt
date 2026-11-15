@@ -38,6 +38,7 @@ import java.io.File
 @Composable
 fun SettingsScreen(
     preferencesManager: PreferencesManager,
+    playerManager: com.thrynx.app.core.player.ThrynxPlayerManager? = null,
     onLanguageChanged: (String) -> Unit,
     onClearHistory: () -> Unit,
     onRescanLibrary: () -> Unit,
@@ -82,6 +83,7 @@ fun SettingsScreen(
     var showVideoViewModeDialog by remember { mutableStateOf(false) }
     var showAudioViewModeDialog by remember { mutableStateOf(false) }
     var showDevInfoDialog by remember { mutableStateOf(false) }
+    var showEqualizerDialog by remember { mutableStateOf(false) }
 
     // Dynamic Cache Size calculation
     var cacheSizeBytes by remember { mutableLongStateOf(0L) }
@@ -246,6 +248,17 @@ fun SettingsScreen(
                         coroutineScope.launch { preferencesManager.setBackgroundAudio(checked) }
                     }
                 )
+                if (playerManager != null) {
+                    val eqEnabled by playerManager.equalizerEnabled.collectAsState()
+                    val eqPreset by playerManager.equalizerPreset.collectAsState()
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsClickableRow(
+                        icon = Icons.Default.GraphicEq,
+                        title = "Equalizer & Sound Effects",
+                        value = if (eqEnabled) eqPreset.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() } else "Disabled",
+                        onClick = { showEqualizerDialog = true }
+                    )
+                }
             }
         }
 
@@ -319,8 +332,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingsClickableRow(
                     icon = Icons.Default.Info,
-                    title = stringResource(id = R.string.settings_app_info),
-                    value = "Architecture & Licenses",
+                    title = "App Info",
+                    value = "THRYNX v1.1.0",
                     onClick = { showDevInfoDialog = true }
                 )
             }
@@ -714,20 +727,18 @@ fun SettingsScreen(
         )
     }
 
-    // Development & Architecture Dialog
+    // App Information Dialog
     if (showDevInfoDialog) {
         AlertDialog(
             onDismissRequest = { showDevInfoDialog = false },
-            title = { Text("THRYNX Video Player") },
+            title = { Text("THRYNX") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Engine: AndroidX Media3 ExoPlayer", fontWeight = FontWeight.Bold)
-                    Text("Architecture: Jetpack Compose + Room + DataStore")
-                    Text("Language: Kotlin 1.9.22")
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Version: 1.1.0", fontWeight = FontWeight.Bold)
+                    Text("Engine: AndroidX Media3")
+                    Text("Architecture: Jetpack Compose")
                     Text("Target SDK: Android 14 (API 34)")
                     Text("Min SDK: Android 8.0 (API 26)")
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text("Built for smooth local playback, pinch-to-zoom, gesture HUD, and hardware decoding.", style = MaterialTheme.typography.bodySmall)
                 }
             },
             confirmButton = {
@@ -807,6 +818,13 @@ fun SettingsScreen(
                     Text(stringResource(id = R.string.action_cancel))
                 }
             }
+        )
+    }
+
+    if (showEqualizerDialog && playerManager != null) {
+        com.thrynx.app.feature.audio.EqualizerSheet(
+            playerManager = playerManager,
+            onDismiss = { showEqualizerDialog = false }
         )
     }
 }

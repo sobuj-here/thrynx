@@ -1,6 +1,7 @@
 package com.thrynx.app.feature.videos
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -93,6 +94,25 @@ fun VideosScreen(
 
     // Folder drill down state
     var selectedFolderDrillDown by remember { mutableStateOf<FolderItemModel?>(null) }
+
+    BackHandler(
+        enabled = selectedFolderDrillDown != null || isSelectionMode || selectedMediaForAction != null || selectedMediaForDetails != null || videoToResumePrompt != null || searchQuery.isNotEmpty()
+    ) {
+        if (selectedMediaForAction != null) {
+            selectedMediaForAction = null
+        } else if (selectedMediaForDetails != null) {
+            selectedMediaForDetails = null
+        } else if (videoToResumePrompt != null) {
+            videoToResumePrompt = null
+        } else if (isSelectionMode) {
+            isSelectionMode = false
+            selectedUris = emptySet()
+        } else if (searchQuery.isNotEmpty()) {
+            searchQuery = ""
+        } else if (selectedFolderDrillDown != null) {
+            selectedFolderDrillDown = null
+        }
+    }
 
     fun handlePlayRequest(video: MediaItemModel) {
         if (video.lastPositionMs > 5000L && (video.durationMs == 0L || video.lastPositionMs < video.durationMs - 5000L)) {

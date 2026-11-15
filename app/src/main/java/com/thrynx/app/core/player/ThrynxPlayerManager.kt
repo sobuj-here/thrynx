@@ -48,15 +48,30 @@ class ThrynxPlayerManager(private val context: Context) {
     private val mediaSourceFactory = DefaultMediaSourceFactory(context)
         .setDataSourceFactory(dataSourceFactory)
 
+    val equalizerProcessor = EqualizerProcessor()
+
+    private val renderersFactory = object : DefaultRenderersFactory(context) {
+        override fun buildAudioSink(
+            context: Context,
+            enableFloatOutput: Boolean,
+            enableAudioTrackPlaybackParams: Boolean
+        ): androidx.media3.exoplayer.audio.AudioSink? {
+            return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
+                .setEnableFloatOutput(enableFloatOutput)
+                .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                .setAudioProcessors(arrayOf(equalizerProcessor))
+                .build()
+        }
+    }.apply {
+        setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+    }
+
     val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
         .setTrackSelector(trackSelector)
         .setMediaSourceFactory(mediaSourceFactory)
         .setAudioAttributes(audioAttributes, true) // Automatically handles audio focus, calls, and ducking
         .setHandleAudioBecomingNoisy(true) // Pauses automatically on headset disconnect
-        .setRenderersFactory(
-            DefaultRenderersFactory(context)
-                .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
-        )
+        .setRenderersFactory(renderersFactory)
         .setLoadControl(
             DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
@@ -85,6 +100,68 @@ class ThrynxPlayerManager(private val context: Context) {
 
     private val _subtitleStyle = MutableStateFlow(SubtitleStyle())
     val subtitleStyle: StateFlow<SubtitleStyle> = _subtitleStyle.asStateFlow()
+
+    // 10-Band Equalizer & DSP State
+    private val _equalizerEnabled = MutableStateFlow(false)
+    val equalizerEnabled: StateFlow<Boolean> = _equalizerEnabled.asStateFlow()
+
+    private val _equalizerPreset = MutableStateFlow(EqualizerPreset.FLAT)
+    val equalizerPreset: StateFlow<EqualizerPreset> = _equalizerPreset.asStateFlow()
+
+    private val _equalizerBands = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f))
+    val equalizerBands: StateFlow<List<Float>> = _equalizerBands.asStateFlow()
+
+    private val _toneX = MutableStateFlow(0f)
+    val toneX: StateFlow<Float> = _toneX.asStateFlow()
+
+    private val _toneY = MutableStateFlow(0f)
+    val toneY: StateFlow<Float> = _toneY.asStateFlow()
+
+    private val _audioBalance = MutableStateFlow(0f)
+    val audioBalance: StateFlow<Float> = _audioBalance.asStateFlow()
+
+    fun setEqualizerEnabled(enabled: Boolean) {
+        _equalizerEnabled.value = enabled
+        applyEqualizerTuning()
+    }
+
+    fun setEqualizerPreset(preset: EqualizerPreset) {
+        _equalizerPreset.value = preset
+        if (preset != EqualizerPreset.CUSTOM) {
+            _equalizerBands.value = preset.bands
+        }
+        applyEqualizerTuning()
+    }
+
+    fun setEqualizerBand(index: Int, gainDb: Float) {
+        val current = _equalizerBands.value.toMutableList()
+        if (index in current.indices) {
+            current[index] = gainDb.coerceIn(-12f, 12f)
+            _equalizerBands.value = current
+            _equalizerPreset.value = EqualizerPreset.matching(current)
+            applyEqualizerTuning()
+        }
+    }
+
+    fun setTone(x: Float, y: Float) {
+        _toneX.value = x.coerceIn(-1f, 1f)
+        _toneY.value = y.coerceIn(-1f, 1f)
+        applyEqualizerTuning()
+    }
+
+    fun setAudioBalance(balance: Float) {
+        _audioBalance.value = balance.coerceIn(-1f, 1f)
+        applyEqualizerTuning()
+    }
+
+    private fun applyEqualizerTuning() {
+        val curve = if (_toneX.value != 0f || _toneY.value != 0f) {
+            EqCurve.fromTone(_toneX.value, _toneY.value)
+        } else {
+            EqCurve.fromManualBands(_equalizerBands.value)
+        }
+        equalizerProcessor.setTuning(_equalizerEnabled.value, curve, _audioBalance.value)
+    }
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var progressTrackerJob: Job? = null
