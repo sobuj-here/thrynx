@@ -792,7 +792,7 @@ fun SettingsScreen(
         val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
         AlertDialog(
             onDismissRequest = { showSpeedDialog = false },
-            title = { Text(stringResource(id = R.string.settings_playback_speed)) },
+            title = { Text(stringResource(id = R.string.settings_default_speed)) },
             text = {
                 Column {
                     speeds.forEach { speed ->
@@ -832,7 +832,7 @@ fun SettingsScreen(
         val seekOptions = listOf(5, 10, 15, 30)
         AlertDialog(
             onDismissRequest = { showSeekDialog = false },
-            title = { Text(stringResource(id = R.string.settings_seek_duration)) },
+            title = { Text(stringResource(id = R.string.settings_double_tap_seek)) },
             text = {
                 Column {
                     seekOptions.forEach { sec ->
@@ -1086,7 +1086,7 @@ fun SettingsScreen(
         )
         AlertDialog(
             onDismissRequest = { showResumeModeDialog = false },
-            title = { Text(stringResource(id = R.string.settings_resume_mode)) },
+            title = { Text(stringResource(id = R.string.settings_resume_mode_title)) },
             text = {
                 Column {
                     modes.forEach { (mode, label) ->
@@ -1125,10 +1125,10 @@ fun SettingsScreen(
     if (showHiddenFoldersDialog) {
         AlertDialog(
             onDismissRequest = { showHiddenFoldersDialog = false },
-            title = { Text(stringResource(id = R.string.settings_hidden_folders)) },
+            title = { Text(stringResource(id = R.string.settings_hidden_folders_title)) },
             text = {
                 if (hiddenFolders.isEmpty()) {
-                    Text(stringResource(id = R.string.settings_no_hidden_folders))
+                    Text(stringResource(id = R.string.settings_hidden_folders_empty))
                 } else {
                     LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                         items(hiddenFolders.toList().size) { idx ->
@@ -1149,7 +1149,7 @@ fun SettingsScreen(
                                     val updated = hiddenFolders.toMutableSet().apply { remove(folderPath) }
                                     coroutineScope.launch { preferencesManager.setHiddenFolders(updated) }
                                 }) {
-                                    Text(stringResource(id = R.string.action_unhide))
+                                    Text(stringResource(id = R.string.folders_unhide))
                                 }
                             }
                         }

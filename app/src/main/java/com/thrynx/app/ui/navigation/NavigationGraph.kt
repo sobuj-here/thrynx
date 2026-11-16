@@ -39,6 +39,7 @@ import com.thrynx.app.feature.home.HomeScreen
 import com.thrynx.app.feature.player.VideoPlayerScreen
 import com.thrynx.app.feature.settings.SettingsScreen
 import com.thrynx.app.feature.videos.VideosScreen
+import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
     object Home : Screen("home", R.string.nav_home, Icons.Default.Home)
