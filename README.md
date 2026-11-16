@@ -5,12 +5,8 @@
 </p>
 
 <p align="center">
+
   
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.2.0">
-    <img src="https://img.shields.io/badge/📦%20RELEASE%20PAGE-v1.2.0-2979FF?style=for-the-badge&logo=github&logoColor=white" height="42" alt="Release Page" />
-  </a>
 </p>
 
 <p align="center">
