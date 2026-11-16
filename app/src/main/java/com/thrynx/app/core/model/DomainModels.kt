@@ -21,7 +21,8 @@ data class MediaItemModel(
     val width: Int = 0,
     val height: Int = 0,
     val bitrate: Long = 0L,
-    val artworkUri: String? = null
+    val artworkUri: String? = null,
+    val isPlayed: Boolean = false
 ) {
     val mediaUriString: String
         get() = uri?.toString() ?: path
@@ -35,6 +36,9 @@ data class MediaItemModel(
             width > 0 && height > 0 -> "${width}x${height}"
             else -> "SD"
         }
+
+    val isNew: Boolean
+        get() = !isPlayed && lastPositionMs <= 0L
 }
 
 /**

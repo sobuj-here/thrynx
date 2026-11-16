@@ -45,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class MainActivity : FragmentActivity() {
 
@@ -52,6 +53,7 @@ class MainActivity : FragmentActivity() {
     private var currentLanguage = "en"
     private var onPermissionGrantedCallback: (() -> Unit)? = null
     private val hasStoragePermissionState = mutableStateOf(false)
+    private var isBackgroundVideoEnabled = false
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -139,19 +141,22 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-        val lang = runBlocking {
-            try {
-                ThrynxApplication.instance.preferencesManager.languageFlow.first()
-            } catch (e: Exception) {
-                "en"
-            }
-        }
+        val prefs = newBase.getSharedPreferences("thrynx_fast_boot", Context.MODE_PRIVATE)
+        val lang = prefs.getString("key_app_language", "en") ?: "en"
         currentLanguage = lang
         super.attachBaseContext(LocaleHelper.setLocale(newBase, lang))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            try {
+                app.preferencesManager.backgroundPlaybackFlow.collect {
+                    isBackgroundVideoEnabled = it
+                }
+            } catch (_: Exception) {}
+        }
 
         hasStoragePermissionState.value = MediaStoreScanner.hasStoragePermission(this)
         checkAndRequestPermissions()
@@ -182,25 +187,30 @@ class MainActivity : FragmentActivity() {
                 val customFolders by app.database.customFolderDao().getAllCustomFoldersFlow().collectAsState(initial = emptyList())
                 val vaultPin by preferencesManager.privateVaultPinFlow.collectAsState(initial = "")
                 val hiddenFolders by preferencesManager.hiddenFoldersFlow.collectAsState(initial = emptySet())
+                val clickedMediaUris by preferencesManager.clickedMediaUrisFlow.collectAsState(initial = emptySet())
 
                 // Attach persistent playback positions from Room DB to videos
                 val videoHistoryMap = remember(recentHistory) { recentHistory.associateBy({ it.uri }, { it.lastPositionMs }) }
-                val visibleVideos = remember(rawVideos, privateVideos, hiddenFolders, videoHistoryMap) {
+                val visibleVideos = remember(rawVideos, privateVideos, hiddenFolders, videoHistoryMap, clickedMediaUris) {
                     val privateUris = privateVideos.map { it.mediaUri }.toSet()
                     rawVideos.filter {
                         !privateUris.contains(it.mediaUriString) && !hiddenFolders.contains(it.folderName)
                     }.map { video ->
                         val savedPos = videoHistoryMap[video.mediaUriString]
-                        if (savedPos != null && savedPos > 0L) video.copy(lastPositionMs = savedPos) else video
+                        val isPlayed = clickedMediaUris.contains(video.mediaUriString) || (savedPos != null && savedPos > 0L)
+                        val withPos = if (savedPos != null && savedPos > 0L) video.copy(lastPositionMs = savedPos) else video
+                        withPos.copy(isPlayed = isPlayed)
                     }
                 }
 
                 // Attach persistent playback positions from Room DB to audios
                 val audioHistoryMap = remember(recentAudioHistory) { recentAudioHistory.associateBy({ it.uri }, { it.lastPositionMs }) }
-                val mappedAudios = remember(rawAudios, audioHistoryMap) {
+                val mappedAudios = remember(rawAudios, audioHistoryMap, clickedMediaUris) {
                     rawAudios.map { audio ->
                         val savedPos = audioHistoryMap[audio.mediaUriString]
-                        if (savedPos != null && savedPos > 0L) audio.copy(lastPositionMs = savedPos) else audio
+                        val isPlayed = clickedMediaUris.contains(audio.mediaUriString) || (savedPos != null && savedPos > 0L)
+                        val withPos = if (savedPos != null && savedPos > 0L) audio.copy(lastPositionMs = savedPos) else audio
+                        withPos.copy(isPlayed = isPlayed)
                     }
                 }
 
@@ -213,16 +223,18 @@ class MainActivity : FragmentActivity() {
                 }
 
                 fun refreshVideos() {
-                    lifecycleScope.launch {
+                    lifecycleScope.launch(Dispatchers.IO) {
                         val foldersToScan = try {
                             app.database.customFolderDao().getAllCustomFolders()
                         } catch (e: Exception) {
                             emptyList()
                         }
                         val v = app.mediaScanner.loadVideos(customFolders = foldersToScan)
-                        rawVideos = v
                         val a = app.mediaScanner.loadAudios()
-                        rawAudios = a
+                        withContext(Dispatchers.Main) {
+                            rawVideos = v
+                            rawAudios = a
+                        }
                     }
                 }
 
@@ -536,16 +548,9 @@ class MainActivity : FragmentActivity() {
                 startService(serviceIntent)
             }
         } else if (isVideo) {
-            val backgroundVideoEnabled = runBlocking {
-                try {
-                    app.preferencesManager.backgroundPlaybackFlow.first()
-                } catch (e: Exception) {
-                    false
-                }
-            }
-            if (!backgroundVideoEnabled && !isInPictureInPictureMode) {
+            if (!isBackgroundVideoEnabled && !isInPictureInPictureMode) {
                 app.playerManager.pause()
-            } else if (backgroundVideoEnabled && isPlaying) {
+            } else if (isBackgroundVideoEnabled && isPlaying) {
                 val serviceIntent = Intent(this, ThrynxMediaPlaybackService::class.java)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(serviceIntent)

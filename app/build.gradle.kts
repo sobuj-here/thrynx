@@ -119,6 +119,9 @@ dependencies {
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // NewPipeExtractor for Resilient YouTube Audio/Video Deciphering & Extraction
+    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.24.4")
+
     // DocumentFile & Storage Access Framework
     implementation("androidx.documentfile:documentfile:1.0.1")
 

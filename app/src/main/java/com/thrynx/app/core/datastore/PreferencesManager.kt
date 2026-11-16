@@ -42,6 +42,7 @@ class PreferencesManager(private val context: Context) {
 
         // Sleep Timer
         val KEY_SLEEP_TIMER_MINUTES = intPreferencesKey("key_sleep_timer_minutes")
+        val KEY_CLICKED_MEDIA_URIS = stringSetPreferencesKey("key_clicked_media_uris")
 
         // List & View Options
         val KEY_SHOW_PLAYED_TIME = booleanPreferencesKey("key_show_played_time")
@@ -183,7 +184,24 @@ class PreferencesManager(private val context: Context) {
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_SHOW_NERD_STATS] ?: false }
 
+    val clickedMediaUrisFlow: Flow<Set<String>> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_CLICKED_MEDIA_URIS] ?: emptySet() }
+
+    suspend fun markMediaClicked(uri: String) {
+        if (uri.isBlank()) return
+        context.dataStore.edit {
+            val current = it[KEY_CLICKED_MEDIA_URIS]?.toMutableSet() ?: mutableSetOf()
+            current.add(uri)
+            it[KEY_CLICKED_MEDIA_URIS] = current
+        }
+    }
+
     suspend fun setLanguage(langCode: String) {
+        try {
+            context.getSharedPreferences("thrynx_fast_boot", Context.MODE_PRIVATE)
+                .edit().putString("key_app_language", langCode).apply()
+        } catch (_: Exception) {}
         context.dataStore.edit { it[KEY_LANGUAGE] = langCode }
     }
 

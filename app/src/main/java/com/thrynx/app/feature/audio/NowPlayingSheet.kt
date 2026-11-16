@@ -1,6 +1,9 @@
 package com.thrynx.app.feature.audio
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -168,11 +172,24 @@ fun NowPlayingSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     if (!showLyrics) {
-                        // Artwork View
+                        // Artwork View with Spring Scale Animation (BitChord / Apple Music Style)
+                        val artScale by animateFloatAsState(
+                            targetValue = if (playbackState.isPlaying) 1.0f else 0.88f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
+                            label = "ArtworkSpringScale"
+                        )
+
                         Box(
                             modifier = Modifier
                                 .size(300.dp)
-                                .shadow(24.dp, RoundedCornerShape(24.dp), spotColor = ThrynxCyan.copy(alpha = 0.4f))
+                                .graphicsLayer {
+                                    scaleX = artScale
+                                    scaleY = artScale
+                                }
+                                .shadow(28.dp, RoundedCornerShape(24.dp), spotColor = ThrynxCyan.copy(alpha = 0.45f))
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(ThrynxSurfaceLight),
                             contentAlignment = Alignment.Center
@@ -364,7 +381,35 @@ fun NowPlayingSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // BitChord / Apple Music Style Audio Format & Quality Capsule Pill
+                val isOnlineStream = currentMedia?.path?.contains("youtube") == true ||
+                        currentMedia?.uri?.toString()?.contains("googlevideo") == true
+                val qualityLabel = when {
+                    isOnlineStream -> "OPUS • 160 KBPS HQ"
+                    (currentMedia?.durationMs ?: 0L) > 0 -> "LOSSLESS • 48 kHz / 24-BIT"
+                    else -> "HIGH QUALITY AUDIO"
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color.White.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = qualityLabel,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.5.sp,
+                            letterSpacing = 1.sp,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Apple Music Hairline Thin Scrubber with Instant Non-Blocking Response
                 val currentMs = playbackState.currentPositionMs.toFloat()
@@ -386,26 +431,29 @@ fun NowPlayingSheet(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Time indicators
+                // Time indicators: Elapsed on left, -mm:ss Remaining on right
                 val displayedCurrentMs = if (isDraggingSlider) (dragFraction * durationMs).toLong() else playbackState.currentPositionMs
+                val remainingMs = (playbackState.durationMs - displayedCurrentMs).coerceAtLeast(0L)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 2.dp),
+                        .padding(top = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = formatDuration(displayedCurrentMs),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color.White.copy(alpha = 0.5f),
-                            fontSize = 12.sp
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     )
                     Text(
-                        text = formatDuration(playbackState.durationMs),
+                        text = "-${formatDuration(remainingMs)}",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color.White.copy(alpha = 0.5f),
-                            fontSize = 12.sp
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     )
                 }

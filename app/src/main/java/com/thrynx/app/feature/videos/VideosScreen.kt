@@ -881,6 +881,25 @@ fun VideoListItem(
                     }
                 }
 
+                if (video.isNew) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(3.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ThrynxCyan)
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = "NEW",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ThrynxBgDark,
+                            fontSize = 7.5.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+
                 if (video.durationMs > 0) {
                     Box(
                         modifier = Modifier
@@ -1033,6 +1052,25 @@ fun VideoGridItem(
                             .padding(4.dp)
                     ) {
                         Checkbox(checked = isSelected, onCheckedChange = { onClick() })
+                    }
+                }
+
+                if (video.isNew && !isSelectionMode) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ThrynxCyan)
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = "NEW",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ThrynxBgDark,
+                            fontSize = 7.5.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                     }
                 }
 

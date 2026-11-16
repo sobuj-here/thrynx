@@ -49,33 +49,33 @@ enum class SettingsSection(
     val icon: ImageVector
 ) {
     LIST(
-        title = "List & Library",
-        description = "Display layout, hidden folders, media scanner & cache storage",
+        title = "Library View",
+        description = "Layout, view modes, media scanner, and storage management",
         icon = Icons.Default.Folder
     ),
     PLAYER_CONTROLS(
         title = "Player Controls",
-        description = "Speed, double-tap seek, gestures, orientation & auto-play",
+        description = "Playback gestures, seek duration, orientation, and controls",
         icon = Icons.Default.PlayCircle
     ),
     AUDIO(
-        title = "Audio & Sound Engine",
-        description = "Quality, loudness normalization, silence skipping & 10-band EQ",
+        title = "Audio Engine",
+        description = "Sound engine, equalizer, loudness normalization, and playback",
         icon = Icons.Default.Headphones
     ),
     GENERAL(
         title = "General",
-        description = "App theme, language (English / বাংলা) & THRYNX v1.2.0 info",
+        description = "Theme appearance, interface language, and cache management",
         icon = Icons.Default.Settings
     ),
     DEVELOPMENT(
-        title = "Development & Security",
-        description = "Private Vault PIN, biometric unlock, decoder mode & nerd stats",
+        title = "Security & Advanced",
+        description = "Private vault PIN, biometric lock, and diagnostics",
         icon = Icons.Default.Security
     ),
     SUBTITLE(
-        title = "Subtitle",
-        description = "Font size, text color, background opacity & sync delay",
+        title = "Subtitles",
+        description = "Text appearance, font size, colors, and styling",
         icon = Icons.Default.Subtitles
     )
 }
@@ -132,6 +132,7 @@ fun SettingsScreen(
 
     // Dialog states
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showSeekDialog by remember { mutableStateOf(false) }
     var showOrientationDialog by remember { mutableStateOf(false) }
@@ -198,31 +199,15 @@ fun SettingsScreen(
                         text = currentSection?.title ?: stringResource(id = R.string.settings_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = currentSection?.description ?: "THRYNX Media Studio Configuration",
+                        text = currentSection?.description ?: "Customize playback & library preferences",
                         style = MaterialTheme.typography.labelSmall,
-                        color = ThrynxTextMutedDark,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                }
-
-                if (currentSection == null) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ThrynxCyan.copy(alpha = 0.15f))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "v1.2.0",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = ThrynxCyan
-                        )
-                    }
                 }
             }
         }
@@ -266,33 +251,6 @@ fun SettingsScreen(
                             section = itemSection,
                             onClick = { currentSection = itemSection }
                         )
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(ThrynxCardDark)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "THRYNX Media Studio",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "High-performance ExoPlayer & THRYNX Audio Architecture",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = ThrynxTextMutedDark
-                                )
-                            }
-                        }
                     }
                 }
             } else {
@@ -579,17 +537,19 @@ fun SettingsScreen(
                                     SettingsClickableRow(
                                         icon = Icons.Default.Translate,
                                         title = "Display Language",
-                                        value = if (currentLang == "bn") "বাংলা (Bangla)" else "English",
+                                        value = if (currentLang == "bn") "Bengali" else "English",
                                         onClick = { showLanguageDialog = true }
                                     )
                                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     SettingsClickableRow(
                                         icon = Icons.Default.Palette,
-                                        title = "Theme Accent",
-                                        value = "THRYNX Dark Space (Cyan)",
-                                        onClick = {
-                                            Toast.makeText(context, "Dark Space Theme Active", Toast.LENGTH_SHORT).show()
-                                        }
+                                        title = "Theme Mode",
+                                        value = when (currentTheme) {
+                                            "light" -> "Light"
+                                            "system" -> "System Default"
+                                            else -> "Dark"
+                                        },
+                                        onClick = { showThemeDialog = true }
                                     )
                                 }
                             }
@@ -599,7 +559,7 @@ fun SettingsScreen(
                                     SettingsClickableRow(
                                         icon = Icons.Default.Info,
                                         title = "About THRYNX",
-                                        value = "v1.2.0 (Build 3)",
+                                        value = "Engine Architecture & Details",
                                         onClick = { showDevInfoDialog = true }
                                     )
                                 }
@@ -661,7 +621,7 @@ fun SettingsScreen(
                                             shape = RoundedCornerShape(6.dp)
                                         ) {
                                             Text(
-                                                text = "Sample Subtitle (নমুনা সাবটাইটেল)",
+                                                text = "Sample Subtitle Preview (4K HDR)",
                                                 color = Color(android.graphics.Color.parseColor(subtitleStyle.textColorHex)),
                                                 fontSize = subtitleStyle.fontSizeSp.sp,
                                                 fontWeight = FontWeight.Bold,
@@ -1207,19 +1167,65 @@ fun SettingsScreen(
         )
     }
 
+    // App Theme Dialog
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            title = { Text("Select App Theme") },
+            text = {
+                Column {
+                    listOf(
+                        "system" to "System Default",
+                        "dark" to "Dark",
+                        "light" to "Light"
+                    ).forEach { (mode, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch {
+                                        preferencesManager.setTheme(mode)
+                                    }
+                                    showThemeDialog = false
+                                }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = currentTheme == mode,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        preferencesManager.setTheme(mode)
+                                    }
+                                    showThemeDialog = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     // App Information Dialog
     if (showDevInfoDialog) {
         AlertDialog(
             onDismissRequest = { showDevInfoDialog = false },
-            title = { Text("THRYNX Media Studio") },
+            title = { Text("About THRYNX") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Version: 1.2.0 (Build 3)", fontWeight = FontWeight.Bold, color = ThrynxCyan)
                     Text("Video Engine: AndroidX Media3 (ExoPlayer)")
-                    Text("Audio Engine: THRYNX Adaptive Stream Resolver")
+                    Text("Audio Engine: Dual Stream Deciphering & Playback")
                     Text("UI Architecture: Jetpack Compose Material 3")
-                    Text("Audio Scrubber: Apple Music ThinSlider Engine")
-                    Text("Ambient Backdrop: Fluid Blur Mesh Gradient")
+                    Text("Audio Scrubber: Fluid Hairline ThinSlider Engine")
+                    Text("Ambient Backdrop: Fluid Artwork Mesh Backdrop")
                     Text("Target SDK: Android 14 (API 34)")
                 }
             },
@@ -1352,13 +1358,13 @@ fun SettingsCategoryHubCard(
                     text = section.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = section.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = ThrynxTextMutedDark,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1382,7 +1388,7 @@ fun SettingsCategoryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ThrynxCardDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -1427,13 +1433,13 @@ fun SettingsClickableRow(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.weight(1f),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
-            color = ThrynxTextMutedDark,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -1441,7 +1447,7 @@ fun SettingsClickableRow(
         Icon(
             Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = ThrynxTextMutedDark.copy(alpha = 0.6f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.size(18.dp)
         )
     }
@@ -1476,14 +1482,14 @@ fun SettingsSwitchRow(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             description?.let {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = it,
                     style = MaterialTheme.typography.labelSmall,
-                    color = ThrynxTextMutedDark
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

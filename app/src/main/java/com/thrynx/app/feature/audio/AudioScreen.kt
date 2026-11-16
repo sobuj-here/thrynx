@@ -813,12 +813,41 @@ fun AudioScreen(
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = if (isPlaying && playbackState.isPlaying) Icons.Default.Audiotrack else Icons.Default.PlayArrow,
-                                            contentDescription = null,
-                                            tint = if (isPlaying) ThrynxBgDark else ThrynxCyan,
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                                        val artUri = audio.artworkUri ?: audio.uri
+                                        if (artUri != null) {
+                                            AsyncImage(
+                                                model = artUri,
+                                                contentDescription = audio.title,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = if (isPlaying && playbackState.isPlaying) Icons.Default.Audiotrack else Icons.Default.PlayArrow,
+                                                contentDescription = null,
+                                                tint = if (isPlaying) ThrynxBgDark else ThrynxCyan,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+
+                                        if (audio.isNew) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .padding(2.dp)
+                                                    .clip(RoundedCornerShape(3.dp))
+                                                    .background(ThrynxCyan)
+                                                    .padding(horizontal = 3.dp, vertical = 0.5.dp)
+                                            ) {
+                                                Text(
+                                                    text = "NEW",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = ThrynxBgDark,
+                                                    fontSize = 6.5.sp,
+                                                    fontWeight = FontWeight.ExtraBold
+                                                )
+                                            }
+                                        }
                                     }
 
                                     Spacer(modifier = Modifier.width(12.dp))
@@ -834,7 +863,22 @@ fun AudioScreen(
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            if (isLastPlayed && !isPlaying) {
+                                            if (audio.isNew && !isPlaying) {
+                                                Surface(
+                                                    color = ThrynxCyan,
+                                                    shape = RoundedCornerShape(4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "NEW",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = ThrynxBgDark,
+                                                        fontSize = 8.sp,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                                Text(" • ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            } else if (isLastPlayed && !isPlaying) {
                                                 Surface(
                                                     color = ThrynxCyan.copy(alpha = 0.2f),
                                                     shape = RoundedCornerShape(4.dp)
@@ -948,21 +992,27 @@ fun AudioScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.radialGradient(
-                                            colors = listOf(ThrynxCyan.copy(alpha = 0.35f), Color(0xFF1E2838))
-                                        )
-                                    ),
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFF1E2838)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.MusicNote,
-                                    contentDescription = null,
-                                    tint = ThrynxCyan,
-                                    modifier = Modifier.size(22.dp)
-                                )
+                                val artModel = activeSong.artworkUri ?: activeSong.uri
+                                if (artModel != null) {
+                                    AsyncImage(
+                                        model = artModel,
+                                        contentDescription = activeSong.title,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.MusicNote,
+                                        contentDescription = null,
+                                        tint = ThrynxCyan,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))

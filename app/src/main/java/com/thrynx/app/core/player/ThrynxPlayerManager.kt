@@ -355,6 +355,14 @@ class ThrynxPlayerManager(private val context: Context) {
         currentPlaylist = listOf(media)
         currentPlaylistIndex = 0
 
+        try {
+            com.thrynx.app.ThrynxApplication.instance.preferencesManager.let { pm ->
+                scope.launch(Dispatchers.IO) {
+                    pm.markMediaClicked(media.mediaUriString)
+                }
+            }
+        } catch (_: Exception) {}
+
         val resolvedStartPos = if (startPositionMs > 0L) {
             startPositionMs
         } else if (media.lastPositionMs > 2000L) {
@@ -455,6 +463,15 @@ class ThrynxPlayerManager(private val context: Context) {
         currentPlaylistIndex = startIndex.coerceIn(0, mediaList.size - 1)
 
         val target = currentPlaylist[currentPlaylistIndex]
+
+        try {
+            com.thrynx.app.ThrynxApplication.instance.preferencesManager.let { pm ->
+                scope.launch(Dispatchers.IO) {
+                    pm.markMediaClicked(target.mediaUriString)
+                }
+            }
+        } catch (_: Exception) {}
+
         val resolvedStartPos = if (startPositionMs > 0L) {
             startPositionMs
         } else if (target.lastPositionMs > 2000L) {
