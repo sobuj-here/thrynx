@@ -1,43 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#070A12"/>
       <stop offset="50%" stop-color="#0E1626"/>
       <stop offset="100%" stop-color="#05080E"/>
     </linearGradient>
+
+    <!-- Vibrant Cyan / Blue Accents -->
     <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#00E5FF"/>
       <stop offset="100%" stop-color="#2979FF"/>
     </linearGradient>
+
+    <linearGradient id="musicMeshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A1C38"/>
+      <stop offset="35%" stop-color="#0A2A4A"/>
+      <stop offset="70%" stop-color="#1B143A"/>
+      <stop offset="100%" stop-color="#0C1527"/>
+    </linearGradient>
+
     <linearGradient id="phoneCardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#182236"/>
       <stop offset="100%" stop-color="#0F1726"/>
     </linearGradient>
+
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="8" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
 
-  <!-- Background -->
+  <!-- Background Canvas -->
   <rect width="1200" height="480" fill="url(#bgGrad)"/>
   
-  <!-- Subtle Grid Accent -->
-  <g opacity="0.05" stroke="#00E5FF" stroke-width="1">
+  <!-- Subtle Grid Pattern Accent -->
+  <g opacity="0.04" stroke="#00E5FF" stroke-width="1">
     <line x1="0" y1="80" x2="1200" y2="80"/>
     <line x1="0" y1="160" x2="1200" y2="160"/>
     <line x1="0" y1="240" x2="1200" y2="240"/>
     <line x1="0" y1="320" x2="1200" y2="320"/>
     <line x1="0" y1="400" x2="1200" y2="400"/>
-    <line x1="200" y1="0" x2="200" y2="480"/>
-    <line x1="400" y1="0" x2="400" y2="480"/>
+    <line x1="150" y1="0" x2="150" y2="480"/>
+    <line x1="300" y1="0" x2="300" y2="480"/>
+    <line x1="450" y1="0" x2="450" y2="480"/>
     <line x1="600" y1="0" x2="600" y2="480"/>
-    <line x1="800" y1="0" x2="800" y2="480"/>
-    <line x1="1000" y1="0" x2="1000" y2="480"/>
+    <line x1="750" y1="0" x2="750" y2="480"/>
+    <line x1="900" y1="0" x2="900" y2="480"/>
+    <line x1="1050" y1="0" x2="1050" y2="480"/>
   </g>
 
   <!-- Left Side: Branding, Tagline, Badges -->
-  <g transform="translate(80, 100)">
+  <g transform="translate(70, 75)">
     <!-- Brand Crest Symbol -->
     <g transform="translate(0, 0)">
       <polygon points="0,0 60,0 45,30 15,30" fill="#00E5FF" filter="url(#glow)"/>
@@ -47,105 +65,146 @@
     </g>
 
     <text x="80" y="44" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" letter-spacing="4">THRYNX</text>
-    <text x="84" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00E5FF" letter-spacing="5">PROFESSIONAL VIDEO PLAYER</text>
+    <text x="84" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="800" fill="#00E5FF" letter-spacing="4">NATIVE MEDIA STUDIO &amp; MUSIC DISCOVERY</text>
 
     <!-- Tagline description -->
-    <text x="0" y="140" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
-      High-Performance, MX Player-Grade Video Playback Engine
+    <text x="0" y="132" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="19" font-weight="600" fill="#FFFFFF">
+      High-Performance Video Player &amp; Audiophile Music Hub
     </text>
-    <text x="0" y="170" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
-      Intuitive Gestures • Multi-Audio • Subtitle Sync • Private Vault
+    <text x="0" y="162" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#CBD5E1">
+      ⚡ YouTube Music Discovery • Offline Audio Downloader • Liked Tracks
     </text>
-    <text x="0" y="205" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="500" fill="#94A3B8">
-      Dual Language: English &amp; বাংলা • Media3 ExoPlayer • 4K UHD • 100% Offline
+    <text x="0" y="188" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#CBD5E1">
+      🎧 10-Band Parametric EQ • Synced Lyrics • Ambient Mesh Gradients
+    </text>
+    <text x="0" y="214" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#CBD5E1">
+      📞 Smart Call &amp; Bluetooth Audio Focus • 6-Category Settings Hub
+    </text>
+    <text x="0" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#94A3B8">
+      Dual Language: English &amp; বাংলা • Media3 ExoPlayer • Room v4 • 100% Ad-Free
     </text>
 
     <!-- Download Badge / CTA Button -->
-    <g transform="translate(0, 240)">
-      <rect width="240" height="52" rx="26" fill="url(#cyanGlow)" filter="url(#glow)"/>
-      <text x="35" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="800" fill="#070B14" letter-spacing="1">⚡ DOWNLOAD APK</text>
-      <!-- Arrow Icon -->
-      <path d="M195 26 L187 20 L187 32 Z" fill="#070B14"/>
+    <g transform="translate(0, 275)">
+      <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.2.0">
+        <rect width="250" height="52" rx="26" fill="url(#cyanGlow)" filter="url(#glow)"/>
+        <text x="32" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="800" fill="#070B14" letter-spacing="1">⚡ DOWNLOAD APK v1.2.0</text>
+        <path d="M218 26 L210 20 L210 32 Z" fill="#070B14"/>
+      </a>
     </g>
     
-    <g transform="translate(260, 240)">
-      <rect width="210" height="52" rx="26" fill="#141E30" stroke="#25354F" stroke-width="1.5"/>
-      <text x="32" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#E2E8F0">v1.0.0 Stable (~21 MB)</text>
+    <g transform="translate(270, 275)">
+      <rect width="200" height="52" rx="26" fill="#141E30" stroke="#25354F" stroke-width="1.5"/>
+      <text x="28" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#00E5FF">Release v1.2.0 (~23 MB)</text>
     </g>
   </g>
 
-  <!-- Right Side: 2 Sleek Layered Mockups -->
-  <!-- Device 1: Video Player with MX Gestures & Multi-Track Audio -->
-  <g transform="translate(710, 50)">
-    <rect width="210" height="380" rx="24" fill="url(#phoneCardGrad)" stroke="#223048" stroke-width="3"/>
-    <!-- Top Bar Notch -->
-    <rect x="70" y="12" width="70" height="12" rx="6" fill="#0A0E17"/>
+  <!-- Right Side Mockups: 2 Layered Showcase Cards -->
+
+  <!-- Device 1: Video Player Engine (Back/Left) -->
+  <g transform="translate(690, 48)">
+    <rect width="220" height="390" rx="24" fill="url(#phoneCardGrad)" stroke="#223048" stroke-width="2.5"/>
+    <rect x="75" y="10" width="70" height="10" rx="5" fill="#0A0E17"/>
+    
     <!-- Video Player Preview Header -->
-    <rect x="15" y="36" width="180" height="110" rx="10" fill="#080D18"/>
-    <!-- Video Playback Indicator -->
-    <circle cx="105" cy="91" r="22" fill="#00E5FF" opacity="0.9"/>
-    <polygon points="101,83 113,91 101,99" fill="#070B14"/>
-    <!-- Multi-Audio Track Sheet -->
-    <rect x="15" y="160" width="180" height="200" rx="12" fill="#111A2C" stroke="#24344E" stroke-width="1"/>
-    <text x="28" y="185" font-family="sans-serif" font-size="12" font-weight="700" fill="#00E5FF">AUDIO TRACKS</text>
+    <rect x="14" y="32" width="192" height="115" rx="10" fill="#080D18"/>
+    <circle cx="110" cy="90" r="22" fill="#00E5FF" opacity="0.9" filter="url(#softGlow)"/>
+    <polygon points="106,82 118,90 106,98" fill="#070B14"/>
+    <text x="24" y="52" font-family="sans-serif" font-size="9" font-weight="700" fill="#00E5FF">4K HDR • 60 FPS</text>
     
-    <rect x="25" y="198" width="160" height="28" rx="6" fill="#00E5FF" opacity="0.15"/>
-    <circle cx="38" cy="212" r="5" fill="#00E5FF"/>
-    <text x="50" y="216" font-family="sans-serif" font-size="10" font-weight="700" fill="#00E5FF">English (Original - 5.1)</text>
-
-    <rect x="25" y="232" width="160" height="28" rx="6" fill="#182338"/>
-    <circle cx="38" cy="246" r="5" fill="#64748B"/>
-    <text x="50" y="250" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">বাংলা (Bangla Audio)</text>
-
-    <rect x="25" y="266" width="160" height="28" rx="6" fill="#182338"/>
-    <circle cx="38" cy="280" r="5" fill="#64748B"/>
-    <text x="50" y="284" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">Hindi (Track #3)</text>
+    <!-- Multi-Audio Track & Network Stream Sheet -->
+    <rect x="14" y="158" width="192" height="210" rx="12" fill="#111A2C" stroke="#24344E" stroke-width="1"/>
+    <text x="26" y="180" font-family="sans-serif" font-size="11" font-weight="800" fill="#00E5FF">NETWORK &amp; AUDIO</text>
     
-    <!-- Gesture Hints -->
-    <rect x="25" y="304" width="160" height="42" rx="6" fill="#0A0F1D"/>
-    <text x="32" y="322" font-family="sans-serif" font-size="9" fill="#94A3B8">Brightness ⮞ Swipe Left</text>
-    <text x="32" y="336" font-family="sans-serif" font-size="9" fill="#94A3B8">Volume ⮞ Swipe Right</text>
+    <rect x="22" y="192" width="176" height="26" rx="6" fill="#00E5FF" opacity="0.15"/>
+    <circle cx="34" cy="205" r="4" fill="#00E5FF"/>
+    <text x="46" y="209" font-family="sans-serif" font-size="10" font-weight="700" fill="#00E5FF">Watch Video (ExoPlayer)</text>
+
+    <rect x="22" y="224" width="176" height="26" rx="6" fill="#182338"/>
+    <circle cx="34" cy="237" r="4" fill="#64748B"/>
+    <text x="46" y="241" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">Play Audio (Background)</text>
+
+    <rect x="22" y="256" width="176" height="26" rx="6" fill="#182338"/>
+    <circle cx="34" cy="269" r="4" fill="#64748B"/>
+    <text x="46" y="273" font-family="sans-serif" font-size="10" font-weight="500" fill="#E2E8F0">English &amp; বাংলা Subtitles</text>
+    
+    <!-- Gesture Hints Bar -->
+    <rect x="22" y="292" width="176" height="60" rx="8" fill="#0A0F1D"/>
+    <text x="30" y="312" font-family="sans-serif" font-size="9" fill="#94A3B8">Brightness ⮞ Swipe Left</text>
+    <text x="30" y="328" font-family="sans-serif" font-size="9" fill="#94A3B8">Volume ⮞ Swipe Right</text>
+    <text x="30" y="344" font-family="sans-serif" font-size="9" fill="#00E5FF">Zoom 1.0x - 4.0x Multi-Touch</text>
   </g>
 
-  <!-- Device 2: Folders & Private Vault (Front Focus) -->
-  <g transform="translate(940, 70)">
-    <rect width="220" height="370" rx="24" fill="url(#phoneCardGrad)" stroke="#00E5FF" stroke-width="2.5" filter="url(#glow)"/>
-    <!-- Top Notch -->
-    <rect x="75" y="12" width="70" height="12" rx="6" fill="#0A0E17"/>
-    <!-- Header -->
-    <text x="20" y="44" font-family="sans-serif" font-size="13" font-weight="800" fill="#FFFFFF">Video Folders</text>
-    <rect x="155" y="32" width="45" height="18" rx="9" fill="#00E5FF"/>
-    <text x="160" y="45" font-family="sans-serif" font-size="9" font-weight="800" fill="#070B14">VAULT</text>
+  <!-- Device 2: Audiophile Music Hub & YouTube Music (Front/Right Focus) -->
+  <g transform="translate(930, 40)">
+    <rect width="235" height="405" rx="26" fill="url(#musicMeshGrad)" stroke="#00E5FF" stroke-width="2.5" filter="url(#glow)"/>
+    <rect x="82" y="10" width="70" height="10" rx="5" fill="#0A0E17"/>
 
-    <!-- Private Vault Card -->
-    <rect x="18" y="58" width="184" height="60" rx="10" fill="#0E1729" stroke="#00E5FF" stroke-width="1.2"/>
-    <circle cx="42" cy="88" r="14" fill="#00E5FF" opacity="0.2"/>
-    <text x="65" y="82" font-family="sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Private Vault</text>
-    <text x="65" y="98" font-family="sans-serif" font-size="9" fill="#00E5FF">PIN Protected • Hidden</text>
+    <!-- Top Status / Header -->
+    <text x="18" y="38" font-family="sans-serif" font-size="12" font-weight="800" fill="#FFFFFF">THRYNX Music</text>
+    <rect x="156" y="26" width="62" height="18" rx="9" fill="#00E5FF"/>
+    <text x="163" y="39" font-family="sans-serif" font-size="9" font-weight="800" fill="#070B14">ONLINE</text>
 
-    <!-- Folder 1: Movies -->
-    <rect x="18" y="128" width="184" height="48" rx="8" fill="#141E30"/>
-    <rect x="26" y="136" width="38" height="32" rx="4" fill="#2979FF" opacity="0.3"/>
-    <text x="72" y="150" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Movies (4K UHD)</text>
-    <text x="72" y="164" font-family="sans-serif" font-size="9" fill="#94A3B8">24 Videos • 18.2 GB</text>
+    <!-- Album Art Artwork Card with Mesh Shadow -->
+    <rect x="24" y="56" width="187" height="135" rx="14" fill="#0C1A30" stroke="#00E5FF" stroke-width="1.2"/>
+    <!-- Simulated Gradient Artwork -->
+    <rect x="34" y="66" width="60" height="60" rx="8" fill="#00E5FF" opacity="0.3"/>
+    <polygon points="56,88 72,96 56,104" fill="#00E5FF"/>
+    <text x="104" y="86" font-family="sans-serif" font-size="11" font-weight="800" fill="#FFFFFF">Midnight Echoes</text>
+    <text x="104" y="102" font-family="sans-serif" font-size="9" font-weight="600" fill="#00E5FF">YouTube Music</text>
+    <text x="104" y="118" font-family="sans-serif" font-size="8" fill="#94A3B8">320kbps • AAC</text>
 
-    <!-- Folder 2: Downloads -->
-    <rect x="18" y="184" width="184" height="48" rx="8" fill="#141E30"/>
-    <rect x="26" y="192" width="38" height="32" rx="4" fill="#00E5FF" opacity="0.3"/>
-    <text x="72" y="206" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Downloads</text>
-    <text x="72" y="220" font-family="sans-serif" font-size="9" fill="#94A3B8">15 Videos • 6.4 GB</text>
+    <!-- Quick Action Chips (Heart, Download, Video) -->
+    <g transform="translate(34, 140)">
+      <rect width="48" height="24" rx="12" fill="#E11D48" opacity="0.2"/>
+      <text x="12" y="16" font-family="sans-serif" font-size="9" font-weight="700" fill="#FB7185">❤️ Liked</text>
+      
+      <rect x="54" width="62" height="24" rx="12" fill="#00E5FF" opacity="0.2"/>
+      <text x="63" y="16" font-family="sans-serif" font-size="9" font-weight="700" fill="#00E5FF">⬇ Offline</text>
 
-    <!-- Folder 3: Camera -->
-    <rect x="18" y="240" width="184" height="48" rx="8" fill="#141E30"/>
-    <rect x="26" y="248" width="38" height="32" rx="4" fill="#00E676" opacity="0.3"/>
-    <text x="72" y="262" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Camera Clips</text>
-    <text x="72" y="276" font-family="sans-serif" font-size="9" fill="#94A3B8">42 Videos • 1080p</text>
+      <rect x="122" width="55" height="24" rx="12" fill="#2979FF" opacity="0.2"/>
+      <text x="130" y="16" font-family="sans-serif" font-size="9" font-weight="700" fill="#60A5FA">🎬 Video</text>
+    </g>
+
+    <!-- Synced Lyrics Section Preview -->
+    <rect x="24" y="202" width="187" height="85" rx="10" fill="#0A1122" opacity="0.9"/>
+    <text x="34" y="222" font-family="sans-serif" font-size="9" font-weight="500" fill="#64748B">♪ Past line fading away...</text>
+    <text x="34" y="244" font-family="sans-serif" font-size="11" font-weight="800" fill="#00E5FF">♪ Stars align across the night sky</text>
+    <text x="34" y="266" font-family="sans-serif" font-size="9" font-weight="500" fill="#64748B">♪ Real-time synchronized lyrics...</text>
+
+    <!-- ThinSlider Scrubber & Equalizer -->
+    <g transform="translate(24, 300)">
+      <line x1="0" y1="6" x2="187" y2="6" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+      <line x1="0" y1="6" x2="110" y2="6" stroke="#00E5FF" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="110" cy="6" r="6" fill="#FFFFFF" filter="url(#softGlow)"/>
+      <text x="0" y="22" font-family="sans-serif" font-size="8" fill="#94A3B8">02:18</text>
+      <text x="165" y="22" font-family="sans-serif" font-size="8" fill="#94A3B8">03:45</text>
+    </g>
+
+    <!-- Controls Row: Shuffle, Prev, Play, Next, EQ -->
+    <g transform="translate(24, 335)">
+      <circle cx="20" cy="18" r="12" fill="#182338"/>
+      <text x="14" y="22" font-family="sans-serif" font-size="11" fill="#00E5FF">🔀</text>
+
+      <circle cx="56" cy="18" r="14" fill="#182338"/>
+      <polygon points="58,12 48,18 58,24" fill="#FFFFFF"/>
+
+      <circle cx="94" cy="18" r="18" fill="#00E5FF" filter="url(#softGlow)"/>
+      <polygon points="90,11 102,18 90,25" fill="#070B14"/>
+
+      <circle cx="132" cy="18" r="14" fill="#182338"/>
+      <polygon points="128,12 138,18 128,24" fill="#FFFFFF"/>
+
+      <rect x="156" y="6" width="30" height="24" rx="6" fill="#182338"/>
+      <text x="160" y="22" font-family="sans-serif" font-size="9" font-weight="700" fill="#00E676">10-EQ</text>
+    </g>
 
     <!-- Bottom Navigation Bar representation -->
-    <rect x="18" y="318" width="184" height="36" rx="8" fill="#0A0F1D"/>
-    <text x="32" y="340" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Home</text>
-    <text x="74" y="340" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Videos</text>
-    <text x="122" y="340" font-family="sans-serif" font-size="8" font-weight="700" fill="#00E5FF">Folders</text>
-    <text x="166" y="340" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Settings</text>
+    <rect x="18" y="368" width="199" height="28" rx="8" fill="#0A0F1D"/>
+    <text x="30" y="386" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Home</text>
+    <text x="70" y="386" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Videos</text>
+    <text x="112" y="386" font-family="sans-serif" font-size="8" font-weight="800" fill="#00E5FF">Audio</text>
+    <text x="152" y="386" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">Folders</text>
+    <text x="188" y="386" font-family="sans-serif" font-size="8" font-weight="600" fill="#94A3B8">⚙</text>
   </g>
 </svg>
