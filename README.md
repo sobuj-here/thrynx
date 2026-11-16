@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.2.0/THRYNX-v1.2.0.apk">
-    <img src="https://img.shields.io/badge/📥%20DOWNLOAD%20APK-v1.2.0%20(Official)-00E5FF?style=for-the-badge&logo=android&logoColor=0B0E14" height="42" alt="Download APK" />
+
   </a>
   &nbsp;&nbsp;
   <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.2.0">
