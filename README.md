@@ -5,8 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sobuj-here/thrynx/releases/download/v1.2.0/THRYNX-v1.2.0.apk">
-
+  
   </a>
   &nbsp;&nbsp;
   <a href="https://github.com/sobuj-here/thrynx/releases/tag/v1.2.0">
