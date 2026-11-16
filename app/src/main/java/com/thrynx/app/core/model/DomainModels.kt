@@ -20,7 +20,8 @@ data class MediaItemModel(
     val isVideo: Boolean = true,
     val width: Int = 0,
     val height: Int = 0,
-    val bitrate: Long = 0L
+    val bitrate: Long = 0L,
+    val artworkUri: String? = null
 ) {
     val mediaUriString: String
         get() = uri?.toString() ?: path

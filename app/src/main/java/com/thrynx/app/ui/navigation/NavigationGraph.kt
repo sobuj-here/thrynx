@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import coil.compose.AsyncImage
 import com.thrynx.app.R
 import com.thrynx.app.core.database.FavoriteMediaEntity
 import com.thrynx.app.core.database.PlaybackHistoryEntity
@@ -90,6 +92,7 @@ fun ThrynxNavigationApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
     val playbackState by playerManager.playbackState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     val favoritesUris = remember(favorites) { favorites.map { it.uri }.toSet() }
 
@@ -191,19 +194,63 @@ fun ThrynxNavigationApp(
                     onNavigateToVideos = {
                         navController.navigate(Screen.Videos.route) { launchSingleTop = true }
                     },
-                    onOpenStreamUrl = { url ->
-                        val titleFromUrl = try {
-                            android.net.Uri.parse(url).lastPathSegment?.ifBlank { "Network Stream" } ?: "Network Stream"
-                        } catch (e: Exception) { "Network Stream" }
-                        val streamMedia = MediaItemModel(
-                            id = System.currentTimeMillis(),
-                            title = titleFromUrl,
-                            uri = android.net.Uri.parse(url),
-                            path = url,
-                            isVideo = true
-                        )
-                        playerManager.playMedia(streamMedia)
-                        navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                    onOpenStreamUrl = { url, asVideo ->
+                        val context = navController.context
+                        if (asVideo) {
+                            if (com.thrynx.app.core.player.YouTubeAudioResolver.isYouTubeUrl(url)) {
+                                coroutineScope.launch {
+                                    playerManager.playYouTubeVideo(
+                                        youtubeUrlOrId = url,
+                                        onSuccess = {
+                                            navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                                        },
+                                        onError = { err ->
+                                            android.widget.Toast.makeText(context, err, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                }
+                            } else {
+                                val titleFromUrl = try {
+                                    android.net.Uri.parse(url).lastPathSegment?.ifBlank { "Network Stream" } ?: "Network Stream"
+                                } catch (e: Exception) { "Network Stream" }
+                                val streamMedia = MediaItemModel(
+                                    id = System.currentTimeMillis(),
+                                    title = titleFromUrl,
+                                    uri = android.net.Uri.parse(url),
+                                    path = url,
+                                    isVideo = true
+                                )
+                                playerManager.playMedia(streamMedia)
+                                navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                            }
+                        } else {
+                            if (com.thrynx.app.core.player.YouTubeAudioResolver.isYouTubeUrl(url)) {
+                                coroutineScope.launch {
+                                    playerManager.playYouTubeAudio(
+                                        youtubeUrlOrId = url,
+                                        onSuccess = {
+                                            navController.navigate(Screen.Audio.route) { launchSingleTop = true }
+                                        },
+                                        onError = { err ->
+                                            android.widget.Toast.makeText(context, err, android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                }
+                            } else {
+                                val titleFromUrl = try {
+                                    android.net.Uri.parse(url).lastPathSegment?.ifBlank { "Network Stream Audio" } ?: "Network Stream Audio"
+                                } catch (e: Exception) { "Network Stream Audio" }
+                                val streamMedia = MediaItemModel(
+                                    id = System.currentTimeMillis(),
+                                    title = titleFromUrl,
+                                    uri = android.net.Uri.parse(url),
+                                    path = url,
+                                    isVideo = false
+                                )
+                                playerManager.playMedia(streamMedia)
+                                navController.navigate(Screen.Audio.route) { launchSingleTop = true }
+                            }
+                        }
                     },
                     privateVideosCount = privateVideos.size,
                     onOpenVault = {
@@ -241,8 +288,9 @@ fun ThrynxNavigationApp(
                 )
             }
 
-            // 3. Audio Screen (Music Player)
+            // 3. Audio Screen (Music Player & YouTube Music Explorer)
             composable(Screen.Audio.route) {
+                val context = navController.context
                 AudioScreen(
                     audios = audios,
                     audioFolders = audioFolders,
@@ -261,7 +309,31 @@ fun ThrynxNavigationApp(
                     },
                     onDeleteAudio = onDeleteMedia,
                     onDeleteMultipleAudios = onDeleteMultipleVideos,
-                    onRescanLibrary = onRescanLibrary
+                    onRescanLibrary = onRescanLibrary,
+                    onPlayOnlineTrack = { track ->
+                        coroutineScope.launch {
+                            playerManager.playYouTubeAudio(
+                                youtubeUrlOrId = track.videoId,
+                                onSuccess = { /* Audio playing in background */ },
+                                onError = { err ->
+                                    android.widget.Toast.makeText(context, err, android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                    },
+                    onWatchOnlineVideo = { track ->
+                        coroutineScope.launch {
+                            playerManager.playYouTubeVideo(
+                                youtubeUrlOrId = track.videoId,
+                                onSuccess = {
+                                    navController.navigate(Screen.Player.route) { launchSingleTop = true }
+                                },
+                                onError = { err ->
+                                    android.widget.Toast.makeText(context, err, android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                    }
                 )
             }
 
@@ -496,17 +568,27 @@ fun MiniPlayerBar(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(ThrynxCyan.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = if (playbackState.isPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
-                        contentDescription = null,
-                        tint = ThrynxCyan,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    val artModel = currentMedia.artworkUri ?: currentMedia.uri
+                    if (artModel != null) {
+                        AsyncImage(
+                            model = artModel,
+                            contentDescription = currentMedia.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (playbackState.isPlaying) Icons.Default.GraphicEq else Icons.Default.MusicNote,
+                            contentDescription = null,
+                            tint = ThrynxCyan,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))

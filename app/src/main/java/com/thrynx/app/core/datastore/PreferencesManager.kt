@@ -48,6 +48,14 @@ class PreferencesManager(private val context: Context) {
         val KEY_VIDEO_VIEW_MODE = stringPreferencesKey("key_video_view_mode") // "files" or "folders"
         val KEY_AUDIO_VIEW_MODE = stringPreferencesKey("key_audio_view_mode") // "files" or "folders"
         val KEY_PAUSE_ON_HEADSET_DISCONNECT = booleanPreferencesKey("key_pause_on_headset_disconnect")
+
+        // THRYNX Advanced Audio & Playback Engine Settings
+        val KEY_AUDIO_QUALITY = stringPreferencesKey("key_audio_quality") // "high", "medium", "auto"
+        val KEY_LOUDNESS_NORMALIZATION = booleanPreferencesKey("key_loudness_normalization")
+        val KEY_SKIP_SILENCE = booleanPreferencesKey("key_skip_silence")
+        val KEY_CROSSFADE_SECONDS = intPreferencesKey("key_crossfade_seconds")
+        val KEY_REDUCE_ANIMATION = booleanPreferencesKey("key_reduce_animation")
+        val KEY_SHOW_NERD_STATS = booleanPreferencesKey("key_show_nerd_stats")
     }
 
     val languageFlow: Flow<String> = context.dataStore.data
@@ -150,6 +158,30 @@ class PreferencesManager(private val context: Context) {
     val pauseOnHeadsetDisconnectFlow: Flow<Boolean> = context.dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_PAUSE_ON_HEADSET_DISCONNECT] ?: true }
+
+    val audioQualityFlow: Flow<String> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_AUDIO_QUALITY] ?: "high" }
+
+    val loudnessNormalizationFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_LOUDNESS_NORMALIZATION] ?: true }
+
+    val skipSilenceFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_SKIP_SILENCE] ?: false }
+
+    val crossfadeSecondsFlow: Flow<Int> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_CROSSFADE_SECONDS] ?: 0 }
+
+    val reduceAnimationFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_REDUCE_ANIMATION] ?: false }
+
+    val showNerdStatsFlow: Flow<Boolean> = context.dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map { it[KEY_SHOW_NERD_STATS] ?: false }
 
     suspend fun setLanguage(langCode: String) {
         context.dataStore.edit { it[KEY_LANGUAGE] = langCode }
@@ -256,6 +288,30 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun setPauseOnHeadsetDisconnect(enabled: Boolean) {
         context.dataStore.edit { it[KEY_PAUSE_ON_HEADSET_DISCONNECT] = enabled }
+    }
+
+    suspend fun setAudioQuality(quality: String) {
+        context.dataStore.edit { it[KEY_AUDIO_QUALITY] = quality }
+    }
+
+    suspend fun setLoudnessNormalization(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_LOUDNESS_NORMALIZATION] = enabled }
+    }
+
+    suspend fun setSkipSilence(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_SKIP_SILENCE] = enabled }
+    }
+
+    suspend fun setCrossfadeSeconds(seconds: Int) {
+        context.dataStore.edit { it[KEY_CROSSFADE_SECONDS] = seconds }
+    }
+
+    suspend fun setReduceAnimation(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_REDUCE_ANIMATION] = enabled }
+    }
+
+    suspend fun setShowNerdStats(show: Boolean) {
+        context.dataStore.edit { it[KEY_SHOW_NERD_STATS] = show }
     }
 
     suspend fun updateSubtitleStyle(style: SubtitleStyle) {

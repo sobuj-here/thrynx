@@ -12,8 +12,8 @@ android {
         applicationId = "com.thrynx.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -114,6 +114,10 @@ dependencies {
 
     // Coil Image Loader
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Palette & Networking for Fluid Mesh and InnerTube Streaming
+    implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // DocumentFile & Storage Access Framework
     implementation("androidx.documentfile:documentfile:1.0.1")

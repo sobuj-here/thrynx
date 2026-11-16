@@ -61,3 +61,15 @@ data class CustomFolderEntity(
     val folderName: String,
     val addedTimestamp: Long = System.currentTimeMillis()
 )
+
+/**
+ * Stores user's liked/favorite online YouTube Music tracks.
+ */
+@Entity(tableName = "favorite_online_tracks")
+data class FavoriteOnlineTrackEntity(
+    @PrimaryKey val videoId: String,
+    val title: String,
+    val artist: String,
+    val thumbnailUrl: String,
+    val addedTimestamp: Long = System.currentTimeMillis()
+)

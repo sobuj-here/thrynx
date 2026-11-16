@@ -25,7 +25,15 @@ object LrcLibClient {
             val cleanArtist = cleanMetadata(artist)
             val seconds = (durationMs / 1000).toInt()
 
-            val exact = runCatching { exactMatch(cleanTitle, cleanArtist, seconds) }.getOrNull()
+            val hasValidArtist = cleanArtist.isNotBlank() && 
+                    cleanArtist != "Audio Track" && 
+                    cleanArtist != "THRYNX Audio" && 
+                    cleanArtist != "<unknown>"
+
+            val exact = if (hasValidArtist) {
+                runCatching { exactMatch(cleanTitle, cleanArtist, seconds) }.getOrNull()
+            } else null
+
             val synced = exact ?: runCatching { searchMatch(cleanTitle, cleanArtist, seconds) }.getOrNull()
             synced?.let(::parseLrc)?.takeIf { it.isNotEmpty() }
         }
@@ -42,7 +50,16 @@ object LrcLibClient {
     }
 
     private fun searchMatch(title: String, artist: String, seconds: Int): String? {
-        val query = "track_name=${encode(title)}&artist_name=${encode(artist)}"
+        val hasValidArtist = artist.isNotBlank() && 
+                artist != "Audio Track" && 
+                artist != "THRYNX Audio" && 
+                artist != "<unknown>"
+
+        val query = if (hasValidArtist) {
+            "track_name=${encode(title)}&artist_name=${encode(artist)}"
+        } else {
+            "track_name=${encode(title)}"
+        }
         val response = get("$BASE_URL/search?$query") ?: return null
         return try {
             val array = JSONArray(response)

@@ -2,6 +2,7 @@ package com.thrynx.app.feature.home
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -48,7 +49,7 @@ fun HomeScreen(
     onOpenMedia: (MediaItemModel, Long) -> Unit,
     onOpenFolder: (FolderItemModel) -> Unit,
     onNavigateToVideos: () -> Unit,
-    onOpenStreamUrl: (String) -> Unit,
+    onOpenStreamUrl: (url: String, asVideo: Boolean) -> Unit,
     privateVideosCount: Int = 0,
     onOpenVault: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -527,7 +528,7 @@ fun HomeScreen(
 
     // Network Stream Dialog with URL auto-sanitization, YouTube detection & test streams
     if (showStreamDialog) {
-        val context = LocalContext.current
+        val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
         val isYouTubeUrl = remember(streamUrlInput) {
             val lower = streamUrlInput.trim().lowercase()
             lower.contains("youtube.com") || lower.contains("youtu.be")
@@ -535,11 +536,20 @@ fun HomeScreen(
 
         AlertDialog(
             onDismissRequest = { showStreamDialog = false },
-            title = { Text(stringResource(id = R.string.stream_title)) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Link, contentDescription = null, tint = ThrynxCyan)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(id = R.string.stream_title), fontWeight = FontWeight.Bold)
+                }
+            },
             text = {
                 Column {
                     Text(
-                        text = stringResource(id = R.string.stream_hint),
+                        text = if (isYouTubeUrl)
+                            "YouTube link detected. Watch the video directly or play background audio."
+                        else
+                            stringResource(id = R.string.stream_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -547,61 +557,81 @@ fun HomeScreen(
                     OutlinedTextField(
                         value = streamUrlInput,
                         onValueChange = { streamUrlInput = it },
-                        placeholder = { Text("https://example.com/video.m3u8") },
+                        placeholder = { Text("https://example.com/video.m3u8 or YouTube URL") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    // YouTube URL Warning & External Launch Handoff
-                    if (isYouTubeUrl) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Surface(
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Text(
-                                    text = "YouTube Link Detected",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "YouTube pages are encrypted web streams and cannot be streamed directly. Open it directly in the YouTube app or browser below.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = {
-                                        var url = streamUrlInput.trim()
-                                        if (!url.contains("://")) url = "https://$url"
-                                        try {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                            context.startActivity(intent)
-                                            showStreamDialog = false
-                                        } catch (e: Exception) {
-                                            // Handle activity not found
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = ThrynxCyan,
-                                        contentColor = ThrynxBgDark
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Open in YouTube / Browser", fontWeight = FontWeight.Bold)
+                        shape = RoundedCornerShape(12.dp),
+                        trailingIcon = {
+                            if (streamUrlInput.isNotBlank()) {
+                                IconButton(onClick = { streamUrlInput = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear", tint = Color.Gray)
+                                }
+                            } else {
+                                IconButton(onClick = {
+                                    val clip = clipboardManager.getText()?.text?.trim() ?: ""
+                                    if (clip.isNotBlank()) streamUrlInput = clip
+                                }) {
+                                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = ThrynxCyan)
                                 }
                             }
                         }
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Playback Mode Selection Buttons: Watch Video or Play Audio
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Option 1: Watch Video Directly
+                        Button(
+                            onClick = {
+                                var url = streamUrlInput.trim()
+                                if (url.isNotBlank()) {
+                                    if (!url.contains("://")) url = "https://$url"
+                                    showStreamDialog = false
+                                    onOpenStreamUrl(url, true)
+                                }
+                            },
+                            enabled = streamUrlInput.isNotBlank(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ThrynxCyan,
+                                contentColor = ThrynxBgDark
+                            ),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Watch Video", fontWeight = FontWeight.Bold, maxLines = 1)
+                        }
+
+                        // Option 2: Background Audio Playback
+                        Button(
+                            onClick = {
+                                var url = streamUrlInput.trim()
+                                if (url.isNotBlank()) {
+                                    if (!url.contains("://")) url = "https://$url"
+                                    showStreamDialog = false
+                                    onOpenStreamUrl(url, false)
+                                }
+                            },
+                            enabled = streamUrlInput.isNotBlank(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ThrynxCobalt,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Headphones, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Play Audio", fontWeight = FontWeight.Bold, maxLines = 1)
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                     Text(
                         text = "Quick Sample Streams (Direct Media):",
                         style = MaterialTheme.typography.labelSmall,
@@ -637,25 +667,7 @@ fun HomeScreen(
                     }
                 }
             },
-            confirmButton = {
-                if (!isYouTubeUrl) {
-                    Button(
-                        onClick = {
-                            var trimmed = streamUrlInput.trim()
-                            if (trimmed.isNotBlank()) {
-                                if (!trimmed.contains("://")) {
-                                    trimmed = "https://$trimmed"
-                                }
-                                showStreamDialog = false
-                                onOpenStreamUrl(trimmed)
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = ThrynxCyan, contentColor = ThrynxBgDark)
-                    ) {
-                        Text(stringResource(id = R.string.stream_play), fontWeight = FontWeight.Bold)
-                    }
-                }
-            },
+            confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showStreamDialog = false }) {
                     Text(stringResource(id = R.string.action_cancel))

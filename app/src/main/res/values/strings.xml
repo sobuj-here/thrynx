@@ -2,7 +2,7 @@
 <resources>
     <!-- Brand -->
     <string name="app_name">THRYNX</string>
-    <string name="app_tagline">Video Player</string>
+    <string name="app_tagline">Media Studio</string>
     <string name="app_description">High-performance video player for local media and network streams</string>
 
     <!-- Navigation -->

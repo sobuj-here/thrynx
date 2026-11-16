@@ -2,7 +2,7 @@
 <resources>
     <!-- Brand -->
     <string name="app_name">THRYNX</string>
-    <string name="app_tagline">ভিডিও প্লেয়ার</string>
+    <string name="app_tagline">Media Studio</string>
     <string name="app_description">স্থানীয় ভিডিও ও নেটওয়ার্ক স্ট্রিম চালানোর শক্তিশালী মাধ্যম</string>
 
     <!-- Navigation -->

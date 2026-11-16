@@ -412,6 +412,7 @@ class MediaStoreScanner(private val context: Context) {
             MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.DATA,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.SIZE,
@@ -432,6 +433,7 @@ class MediaStoreScanner(private val context: Context) {
                 val nameCol = c.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
                 val titleCol = c.getColumnIndex(MediaStore.Audio.Media.TITLE)
                 val artistCol = c.getColumnIndex(MediaStore.Audio.Media.ARTIST)
+                val albumIdCol = c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
                 val dataCol = c.getColumnIndex(MediaStore.Audio.Media.DATA)
                 val durationCol = c.getColumnIndex(MediaStore.Audio.Media.DURATION)
                 val sizeCol = c.getColumnIndex(MediaStore.Audio.Media.SIZE)
@@ -443,6 +445,7 @@ class MediaStoreScanner(private val context: Context) {
                     val rawName = if (nameCol >= 0) c.getString(nameCol) else ""
                     val title = if (titleCol >= 0) c.getString(titleCol) ?: rawName else rawName
                     val artist = if (artistCol >= 0) c.getString(artistCol) ?: "<unknown>" else "<unknown>"
+                    val albumId = if (albumIdCol >= 0) c.getLong(albumIdCol) else -1L
                     val path = if (dataCol >= 0) c.getString(dataCol) ?: "" else ""
                     val duration = if (durationCol >= 0) c.getLong(durationCol) else 0L
                     val size = if (sizeCol >= 0) c.getLong(sizeCol) else 0L
@@ -451,6 +454,10 @@ class MediaStoreScanner(private val context: Context) {
                     val cleanTitle = if (title.isBlank()) {
                         if (rawName.isNotBlank()) rawName.substringBeforeLast(".") else "Audio $id"
                     } else title
+                    val cleanArtist = if (artist.isNotBlank() && artist != "<unknown>") artist else "THRYNX Audio"
+                    val artworkUri = if (albumId > 0) {
+                        ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), albumId).toString()
+                    } else null
 
                     audios.add(
                         MediaItemModel(
@@ -462,7 +469,9 @@ class MediaStoreScanner(private val context: Context) {
                             sizeBytes = size,
                             dateAdded = dateAdded,
                             mimeType = "audio/*",
-                            isVideo = false
+                            isVideo = false,
+                            folderName = cleanArtist,
+                            artworkUri = artworkUri
                         )
                     )
                 }

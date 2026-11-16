@@ -338,6 +338,16 @@ class ThrynxPlayerManager(private val context: Context) {
                 builder.setMimeType(MimeTypes.VIDEO_WEBM)
             }
         }
+
+        val metaBuilder = androidx.media3.common.MediaMetadata.Builder()
+            .setTitle(media.title)
+            .setArtist(media.folderName.ifEmpty { if (media.isVideo) "Video" else "THRYNX Audio" })
+        val artUri = media.artworkUri?.let { Uri.parse(it) } ?: media.uri
+        if (artUri != null) {
+            metaBuilder.setArtworkUri(artUri)
+        }
+        builder.setMediaMetadata(metaBuilder.build())
+
         return builder.build()
     }
 
@@ -366,6 +376,77 @@ class ThrynxPlayerManager(private val context: Context) {
             queue = currentPlaylist,
             queueIndex = 0
         )
+    }
+
+    fun playStreamWithHeaders(
+        media: MediaItemModel,
+        headers: Map<String, String>? = null,
+        startPositionMs: Long = 0L
+    ) {
+        if (!headers.isNullOrEmpty()) {
+            httpDataSourceFactory.setDefaultRequestProperties(headers)
+        }
+        playMedia(media, startPositionMs)
+    }
+
+    suspend fun playYouTubeAudio(
+        youtubeUrlOrId: String,
+        onSuccess: (YouTubeAudioStream) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val result = YouTubeAudioResolver.resolveAudio(youtubeUrlOrId)
+        result.onSuccess { stream ->
+            val mediaModel = MediaItemModel(
+                id = stream.videoId.hashCode().toLong(),
+                title = stream.title,
+                durationMs = stream.durationMs,
+                path = stream.streamUrl,
+                uri = Uri.parse(stream.streamUrl),
+                mimeType = MimeTypes.AUDIO_AAC,
+                isVideo = false,
+                folderName = stream.artist,
+                artworkUri = stream.artworkUrl
+            )
+            withContext(Dispatchers.Main) {
+                playStreamWithHeaders(mediaModel, stream.headers)
+                onSuccess(stream)
+            }
+        }.onFailure { err ->
+            withContext(Dispatchers.Main) {
+                onError(err.message ?: "Failed to resolve YouTube audio stream")
+            }
+        }
+    }
+
+    suspend fun playYouTubeVideo(
+        youtubeUrlOrId: String,
+        onSuccess: (YouTubeVideoStream) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val result = YouTubeAudioResolver.resolveVideo(youtubeUrlOrId)
+        result.onSuccess { stream ->
+            val mediaModel = MediaItemModel(
+                id = stream.videoId.hashCode().toLong(),
+                title = stream.title,
+                durationMs = stream.durationMs,
+                path = stream.streamUrl,
+                uri = Uri.parse(stream.streamUrl),
+                mimeType = MimeTypes.VIDEO_MP4,
+                isVideo = true,
+                folderName = stream.artist,
+                width = stream.width,
+                height = stream.height,
+                artworkUri = stream.artworkUrl
+            )
+            withContext(Dispatchers.Main) {
+                playStreamWithHeaders(mediaModel, stream.headers)
+                onSuccess(stream)
+            }
+        }.onFailure { err ->
+            withContext(Dispatchers.Main) {
+                onError(err.message ?: "Failed to resolve YouTube video stream")
+            }
+        }
     }
 
     fun playQueue(mediaList: List<MediaItemModel>, startIndex: Int = 0, startPositionMs: Long = 0L) {

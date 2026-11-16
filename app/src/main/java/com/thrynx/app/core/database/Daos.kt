@@ -89,3 +89,21 @@ interface CustomFolderDao {
     @Query("DELETE FROM custom_folders WHERE folderUri = :uri")
     suspend fun deleteCustomFolder(uri: String)
 }
+
+@Dao
+interface FavoriteOnlineTrackDao {
+    @Query("SELECT * FROM favorite_online_tracks ORDER BY addedTimestamp DESC")
+    fun getAllFavorites(): Flow<List<FavoriteOnlineTrackEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addFavorite(track: FavoriteOnlineTrackEntity)
+
+    @Query("DELETE FROM favorite_online_tracks WHERE videoId = :videoId")
+    suspend fun removeFavorite(videoId: String)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM favorite_online_tracks WHERE videoId = :videoId)")
+    fun isFavoriteFlow(videoId: String): Flow<Boolean>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM favorite_online_tracks WHERE videoId = :videoId)")
+    suspend fun isFavorite(videoId: String): Boolean
+}

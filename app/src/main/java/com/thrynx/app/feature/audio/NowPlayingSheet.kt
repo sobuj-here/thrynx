@@ -31,9 +31,11 @@ import com.thrynx.app.core.designsystem.*
 import com.thrynx.app.core.lyrics.LrcLibClient
 import com.thrynx.app.core.lyrics.LyricLine
 import com.thrynx.app.core.model.MediaItemModel
+import com.thrynx.app.core.model.RepeatMode
 import com.thrynx.app.core.player.ThrynxPlayerManager
 import com.thrynx.app.feature.audio.components.MeshGradientBackground
 import com.thrynx.app.feature.audio.components.ThinSlider
+import com.thrynx.app.feature.audio.components.rememberArtworkColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -50,6 +52,11 @@ fun NowPlayingSheet(
     var showLyrics by remember { mutableStateOf(false) }
     var lyrics by remember { mutableStateOf<List<LyricLine>?>(null) }
     var isLoadingLyrics by remember { mutableStateOf(false) }
+
+    var isDraggingSlider by remember { mutableStateOf(false) }
+    var dragFraction by remember { mutableFloatStateOf(0f) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var showQueueSheet by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val lyricsListState = rememberLazyListState()
@@ -68,9 +75,9 @@ fun NowPlayingSheet(
         }
     }
 
-    // Auto-scroll lyrics to keep current singing line centered
+    // Auto-scroll lyrics to keep current singing line centered (without fighting user touch)
     LaunchedEffect(playbackState.currentPositionMs, showLyrics) {
-        if (showLyrics && lyrics != null) {
+        if (showLyrics && lyrics != null && !lyricsListState.isScrollInProgress) {
             val currentIndex = lyrics!!.indexOfLast { it.startMs <= playbackState.currentPositionMs }
             if (currentIndex >= 0) {
                 lyricsListState.animateScrollToItem(
@@ -90,8 +97,13 @@ fun NowPlayingSheet(
         modifier = Modifier.fillMaxHeight(0.96f)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Apple Music Ambient Mesh Backdrop
-            MeshGradientBackground()
+            // Apple Music Ambient Mesh Backdrop with THRYNX Palette Engine
+            val artworkModel = currentMedia?.artworkUri ?: currentMedia?.uri
+            val meshPalette = rememberArtworkColors(imageUrl = artworkModel?.toString())
+            MeshGradientBackground(
+                palette = meshPalette,
+                trackKey = currentMedia?.id
+            )
 
             Column(
                 modifier = Modifier
@@ -165,10 +177,11 @@ fun NowPlayingSheet(
                                 .background(ThrynxSurfaceLight),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (currentMedia?.uri != null) {
+                            val artToLoad = currentMedia?.artworkUri ?: currentMedia?.uri
+                            if (artToLoad != null) {
                                 AsyncImage(
-                                    model = currentMedia.uri,
-                                    contentDescription = currentMedia.title,
+                                    model = artToLoad,
+                                    contentDescription = currentMedia?.title,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
@@ -273,40 +286,108 @@ fun NowPlayingSheet(
                         )
                     }
 
-                    // Equalizer Button
-                    IconButton(
-                        onClick = onOpenEqualizer,
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(ThrynxCyan.copy(alpha = 0.15f))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.GraphicEq,
-                            contentDescription = "Equalizer",
-                            tint = ThrynxCyan,
-                            modifier = Modifier.size(22.dp)
-                        )
+                        // Heart / Like Favorite Button
+                        val db = remember { com.thrynx.app.ThrynxApplication.instance.database }
+                        val currentUri = currentMedia?.uri?.toString() ?: ""
+                        val isLocalFav by db.favoriteDao().isFavoriteFlow(currentUri).collectAsState(initial = false)
+                        val favOnlineTracks by db.favoriteOnlineTrackDao().getAllFavorites().collectAsState(initial = emptyList())
+                        val isOnlineFav = favOnlineTracks.any { currentMedia?.path?.contains(it.videoId) == true || currentUri.contains(it.videoId) }
+                        val isFavoriteActive = isLocalFav || isOnlineFav
+
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    if (currentMedia != null) {
+                                        val vidId = com.thrynx.app.core.player.YouTubeAudioResolver.extractVideoId(currentMedia.path)
+                                            ?: com.thrynx.app.core.player.YouTubeAudioResolver.extractVideoId(currentUri)
+                                        if (vidId != null) {
+                                            if (isOnlineFav) {
+                                                db.favoriteOnlineTrackDao().removeFavorite(vidId)
+                                            } else {
+                                                db.favoriteOnlineTrackDao().addFavorite(
+                                                    com.thrynx.app.core.database.FavoriteOnlineTrackEntity(
+                                                        videoId = vidId,
+                                                        title = currentMedia.title,
+                                                        artist = currentMedia.folderName,
+                                                        thumbnailUrl = currentMedia.artworkUri ?: ""
+                                                    )
+                                                )
+                                            }
+                                        } else {
+                                            if (isLocalFav) {
+                                                db.favoriteDao().removeFavorite(currentUri)
+                                            } else {
+                                                db.favoriteDao().addFavorite(
+                                                    com.thrynx.app.core.database.FavoriteMediaEntity(
+                                                        uri = currentUri,
+                                                        title = currentMedia.title,
+                                                        isVideo = false
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(if (isFavoriteActive) Color(0xFFFF4081).copy(alpha = 0.2f) else Color.White.copy(alpha = 0.1f))
+                        ) {
+                            Icon(
+                                imageVector = if (isFavoriteActive) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Like Song",
+                                tint = if (isFavoriteActive) Color(0xFFFF4081) else Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        // Equalizer Button
+                        IconButton(
+                            onClick = onOpenEqualizer,
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(ThrynxCyan.copy(alpha = 0.15f))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.GraphicEq,
+                                contentDescription = "Equalizer",
+                                tint = ThrynxCyan,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // Apple Music Hairline Thin Scrubber
+                // Apple Music Hairline Thin Scrubber with Instant Non-Blocking Response
                 val currentMs = playbackState.currentPositionMs.toFloat()
                 val durationMs = (playbackState.durationMs.takeIf { it > 0 } ?: 1L).toFloat()
                 val progressFraction = (currentMs / durationMs).coerceIn(0f, 1f)
 
                 ThinSlider(
-                    value = progressFraction,
+                    value = if (isDraggingSlider) dragFraction else progressFraction,
                     onValueChange = { frac ->
-                        val targetMs = (frac * durationMs).toLong()
-                        playerManager.seekTo(targetMs)
+                        isDraggingSlider = true
+                        dragFraction = frac
                     },
+                    onValueChangeFinished = {
+                        val targetMs = (dragFraction * durationMs).toLong()
+                        playerManager.seekTo(targetMs)
+                        isDraggingSlider = false
+                    },
+                    loading = playbackState.isBuffering,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // Time indicators
+                val displayedCurrentMs = if (isDraggingSlider) (dragFraction * durationMs).toLong() else playbackState.currentPositionMs
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -314,7 +395,7 @@ fun NowPlayingSheet(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = formatDuration(playbackState.currentPositionMs),
+                        text = formatDuration(displayedCurrentMs),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color.White.copy(alpha = 0.5f),
                             fontSize = 12.sp
@@ -329,7 +410,7 @@ fun NowPlayingSheet(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Transport Controls: Prev, Rewind 10s, Large Play/Pause FAB, Forward 10s, Next
                 Row(
@@ -410,7 +491,247 @@ fun NowPlayingSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Secondary Controls Row: Shuffle, Speed, Sleep Timer, Repeat
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Shuffle
+                    IconButton(
+                        onClick = { playerManager.toggleShuffle() },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shuffle,
+                            contentDescription = "Shuffle",
+                            tint = if (playbackState.isShuffle) ThrynxCyan else Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    // Playback Speed
+                    TextButton(
+                        onClick = {
+                            val nextSpeed = when (playbackState.playbackSpeed) {
+                                0.75f -> 1.0f
+                                1.0f -> 1.25f
+                                1.25f -> 1.5f
+                                1.5f -> 2.0f
+                                else -> 0.75f
+                            }
+                            playerManager.setSpeed(nextSpeed)
+                        }
+                    ) {
+                        Text(
+                            text = "${playbackState.playbackSpeed}x",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = if (playbackState.playbackSpeed != 1.0f) ThrynxCyan else Color.White.copy(alpha = 0.7f)
+                            )
+                        )
+                    }
+
+                    // Up Next Queue Button
+                    IconButton(
+                        onClick = { showQueueSheet = true },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QueueMusic,
+                            contentDescription = "Up Next Queue",
+                            tint = if (showQueueSheet) ThrynxCyan else Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Sleep Timer
+                    IconButton(
+                        onClick = { showSleepTimerDialog = true },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Bedtime,
+                            contentDescription = "Sleep Timer",
+                            tint = if (playbackState.sleepTimerMinutes > 0) ThrynxCyan else Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    // Repeat Mode
+                    IconButton(
+                        onClick = { playerManager.toggleRepeatMode() },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        val repeatIcon = when (playbackState.repeatMode) {
+                            RepeatMode.ONE -> Icons.Default.RepeatOne
+                            else -> Icons.Default.Repeat
+                        }
+                        val repeatTint = when (playbackState.repeatMode) {
+                            RepeatMode.OFF -> Color.White.copy(alpha = 0.5f)
+                            else -> ThrynxCyan
+                        }
+                        Icon(
+                            imageVector = repeatIcon,
+                            contentDescription = "Repeat",
+                            tint = repeatTint,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+
+        // Sleep Timer Selection Dialog
+        if (showSleepTimerDialog) {
+            AlertDialog(
+                onDismissRequest = { showSleepTimerDialog = false },
+                title = { Text("Sleep Timer") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (playbackState.sleepTimerMinutes > 0) {
+                            Text(
+                                text = "Active: ${playbackState.sleepTimerRemainingSeconds / 60}m ${playbackState.sleepTimerRemainingSeconds % 60}s remaining",
+                                color = ThrynxCyan,
+                                fontWeight = FontWeight.Bold
+                            )
+                            OutlinedButton(
+                                onClick = {
+                                    playerManager.cancelSleepTimer()
+                                    showSleepTimerDialog = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Turn Off Timer")
+                            }
+                            HorizontalDivider()
+                        }
+                        listOf(15, 30, 45, 60).forEach { mins ->
+                            ListItem(
+                                headlineContent = { Text("$mins minutes") },
+                                modifier = Modifier.clickable {
+                                    playerManager.startSleepTimer(mins)
+                                    showSleepTimerDialog = false
+                                }
+                            )
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showSleepTimerDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        // Up Next Queue Bottom Sheet
+        if (showQueueSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showQueueSheet = false },
+                containerColor = Color(0xFF141C2B),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Up Next (${playbackState.queue.size} tracks)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = ThrynxCyan
+                        )
+                        IconButton(onClick = { showQueueSheet = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.Gray)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = Color.DarkGray)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (playbackState.queue.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(30.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Queue is empty", color = Color.Gray)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            itemsIndexed(playbackState.queue) { idx, item ->
+                                val isCurrent = idx == playbackState.queueIndex
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isCurrent) ThrynxCyan.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            playerManager.playQueue(playbackState.queue, idx)
+                                            showQueueSheet = false
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${idx + 1}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isCurrent) ThrynxCyan else Color.Gray,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.width(28.dp)
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = item.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isCurrent) ThrynxCyan else Color.White,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = item.folderName.ifBlank { "Audio" },
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.Gray,
+                                                maxLines = 1
+                                            )
+                                        }
+                                        if (isCurrent) {
+                                            Icon(
+                                                Icons.Default.GraphicEq,
+                                                contentDescription = null,
+                                                tint = ThrynxCyan,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

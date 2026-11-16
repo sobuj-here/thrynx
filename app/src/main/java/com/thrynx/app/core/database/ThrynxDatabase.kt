@@ -12,9 +12,10 @@ import androidx.room.TypeConverters
         FavoriteMediaEntity::class,
         PrivateFolderEntity::class,
         PrivateVideoEntity::class,
-        CustomFolderEntity::class
+        CustomFolderEntity::class,
+        FavoriteOnlineTrackEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -23,6 +24,7 @@ abstract class ThrynxDatabase : RoomDatabase() {
     abstract fun favoriteDao(): FavoriteDao
     abstract fun privateVaultDao(): PrivateVaultDao
     abstract fun customFolderDao(): CustomFolderDao
+    abstract fun favoriteOnlineTrackDao(): FavoriteOnlineTrackDao
 
     companion object {
         @Volatile
