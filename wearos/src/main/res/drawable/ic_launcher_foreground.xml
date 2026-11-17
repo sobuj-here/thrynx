@@ -1,0 +1,53 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <group
+        android:pivotX="512"
+        android:pivotY="512"
+        android:scaleX="0.84"
+        android:scaleY="0.84">
+        <path android:fillColor="#00E5FF" android:pathData="M 260.0,420.0 H 260.0 A 21.0,21.0 0 0 1 281.0,441.0 V 519.0 A 21.0,21.0 0 0 1 260.0,540.0 H 260.0 A 21.0,21.0 0 0 1 239.0,519.0 V 441.0 A 21.0,21.0 0 0 1 260.0,420.0 Z" />
+        <path android:fillColor="#00B0FF" android:pathData="M 330.0,380.0 H 330.0 A 21.0,21.0 0 0 1 351.0,401.0 V 579.0 A 21.0,21.0 0 0 1 330.0,600.0 H 330.0 A 21.0,21.0 0 0 1 309.0,579.0 V 401.0 A 21.0,21.0 0 0 1 330.0,380.0 Z" />
+        <path android:fillColor="#2979FF" android:pathData="M 400.0,340.0 H 400.0 A 22.0,22.0 0 0 1 422.0,362.0 V 638.0 A 22.0,22.0 0 0 1 400.0,660.0 H 400.0 A 22.0,22.0 0 0 1 378.0,638.0 V 362.0 A 22.0,22.0 0 0 1 400.0,340.0 Z" />
+        <path android:fillColor="#9C27B0" android:pathData="M 624.0,340.0 H 624.0 A 22.0,22.0 0 0 1 646.0,362.0 V 638.0 A 22.0,22.0 0 0 1 624.0,660.0 H 624.0 A 22.0,22.0 0 0 1 602.0,638.0 V 362.0 A 22.0,22.0 0 0 1 624.0,340.0 Z" />
+        <path android:fillColor="#D500F9" android:pathData="M 694.0,380.0 H 694.0 A 21.0,21.0 0 0 1 715.0,401.0 V 579.0 A 21.0,21.0 0 0 1 694.0,600.0 H 694.0 A 21.0,21.0 0 0 1 673.0,579.0 V 401.0 A 21.0,21.0 0 0 1 694.0,380.0 Z" />
+        <path android:fillColor="#FF1744" android:pathData="M 764.0,420.0 H 764.0 A 21.0,21.0 0 0 1 785.0,441.0 V 519.0 A 21.0,21.0 0 0 1 764.0,540.0 H 764.0 A 21.0,21.0 0 0 1 743.0,519.0 V 441.0 A 21.0,21.0 0 0 1 764.0,420.0 Z" />
+        <!-- Central Stem of T -->
+        <path android:pathData="M 512.0,300.0 H 512.0 A 40.0,40.0 0 0 1 552.0,340.0 V 710.0 A 40.0,40.0 0 0 1 512.0,750.0 H 512.0 A 40.0,40.0 0 0 1 472.0,710.0 V 340.0 A 40.0,40.0 0 0 1 512.0,300.0 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="512"
+                    android:startY="300"
+                    android:endX="512"
+                    android:endY="750"
+                    android:type="linear">
+                    <item android:color="#536DFE" android:offset="0.0" />
+                    <item android:color="#7C4DFF" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Top Crossbar of T -->
+        <path android:pathData="M 238.0,260.0 H 786.0 A 24.0,24.0 0 0 1 810.0,284.0 V 310.0 A 24.0,24.0 0 0 1 786.0,334.0 H 238.0 A 24.0,24.0 0 0 1 214.0,310.0 V 284.0 A 24.0,24.0 0 0 1 238.0,260.0 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="214"
+                    android:startY="297"
+                    android:endX="810"
+                    android:endY="297"
+                    android:type="linear">
+                    <item android:color="#00F5FF" android:offset="0.0" />
+                    <item android:color="#448AFF" android:offset="0.35" />
+                    <item android:color="#9C27B0" android:offset="0.75" />
+                    <item android:color="#FF1744" android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Glass Highlight Edge -->
+        <path
+            android:fillColor="#88FFFFFF"
+            android:pathData="M 229.0,264.0 H 795.0 A 5.0,5.0 0 0 1 800.0,269.0 V 271.0 A 5.0,5.0 0 0 1 795.0,276.0 H 229.0 A 5.0,5.0 0 0 1 224.0,271.0 V 269.0 A 5.0,5.0 0 0 1 229.0,264.0 Z" />
+    </group>
+</vector>

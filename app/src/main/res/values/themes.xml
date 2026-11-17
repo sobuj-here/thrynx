@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.THRYNX" parent="android:Theme.Material.NoActionBar">
-        <item name="android:statusBarColor">@color/thrynx_bg_dark</item>
-        <item name="android:navigationBarColor">@color/thrynx_bg_dark</item>
-        <item name="android:windowBackground">@color/thrynx_bg_dark</item>
+    <!-- Compose owns all theming; this just gives an edge-to-edge, action-bar-free window. -->
+    <style name="Theme.BitChord" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
+    <style name="Theme.Thrynx" parent="Theme.BitChord" />
 </resources>
