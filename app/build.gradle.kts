@@ -66,21 +66,21 @@ val addonAuthServer: String = (
     ).trim().trimEnd('/')
 
 // See the root build.gradle.kts: one version for the phone and its watch app.
-val betaSuffix = rootProject.extra["bitchordBetaSuffix"] as String
+val betaSuffix = rootProject.extra["thrynxBetaSuffix"] as String
 
 android {
-    namespace = "com.music.bitchord"
+    namespace = "com.music.thrynx"
     // InnerTubeX's AAR requires compiling against 37; targetSdk (runtime behaviour) stays 36.
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.music.bitchord"
+        applicationId = "com.music.thrynx"
         // 26 keeps reach wide; real-time blur (RenderEffect) kicks in on API 31+,
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
-        versionCode = rootProject.extra["bitchordVersionCode"] as Int
-        versionName = rootProject.extra["bitchordVersionName"] as String
+        versionCode = rootProject.extra["thrynxVersionCode"] as Int
+        versionName = rootProject.extra["thrynxVersionName"] as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -132,7 +132,7 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            applicationId = "com.dev.bitchord"
+            applicationId = "com.dev.thrynx"
             resValue("string", "app_name", "THRYNX Dev")
         }
         create("prod") {
@@ -357,7 +357,7 @@ dependencies {
     // a camera scanner and an Activity with it, and nothing here reads a code —
     // a party is joined by tapping somebody else's link or typing six
     // characters. This produces the bit matrix; the drawing is ours, in
-    // [com.music.bitchord.ui.components.QrCode], so the result is styled like
+    // [com.music.thrynx.ui.components.QrCode], so the result is styled like
     // the rest of the app rather than a stock black-and-white bitmap.
     implementation("com.google.zxing:core:3.5.3")
 
@@ -423,12 +423,12 @@ dependencies {
     // The framework and the router only. media3-cast is left out on purpose:
     // its CastPlayer hands the receiver whatever URI a MediaItem carries, and
     // ours are `bitchord://` addresses that only the service's resolver can
-    // turn into a real stream — see [com.music.bitchord.playback.cast.CastPlayback].
+    // turn into a real stream — see [com.music.thrynx.playback.cast.CastPlayback].
     implementation("com.google.android.gms:play-services-cast-framework:22.2.0")
     implementation("androidx.mediarouter:mediarouter:1.8.1")
 
     // ---- The watch app (wearos/): Data Layer state out, commands in ----
-    // See com.music.bitchord.wear.WearBridge. Rides on the Play services base
+    // See com.music.thrynx.wear.WearBridge. Rides on the Play services base
     // the Cast framework already brings, so it adds very little.
     implementation("com.google.android.gms:play-services-wearable:20.0.1")
     // Opens the watch app after an update, so its install prompt is on screen.
@@ -481,10 +481,10 @@ val verifyDevInstall = tasks.register("verifyDevInstall") {
             .drop(1)
             .mapNotNull { line -> line.split('\t').takeIf { it.size == 2 && it[1] == "device" }?.get(0) }
         serials.forEach { serial ->
-            logger.lifecycle("verifyDevInstall: compiling com.dev.bitchord on $serial")
+            logger.lifecycle("verifyDevInstall: compiling com.dev.thrynx on $serial")
             ProcessBuilder(
                 adbPath, "-s", serial, "shell", "cmd", "package", "compile",
-                "-m", "verify", "-f", "com.dev.bitchord",
+                "-m", "verify", "-f", "com.dev.thrynx",
             ).inheritIO().start().waitFor()
         }
     }
@@ -501,7 +501,7 @@ tasks.matching { it.name == "installDevDebug" }.configureEach { finalizedBy(veri
  * all. A SHA-256 travels with it, so the phone can tell the watch's build from
  * the one it carries even when the version numbers match.
  *
- * Costs a watch build per phone build; -Pbitchord.bundleWear=false skips it
+ * Costs a watch build per phone build; -Pthrynx.bundleWear=false skips it
  * for a quick local iteration (Settings then offers no install).
  */
 abstract class BundleWearApk : DefaultTask() {
@@ -533,7 +533,7 @@ abstract class BundleWearApk : DefaultTask() {
     }
 }
 
-if (providers.gradleProperty("bitchord.bundleWear").orNull != "false" && findProject(":wearos") != null) {
+if (providers.gradleProperty("thrynx.bundleWear").orNull != "false" && findProject(":wearos") != null) {
     androidComponents.onVariants { variant ->
         val flavor = variant.productFlavors.firstOrNull { it.first == "env" }?.second ?: return@onVariants
         val type = variant.buildType ?: return@onVariants
