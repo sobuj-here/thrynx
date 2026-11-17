@@ -3585,9 +3585,10 @@ fun NowPlayingScreen(
                                                 .clip(RoundedCornerShape(10.dp)),
                                         )
                                     }
+                                    var portraitFit by remember(song.videoId) { mutableStateOf(!squareVideo) }
                                     MusicVideoSurface(
                                         videoId = song.videoId,
-                                        fit = !squareVideo,
+                                        fit = portraitFit,
                                         onRenderedChanged = { videoRendered = it },
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -3600,6 +3601,8 @@ fun NowPlayingScreen(
                                             screenOrientation.landscape()
                                         },
                                         onOpenQuality = { showVideoQuality = true },
+                                        aspectFit = portraitFit,
+                                        onToggleAspect = { portraitFit = !portraitFit },
                                         modifier = Modifier
                                             .align(Alignment.TopEnd)
                                             .padding(8.dp),

@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 object PlayerDeepLink {
 
     /** Set on the widget's artwork intent. Nothing else sets it. */
-    const val EXTRA_OPEN_PLAYER = "bitchord.openPlayer"
+    const val EXTRA_OPEN_PLAYER = "thrynx.openPlayer"
 
     private val _pending = MutableStateFlow(false)
 

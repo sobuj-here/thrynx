@@ -1,4 +1,4 @@
-import type { DiscordNowPlaying, DiscordPresenceOptions, DiscordState } from '@bitchord/shared/bridge';
+import type { DiscordNowPlaying, DiscordPresenceOptions, DiscordState } from '@thrynx/shared/bridge';
 import { installDiscordFetchRule } from './rules';
 
 declare const __DISCORD_PRESENCE__: boolean;
@@ -26,14 +26,14 @@ declare const __DISCORD_PRESENCE__: boolean;
  *   timer in Chrome and Firefox; Chrome 116+ also counts socket traffic).
  */
 
-/** BitChord's own Discord application (DiscordApplication.kt). */
+/** Thrynx's own Discord application (DiscordApplication.kt). */
 export const APPLICATION_ID = '1543679166967193620';
 const GATEWAY = 'wss://gateway.discord.gg/?v=9&encoding=json';
 const API = 'https://discord.com/api/v9';
-const PROJECT_URL = 'https://github.com/kushagrasinghx/BitChord';
+const PROJECT_URL = 'https://github.com/kushagrasinghx/Thrynx';
 const DEFAULT_BUTTON_1 = 'Listen on YouTube Music';
-const DEFAULT_BUTTON_2 = 'Visit BitChord';
-const APP_NAME = 'BitChord';
+const DEFAULT_BUTTON_2 = 'Visit Thrynx';
+const APP_NAME = 'Thrynx';
 
 const INITIAL_RECONNECT_MS = 1_000;
 const MAX_RECONNECT_MS = 60_000;
@@ -201,7 +201,7 @@ export class Gateway {
       try {
         this.onMessage(JSON.parse(String(event.data)) as Payload);
       } catch (error) {
-        console.warn('BitChord: Discord gateway payload', error);
+        console.warn('Thrynx: Discord gateway payload', error);
       }
     };
     socket.onclose = (event) => {
@@ -246,7 +246,7 @@ export class Gateway {
   }
 
   private drop(why: string): void {
-    console.info(`BitChord: Discord gateway dropped (${why})`);
+    console.info(`Thrynx: Discord gateway dropped (${why})`);
     this.ready = false;
     this.socket?.close();
   }
@@ -508,7 +508,7 @@ export async function setPresence(track: DiscordNowPlaying | null, options: Disc
   await ensureGateway(held.token).sendActivity(presence);
 }
 
-/** Every BitChord page has gone: nobody is playing, so the card comes down with the socket. */
+/** Every Thrynx page has gone: nobody is playing, so the card comes down with the socket. */
 export function allPagesClosed(): void {
   gateway?.clearActivity();
   idleTimer = setTimeout(closeGateway, 2_000);

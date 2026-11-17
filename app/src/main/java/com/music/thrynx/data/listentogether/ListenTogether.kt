@@ -1693,7 +1693,7 @@ object ListenTogether {
     const val CODE_LENGTH = 6
 
     private const val TAG = "ListenTogether"
-    private const val PREFS = "bitchord_listen_together"
+    private const val PREFS = "thrynx_listen_together"
     private const val KEY_SERVER = "server_url"
 
     /** What a redacted address reads as. Not a hostname, so it cannot be resolved back. */

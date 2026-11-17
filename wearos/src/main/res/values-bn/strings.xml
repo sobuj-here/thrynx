@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connecting">সংযুক্ত হচ্ছে…</string>
+    <string name="no_phone_title">ফোন সংযুক্ত নেই</string>
+    <string name="no_phone_body">আপনার ফোনে Thrynx খুলুন এবং ঘড়ির কাছাকাছি রাখুন।</string>
+    <string name="retry">আবার চেষ্টা করুন</string>
+    <string name="nothing_playing">কিছু বাজছে না</string>
+    <string name="nothing_playing_body">আপনার ফোনে Thrynx থেকে কিছু চালান।</string>
+    <string name="resume">চালিয়ে যান</string>
+    <string name="up_next">পরবর্তী গান</string>
+    <string name="queue_empty">তালিকায় কিছু নেই</string>
+    <string name="loading">লোড হচ্ছে…</string>
+    <string name="playing_now">এখন বাজছে</string>
+    <string name="more">আরও</string>
+    <string name="shuffle">শাফল</string>
+    <string name="repeat">পুনরাবৃত্তি</string>
+    <string name="repeat_off">বন্ধ</string>
+    <string name="repeat_all">সবগুলো</string>
+    <string name="repeat_one">একটি গান</string>
+    <string name="on">চালু</string>
+    <string name="off">বন্ধ</string>
+    <string name="love">পছন্দ</string>
+    <string name="loved">পছন্দ করা হয়েছে</string>
+    <string name="volume">ভলিউম</string>
+    <string name="on_phone">ফোনে</string>
+    <string name="play">চালান</string>
+    <string name="pause">বিরতি</string>
+    <string name="next">পরবর্তী</string>
+    <string name="previous">পূর্ববর্তী</string>
+    <string name="output">আউটপুট</string>
+    <string name="this_watch">এই ঘড়ি</string>
+    <string name="watch_speaker">ঘড়ির স্পিকার বা হেডফোন</string>
+    <string name="on_phone_output">ফোনে</string>
+    <string name="phone_speaker">ফোনের স্পিকার</string>
+    <string name="wired_headphones">তারযুক্ত হেডফোন</string>
+    <string name="usb_audio">ইউএসবি অডিও</string>
+    <string name="hdmi">এইচডিএমআই</string>
+    <string name="other_output">অন্যান্য আউটপুট</string>
+    <string name="moving_to_watch">ঘড়িতে নেওয়া হচ্ছে…</string>
+    <string name="update_channel">আপডেট</string>
+    <string name="update_ready">Thrynx আপডেট প্রস্তুত</string>
+    <string name="update_tap">ফোন থেকে আপডেট ইন্সটল করতে ট্যাপ করুন।</string>
+</resources>

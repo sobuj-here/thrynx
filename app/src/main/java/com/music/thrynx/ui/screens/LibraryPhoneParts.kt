@@ -1,5 +1,6 @@
 package com.music.thrynx.ui.screens
 
+import com.music.thrynx.ui.icons.SfIcons
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -64,6 +65,12 @@ fun libraryLinks(): List<LibraryLink> {
             stringResource(R.string.audio_files_on_device),
             "local:all",
         ),
+        link(
+            stringResource(R.string.local_video),
+            stringResource(R.string.video_files_on_device),
+            "local:videos",
+            icon = SfIcons.Video,
+        ),
         // Opt-in from Settings → Storage: what the song cache is holding from
         // YouTube and JioSaavn. See [com.music.thrynx.playback.AudioCache.cachedSongs].
         link(
@@ -126,6 +133,7 @@ fun libraryDeviceItems(downloadedReleases: List<SavedCollection>): List<ShelfIte
 fun deviceFolderIcon(browseId: String): ImageVector? = when (browseId) {
     "local:downloads" -> Icons.Rounded.Download
     "local:all" -> Icons.Rounded.Folder
+    "local:videos" -> SfIcons.Video
     CACHE_FOLDER_BROWSE_ID -> Icons.Rounded.Storage
     com.music.thrynx.data.webdav.WebDavConfig.BROWSE_ID -> Icons.Rounded.Cloud
     com.music.thrynx.data.smb.SmbConfig.BROWSE_ID -> Icons.Rounded.Lan

@@ -7,7 +7,7 @@ plugins {
 }
 
 /*
- * BitChord for Wear OS: a remote for the phone app, not a second player.
+ * Thrynx for Wear OS: a remote for the phone app, not a second player.
  *
  * It holds no library, streams nothing and runs no Palette or blur of its own —
  * the phone sends it what is playing, the cover as a 240px JPEG, and the mesh
@@ -136,8 +136,8 @@ kotlin {
     }
 }
 
-// Named after the phone APKs (BitChord-v1.8.apk) but with their own prefix, so
-// the phone's updater — which only takes assets starting "BitChord-" — can never
+// Named after the phone APKs (Thrynx-v1.8.apk) but with their own prefix, so
+// the phone's updater — which only takes assets starting "Thrynx-" — can never
 // pick a watch APK by mistake.
 base.archivesName.set("ThrynxWear")
 

@@ -346,6 +346,7 @@ import com.music.thrynx.data.settings.LocalMusicSort
 import com.music.thrynx.ui.screens.HomeScreen
 import com.music.thrynx.ui.screens.LibraryGridPage
 import com.music.thrynx.ui.screens.LibraryScreen
+import com.music.thrynx.ui.screens.LocalVideosScreen
 import com.music.thrynx.ui.screens.MoodGenrePlaylistsScreen
 import com.music.thrynx.ui.screens.SearchScreen
 import com.music.thrynx.data.settings.SongSort
@@ -418,7 +419,7 @@ class MainActivity : AppCompatActivity() {
             }
             ThrynxTheme(darkTheme = darkTheme, font = appFont) {
                 // The glass surfaces sample this layer, and a layer records only
-                // what is drawn into it — which, for BitChord, is a page that
+                // what is drawn into it — which, for Thrynx, is a page that
                 // paints no background of its own. Everywhere a page is not
                 // showing artwork the recording is transparent, so the glass had
                 // nothing to blur there and you saw straight through it to the
@@ -1987,7 +1988,7 @@ private fun ThrynxApp(
 
     /**
      * A YouTube Music link tapped elsewhere on the device, a link shared into
-     * BitChord, or "play something" said to the assistant — see [MusicLink].
+     * Thrynx, or "play something" said to the assistant — see [MusicLink].
      *
      * Keyed on the controller as well as the request, because a link is as
      * often as not what cold-starts the app: the session it has to play into is
@@ -3028,6 +3029,10 @@ private fun ThrynxApp(
                                 onOpenLogin = { showSpotifyLogin = true },
                                 onOpenTokenSetup = { showSpotifyCanvasAuth = true },
                                 contentPadding = listPadding,
+                            )
+                        } else if (pageRoute == AppRoute.LocalVideos) {
+                            LocalVideosScreen(
+                                onBack = { navigator.pop() },
                             )
                         } else if (pageRoute == AppRoute.Discord) {
                             DiscordScreen(

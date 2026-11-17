@@ -50,7 +50,7 @@ val lastfmSecret: String = (
 val listenTogetherServer: String = (
     localProps.getProperty("LISTEN_TOGETHER_SERVER")
         ?: System.getenv("LISTEN_TOGETHER_SERVER")
-        ?: "https://bitchord-listen-together.onrender.com"
+        ?: "https://thrynx-listen-together.onrender.com"
     ).trim().trimEnd('/')
 
 /*
@@ -62,7 +62,7 @@ val listenTogetherServer: String = (
 val addonAuthServer: String = (
     localProps.getProperty("ADDON_AUTH_SERVER")
         ?: System.getenv("ADDON_AUTH_SERVER")
-        ?: "https://bitchord-auth.kushagrasingh.in"
+        ?: "https://thrynx-auth.kushagrasingh.in"
     ).trim().trimEnd('/')
 
 // See the root build.gradle.kts: one version for the phone and its watch app.
@@ -310,6 +310,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.0")
     implementation("androidx.media3:media3-session:1.11.0")
     implementation("androidx.media3:media3-common:1.11.0")
+    implementation("androidx.media3:media3-ui:1.11.0")
     implementation("androidx.media3:media3-datasource-okhttp:1.11.0")
     // Audio is progressive, but Apple serves its motion artwork as HLS — this
     // is what lets the animated sleeve play it. See CanvasArtworkPlayer.
@@ -422,7 +423,7 @@ dependencies {
     // ---- Casting: Google Cast sender + the route discovery it sits on ----
     // The framework and the router only. media3-cast is left out on purpose:
     // its CastPlayer hands the receiver whatever URI a MediaItem carries, and
-    // ours are `bitchord://` addresses that only the service's resolver can
+    // ours are `thrynx://` addresses that only the service's resolver can
     // turn into a real stream — see [com.music.thrynx.playback.cast.CastPlayback].
     implementation("com.google.android.gms:play-services-cast-framework:22.2.0")
     implementation("androidx.mediarouter:mediarouter:1.8.1")
@@ -434,7 +435,7 @@ dependencies {
     // Opens the watch app after an update, so its install prompt is on screen.
     implementation("androidx.wear:wear-remote-interactions:1.1.0")
 
-    // ---- "BitChord for Wear OS": the first install onto a watch ----
+    // ---- "Thrynx for Wear OS": the first install onto a watch ----
     // Without the Play Store only ADB can install on a watch, so this phone is
     // the ADB client, over the watch's Wireless debugging — see WatchInstaller.
     // GPL-3.0/Apache-2.0 dual-licensed. Its own BouncyCastle (jdk15to18) is the
@@ -492,7 +493,7 @@ val verifyDevInstall = tasks.register("verifyDevInstall") {
 tasks.matching { it.name == "installDevDebug" }.configureEach { finalizedBy(verifyDevInstall) }
 
 /*
- * The watch app rides inside the phone app, so "BitChord for Wear OS" in
+ * The watch app rides inside the phone app, so "Thrynx for Wear OS" in
  * Settings can put it on a watch — or update it — with no computer involved.
  *
  * Each phone variant carries the watch build of the same flavor *and* build

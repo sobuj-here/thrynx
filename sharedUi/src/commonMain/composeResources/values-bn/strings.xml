@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="analysis_complete">বিশ্লেষিত</string>
+    <string name="analysis_in_progress">বিশ্লেষণ করা হচ্ছে…</string>
+    <string name="analysis_refining">বিশ্লেষিত, পরিমার্জন করা হচ্ছে…</string>
+    <string name="audio_output">অডিও আউটপুট</string>
+    <string name="audio_output_playing">এখানে বাজছে</string>
+    <string name="audio_pipeline">অডিও পাইপলাইন</string>
+    <string name="automix_analysis_status">অটোমিক্স · বর্তমান গান: %1$s · পরবর্তী: %2$s</string>
+    <string name="automix_not_supported_video">ভিডিও গানে অটোমিক্স সমর্থিত নয়</string>
+    <string name="automix_stopped_in_party">অটোমিক্স: একসঙ্গে শোনার সময় বন্ধ</string>
+    <string name="autoplay">অটোপ্লে</string>
+    <string name="autoplay_empty_description">অনুরূপ গান স্বয়ংক্রিয়ভাবে চলতে থাকবে</string>
+    <string name="autoplay_off">অটোপ্লে বন্ধ</string>
+    <string name="autoplay_on">অটোপ্লে চালু</string>
+    <string name="autoplay_queue_description">অনুরূপ গান, পরবর্তীতে বাজানোর জন্য নির্বাচিত</string>
+    <string name="bit_depth">%1$d-বিট</string>
+    <string name="cancel">বাতিল</string>
+    <string name="cast">কাস্ট</string>
+    <string name="cast_casting">কাস্ট হচ্ছে</string>
+    <string name="cast_connecting">সংযুক্ত হচ্ছে…</string>
+    <string name="cast_row_subtitle">Chromecast ও Google Cast স্পিকার</string>
+    <string name="watch_output">ঘড়ি</string>
+    <string name="watch_output_subtitle">আপনার স্মার্টওয়াচের স্পিকার বা হেডফোনে চালান</string>
+    <string name="channel_count">%1$d চ্যানেল</string>
+    <string name="choose_lyrics_provider">লিরিক্স প্রোভাইডার নির্বাচন করুন</string>
+    <string name="clear">মুছুন</string>
+    <string name="close_lyrics">লিরিক্স বন্ধ করুন</string>
+    <string name="data_saver">ডেটা সেভার</string>
+    <string name="decrease_lyrics_offset">লিরিক্স অফসেট কমান</string>
+    <string name="downgraded_from">↓ %1$s থেকে</string>
+    <string name="drag_to_reorder">ক্রম পরিবর্তন করতে টানুন</string>
+    <string name="failed">ব্যর্থ</string>
+    <string name="hi_res_lossless">হাই-রেস লসলেস</string>
+    <string name="high_quality">উচ্চ মান</string>
+    <string name="high_quality_upgrading">উচ্চ মান, আপগ্রেড করা হচ্ছে</string>
+    <string name="increase_lyrics_offset">লিরিক্স অফসেট বাড়ান</string>
+    <string name="instrumental">যন্ত্রসংগীত</string>
+    <string name="like">পছন্দ</string>
+    <string name="listen_together">একসঙ্গে শুনুন</string>
+    <string name="listen_together_away">অনুপস্থিত — স্লট সংরক্ষিত আছে</string>
+    <string name="listen_together_host">হোস্ট</string>
+    <string name="listen_together_in_party">পার্টিতে সংযুক্ত · %1$s</string>
+    <string name="listen_together_jam">%1$s-এর জ্যাম</string>
+    <string name="listen_together_jam_unnamed">একসঙ্গে শুনছেন</string>
+    <string name="listen_together_manage">পরিচালনা</string>
+    <string name="listen_together_open">একসঙ্গে শুনুন</string>
+    <string name="listen_together_open_count">একসঙ্গে শুনছেন · %1$d</string>
+    <string name="listen_together_you">আপনি</string>
+    <string name="mixing">মিক্সিং</string>
+    <string name="lossless">লসলেস</string>
+    <string name="lyrics_already_in_language">এই লিরিক্স ইতিমধ্যে %1$s ভাষায় আছে</string>
+    <string name="lyrics_already_romanized">এই লিরিক্সে ইতিমধ্যে রোমান হরফ ব্যবহার করা হয়েছে</string>
+    <string name="lyrics_by">লিরিক্স: %1$s</string>
+    <string-array name="lyrics_intro_lines">
+        <item>বিট শুরু হচ্ছে</item>
+        <item>গান শুরু হচ্ছে</item>
+        <item>প্রস্তুতি চলছে</item>
+        <item>আবহ তৈরি হচ্ছে</item>
+        <item>প্রথমে বেস, পরে কথা</item>
+        <item>একটু অপেক্ষা করুন</item>
+        <item>সঙ্গীতের তাল অনুভব করুন</item>
+        <item>আপাতত সুরের মূর্চ্ছনা</item>
+        <item>মূল অংশ আসছে</item>
+        <item>অনুভব করতে থাকুন</item>
+        <item>কণ্ঠস্বর আসছে</item>
+        <item>প্রথম সুর ভেসে আসছে</item>
+    </string-array>
+    <string-array name="lyrics_loading_lines">
+        <item>লিরিক্স সংগ্রহ করা হচ্ছে</item>
+        <item>শব্দ খোঁজা হচ্ছে</item>
+        <item>চরণগুলো লোড হচ্ছে</item>
+        <item>লিরিক্স লোড হচ্ছে</item>
+        <item>লিরিক্সের খাতা যাচাই করা হচ্ছে</item>
+        <item>গান খোঁজা হচ্ছে</item>
+        <item>লিরিক্স সাজানো হচ্ছে</item>
+        <item>কথাগুলো আসছে</item>
+        <item>আর্কাইভ খোঁজা হচ্ছে</item>
+        <item>সঠিক শব্দ নির্বাচন করা হচ্ছে</item>
+        <item>লিরিক্স প্রস্তুত হচ্ছে</item>
+        <item>প্রায় পাওয়া গেছে</item>
+    </string-array>
+    <string name="lyrics_not_available">কোনো লিরিক্স পাওয়া যায়নি</string>
+    <string name="lyrics_offset">লিরিক্স অফসেট</string>
+    <string name="lyrics_offset_description">পজিটিভ মান লিরিক্স দেরিতে প্রদর্শন করে</string>
+    <string name="lyrics_offset_reset">রিসেট</string>
+    <string name="lyrics_provider_current">বর্তমান প্রোভাইডার</string>
+    <string name="lyrics_provider_fetching">লিরিক্স সংগ্রহ করা হচ্ছে…</string>
+    <string name="lyrics_provider_found">লিরিক্স পাওয়া গেছে · ব্যবহার করতে ট্যাপ করুন</string>
+    <string name="lyrics_provider_not_fetched">সংগ্রহ করতে ট্যাপ করুন</string>
+    <string name="lyrics_provider_not_found">লিরিক্স পাওয়া যায়নি</string>
+    <string name="lyrics_romanization_unavailable">এই লিরিক্সের জন্য রোমানাইজেশন উপলব্ধ নয়</string>
+    <string name="lyrics_romanized">রোমানাইজড উচ্চারণ</string>
+    <string name="lyrics_saved_with_download">ডাউনলোডের সাথে লিরিক্স সংরক্ষিত হয়েছে</string>
+    <string name="lyrics_share_pick_limit">কার্ডটি পূর্ণ</string>
+    <string name="lyrics_translated_to">%1$s ভাষায় অনূদিত</string>
+    <string name="lyrics_translation_unavailable">অনুবাদ এই মুহূর্তে উপলব্ধ নয়</string>
+    <string name="medium_quality">মাঝারি মান</string>
+    <string name="mono">মনো</string>
+    <string name="more">আরও</string>
+    <string name="next_from">পরবর্তী গান: %1$s</string>
+    <string name="next_in_queue">পরের তালিকায় আছে</string>
+    <string name="no_lyrics_for_track">এই গানের জন্য কোনো লিরিক্স নেই</string>
+    <string name="no_lyrics_found">কোনো লিরিক্স পাওয়া যায়নি</string>
+    <string name="now_playing">এখন বাজছে</string>
+    <string name="previously_played">পূর্বে বাজানো হয়েছে</string>
+    <string name="open_lyrics">লিরিক্স</string>
+    <string name="pause">বিরতি</string>
+    <string name="play">চালান</string>
+    <string name="played_by">%1$s দ্বারা চালিত</string>
+    <string name="playing_from">%1$s থেকে বাজছে</string>
+    <string name="playing_radio">%1$s রেডিও বাজছে</string>
+    <string name="queue">তালিকাক্রম</string>
+    <string name="remove_from_liked">পছন্দের তালিকা থেকে সরান</string>
+    <string name="remove_from_queue">তালিকা থেকে সরান</string>
+    <string name="repeat_all">সবগুলো পুনরাবৃত্তি</string>
+    <string name="repeat_off">পুনরাবৃত্তি বন্ধ</string>
+    <string name="repeat_one">একটি গান পুনরাবৃত্তি</string>
+    <string name="romanize_lyrics">রোমানাইজড লিরিক্স</string>
+    <string name="romanizing_lyrics">রোমানাইজ করা হচ্ছে…</string>
+    <string name="show_original_lyrics">মূল লিরিক্স দেখান</string>
+    <string name="shuffle_off">শাফল বন্ধ</string>
+    <string name="shuffle_on">শাফল চালু</string>
+    <string name="stereo">স্টিরিও</string>
+    <string name="translate_lyrics">লিরিক্স অনুবাদ করুন</string>
+    <string name="translating_lyrics_to">%1$s ভাষায় অনুবাদ করা হচ্ছে…</string>
+    <string name="up_next">পরবর্তী গান</string>
+    <string name="upgrading_quality">মান উন্নয়ন করা হচ্ছে</string>
+    <string name="waiting">অপেক্ষমাণ</string>
+    <string name="widget_next">পরবর্তী</string>
+    <string name="widget_previous">পূর্ববর্তী</string>
+    <string name="wired_headphones">তারযুক্ত হেডফোন</string>
+    <string name="usb_audio">ইউএসবি অডিও</string>
+    <string name="hdmi_output">এইচডিএমআই</string>
+    <string name="personal_phone">%1$s-এর ফোন</string>
+    <string name="this_phone">এই ফোন</string>
+    <string name="albums">অ্যালবাম</string>
+    <string name="artists">শিল্পী</string>
+    <string name="card_plays_format">%1$s বার বাজানো হয়েছে</string>
+    <string name="card_songs_format">%1$sটি গান</string>
+    <string name="card_views_format">%1$s বার দেখা হয়েছে</string>
+    <string name="clear_search">অনুসন্ধান মুছুন</string>
+    <string name="downloaded">ডাউনলোড করা হয়েছে</string>
+    <string name="explore">এক্সপ্লোর</string>
+    <string name="library">লাইব্রেরি</string>
+    <string name="library_sign_in_description">আপনার পছন্দের গান, প্লেলিস্ট ও YouTube Music হিস্ট্রি দেখতে গুগল অ্যাকাউন্টে সাইন ইন করুন।</string>
+    <string name="new_playlist">নতুন প্লেলিস্ট</string>
+    <string name="on_device">ডিভাইসে সংরক্ষিত</string>
+    <string name="personalized_recommendations">আপনার পছন্দের গান ও পরামর্শ পান</string>
+    <string name="pinned">পিন করা</string>
+    <string name="play_next">পরবর্তীতে চালান</string>
+    <string name="playlist">প্লেলিস্ট</string>
+    <string name="playlist_action">প্লেলিস্ট</string>
+    <string name="playlists">প্লেলিস্টসমূহ</string>
+    <string name="recent_search_edit">“%1$s” সম্পাদনা করুন</string>
+    <string name="recent_search_remove">সাম্প্রতিক অনুসন্ধান থেকে “%1$s” সরান</string>
+    <string name="recent_searches">সাম্প্রতিক অনুসন্ধান</string>
+    <string name="replay_subtitle">আপনার প্রিয় গান, শিল্পী, অ্যালবাম এবং ধরন</string>
+    <string name="retry">পুনরায় চেষ্টা করুন</string>
+    <string name="saved_to_youtube_music">YouTube Music-এ সংরক্ষিত</string>
+    <string name="search">অনুসন্ধান</string>
+    <string name="search_empty">YouTube Music-এ লক্ষ লক্ষ গান অনুসন্ধান করুন।</string>
+    <string name="search_hint">শিল্পী, গান, লিরিক্স এবং আরও অনেক কিছু</string>
+    <string name="search_library_empty">আপনার লোকাল মিউজিক ফোল্ডারের গান অনুসন্ধান করুন।</string>
+    <string name="search_library_hint">গান, শিল্পী এবং অ্যালবাম</string>
+    <string name="search_addons_hint">অ্যাড-অন অনুসন্ধান করুন</string>
+    <string name="search_addons_empty">সকল সক্রিয় অ্যাড-অন একসঙ্গে অনুসন্ধান করুন। ট্র্যাকগুলো সরাসরি অ্যাড-অন থেকেই চলবে।</string>
+    <string name="search_addons_no_results">কোনো অ্যাড-অনে “%1$s” পাওয়া যায়নি।</string>
+    <string name="search_library_no_results">লোকাল মিউজিকে “%1$s”-এর সাথে মিল পাওয়া যায়নি।</string>
+    <string name="selected">নির্বাচিত</string>
+    <string name="share">শেয়ার</string>
+    <string name="shelf_artists_on_the_rise">উদীয়মান শিল্পী</string>
+    <string name="shelf_chart">চার্ট</string>
+    <string name="shelf_charts">চার্টসমূহ</string>
+    <string name="shelf_concerts">কনসার্ট</string>
+    <string name="shelf_featured_playlists_for_you">আপনার জন্য নির্বাচিত প্লেলিস্ট</string>
+    <string name="shelf_for_you">আপনার জন্য</string>
+    <string name="shelf_forgotten_favorites">পুরোনো প্রিয় গান</string>
+    <string name="shelf_from_the_community">কমিউনিটি থেকে</string>
+    <string name="shelf_from_your_library">আপনার লাইব্রেরি থেকে</string>
+    <string name="shelf_hits_today">আজকের সেরা হিট</string>
+    <string name="shelf_listen_again">আবার শুনুন</string>
+    <string name="shelf_mixed_for_you">আপনার জন্য মিক্সড</string>
+    <string name="shelf_new_releases">নতুন রিলিজ</string>
+    <string name="shelf_quick_picks">ঝটপট বাছাই</string>
+    <string name="shelf_recents">সাম্প্রতিক</string>
+    <string name="shelf_recommended_music_videos">প্রস্তাবিত মিউজিক ভিডিও</string>
+    <string name="shelf_shorts">শর্টস</string>
+    <string name="shelf_similar_to">%1$s-এর অনুরূপ</string>
+    <string name="shelf_single">সিঙ্গেল</string>
+    <string name="shelf_song_item">গান</string>
+    <string name="shelf_top_music_videos">শীর্ষ মিউজিক ভিডিও</string>
+    <string name="shelf_top_tunes_right_now">এই মুহূর্তের জনপ্রিয় গান</string>
+    <string name="shelf_trending">ট্রেন্ডিং</string>
+    <string name="shelf_trending_community_playlists">ট্রেন্ডিং কমিউনিটি প্লেলিস্ট</string>
+    <string name="shelf_youtube_charts">YouTube চার্ট</string>
+    <string name="show_all">সব দেখান</string>
+    <string name="sign_in">সাইন ইন</string>
+    <string name="sign_in_youtube_music">YouTube Music-এ সাইন ইন করুন</string>
+    <string name="subscriptions">সাবস্ক্রিপশন</string>
+    <string name="your_replay">আপনার রিপ্লে</string>
+    <string name="your_listening_experience">আপনার শোনার অভিজ্ঞতা</string>
+    <string name="default_replay_holder">THRYNX শ্রোতা</string>
+    <string name="member_since">যুক্ত হয়েছেন</string>
+    <string name="import_spotify">Spotify থেকে আনুন</string>
+    <string name="import_spotify_subtitle">প্লেলিস্ট লিংক ব্যবহার করে</string>
+    <string name="sign_in_with_google">গুগল দিয়ে সাইন ইন করুন</string>
+    <string name="top_picks_for_you">আপনার জন্য সেরা বাছাই</string>
+    <string name="top_pick_made_for_you">আপনার জন্য প্রস্তুত</string>
+    <string name="top_pick_mood_for_you">আপনার মেজাজ অনুযায়ী</string>
+    <string name="top_pick_featuring">%1$s-এর গান</string>
+    <string name="top_pick_and_similar">%1$s ও অনুরূপ শিল্পী</string>
+    <string name="top_pick_named_station">%1$s স্টেশন</string>
+    <string name="top_pick_your_station">আপনার স্টেশন</string>
+    <string name="top_pick_discovery_station">ডিসকভারি স্টেশন</string>
+    <string name="top_pick_new_from">%1$s-এর নতুন গান</string>
+    <string name="mood_energy">উদ্যম</string>
+    <string name="mood_energy_line">আপনাকে চাঙ্গা রাখার মতো উদ্দীপনাপূর্ণ গান।</string>
+    <string name="mood_relax">বিশ্রাম</string>
+    <string name="mood_relax_line">মন শান্ত করার জন্য ধীর ও স্নিগ্ধ সুর।</string>
+    <string name="mood_feeling_blue">মন খারাপ</string>
+    <string name="mood_feeling_blue_line">মন বিষণ্ণ থাকলে শোনার মতো আবেগঘন গান।</string>
+    <string name="mood_feel_good">আনন্দময়</string>
+    <string name="mood_feel_good_line">দিনটি সুন্দর করতে উজ্জীবনী গান।</string>
+    <string name="mood_focus">মনোযোগ</string>
+    <string name="mood_focus_line">কাজে গভীর মনোযোগ ধরে রাখার সুর।</string>
+    <string name="mood_heartbreak">বিরহ</string>
+    <string name="mood_heartbreak_line">হৃদয়ভাঙা স্মৃতির মেলোডি।</string>
+    <string name="mood_love">ভালোবাসা</string>
+    <string name="mood_love_line">প্রেম ও রোমান্টিক মুহূর্তের গান।</string>
+    <string name="find_your_mood">আপনার মেজাজ অনুযায়ী সুর খুঁজুন</string>
+    <string name="mood_after_hours">নিশুতি রাত</string>
+    <string name="mood_after_hours_line">শহর যখন শান্ত, গভীর রাতের স্নিগ্ধ সুর।</string>
+    <string name="mood_alone_time">একাকী সময়</string>
+    <string name="mood_alone_time_line">নিজের সাথে একান্ত সময় কাটানোর সুর।</string>
+    <string name="mood_chill">আরাম</string>
+    <string name="mood_chill_line">নির্ভার ও শান্ত মুহূর্তের সঙ্গীত।</string>
+    <string name="mood_commuting">যাতায়াত</string>
+    <string name="mood_commuting_line">পথের যাত্রাকে উপভোগ্য করার গান।</string>
+    <string name="mood_eating_cooking">খাবার ও রান্না</string>
+    <string name="mood_eating_cooking_line">রান্নাঘর ও খাবার টেবিলের ঘরোয়া মিষ্টি সুর।</string>
+    <string name="mood_evening">সন্ধ্যা</string>
+    <string name="mood_evening_line">দিনশেষে আরামদায়ক ও শান্ত সুর।</string>
+    <string name="mood_fitness">শরীরচর্চা</string>
+    <string name="mood_fitness_line">ব্যায়ামের গতি বাড়াতে জোরালো বিট।</string>
+    <string name="mood_gaming">গেমিং</string>
+    <string name="mood_gaming_line">খেলার উত্তেজনা বাড়িয়ে তোলার সাউন্ডট্র্যাক।</string>
+    <string name="mood_home">বাসায়</string>
+    <string name="mood_home_line">ঘরে অলস সময় কাটানোর মতো গান।</string>
+    <string name="mood_morning">সকাল</string>
+    <string name="mood_morning_line">সুন্দর সকালের সূচনা করার গান।</string>
+    <string name="mood_motivation">অনুপ্রেরণা</string>
+    <string name="mood_motivation_line">এগিয়ে চলার উদ্দীপনামূলক গান।</string>
+    <string name="mood_outdoors">প্রকৃতির মাঝে</string>
+    <string name="mood_outdoors_line">খোলা হাওয়া ও দীর্ঘ ভ্রমণের গান।</string>
+    <string name="mood_party">পার্টি</string>
+    <string name="mood_party_line">রাতভর উৎসব ও নাচের সুর।</string>
+    <string name="mood_sleep">ঘুম</string>
+    <string name="mood_sleep_line">ঘুম পাড়ানিয়া শান্ত ও কোমল সুর।</string>
+    <string name="mood_social">আড্ডা</string>
+    <string name="mood_social_line">বন্ধুদের সাথে মেতে ওঠার চেনা গান।</string>
+    <string name="mood_sports">খেলাধুলা</string>
+    <string name="mood_sports_line">খেলার উদ্দীপনা ও শক্তির সুর।</string>
+    <string name="mood_summertime">গ্রীষ্মের সুর</string>
+    <string name="mood_summertime_line">রৌদ্রোজ্জ্বল উষ্ণ দিনের গান।</string>
+    <string name="mood_holiday">ছুটির দিন</string>
+    <string name="mood_holiday_line">উৎসব ও ছুটির আনন্দঘন সঙ্গীত।</string>
+    <string name="mood_weekend">সাপ্তাহিক ছুটি</string>
+    <string name="mood_weekend_line">ক্লান্তি দূর করার প্রশান্তিদায়ক গান।</string>
+    <string name="mood_wellbeing">সুস্থতা</string>
+    <string name="mood_wellbeing_line">ধ্যান, আত্মিক প্রশান্তি ও যোগব্যায়ামের সুর।</string>
+    <string name="mood_work">কাজ</string>
+    <string name="mood_work_line">কাজের গতি বাড়াতে শান্ত যন্ত্রসংগীত।</string>
+    <string name="video_quality">ভিডিও কোয়ালিটি</string>
+    <string name="video_quality_auto">অটো</string>
+    <string name="mix_view_bars">%1$d বার</string>
+    <string name="mix_view_one_bar">১ বার</string>
+    <string name="mix_view_seconds">%1$d সেকেন্ড</string>
+    <string name="mix_view_bpm">%1$d বিপিএম</string>
+    <string name="automix_overview_unavailable">কোনো অটোমিক্স ট্রানজিশন আসন্ন নয়</string>
+    <string name="fit_screen">ফিট</string>
+    <string name="fill_screen">স্ক্রিন পূর্ণ</string>
+    <string name="zoom">জুম</string>
+    <string name="local_video">লোকাল ভিডিও</string>
+    <string name="video_files_on_device">ডিভাইসের ভিডিও ফাইল</string>
+</resources>

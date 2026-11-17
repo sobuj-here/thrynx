@@ -1186,7 +1186,7 @@ fun TvScrobbleDialog(onDismiss: () -> Unit) {
 
     TvDialog(
         title = "Scrobbling",
-        message = "Connect these on the BitChord phone app; the TV uses the same accounts.",
+        message = "Connect these on the Thrynx phone app; the TV uses the same accounts.",
         onDismissRequest = onDismiss,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {

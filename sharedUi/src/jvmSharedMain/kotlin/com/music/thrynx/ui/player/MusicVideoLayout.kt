@@ -36,6 +36,11 @@ import androidx.compose.material3.MaterialTheme
 import com.music.thrynx.sharedui.resources.Res
 import com.music.thrynx.sharedui.resources.video_quality
 import com.music.thrynx.sharedui.resources.video_quality_auto
+import com.music.thrynx.sharedui.resources.fit_screen
+import com.music.thrynx.sharedui.resources.fill_screen
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.runtime.mutableFloatStateOf
 import com.music.thrynx.ui.haptics.Haptic
 import com.music.thrynx.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
@@ -89,6 +94,11 @@ internal fun FullscreenVideoPlayer(
 ) {
     HideSystemBars(true)
     var controlsShown by remember { mutableStateOf(true) }
+    var aspectFit by remember { mutableStateOf(true) }
+    var zoomScale by remember { mutableFloatStateOf(1f) }
+    var panX by remember { mutableFloatStateOf(0f) }
+    var panY by remember { mutableFloatStateOf(0f) }
+
     // Bumped by every touch on the controls, so the idle timer starts over.
     var touches by remember { mutableIntStateOf(0) }
     LaunchedEffect(controlsShown, isPlaying, touches) {
@@ -109,12 +119,35 @@ internal fun FullscreenVideoPlayer(
     ) {
         // Black with a spinner until the picture's first frame lands.
         if (!rendered) VideoLoadingBackdrop(Modifier.fillMaxSize())
-        MusicVideoSurface(
-            videoId = song.videoId,
-            fit = true,
-            onRenderedChanged = onRenderedChanged,
-            modifier = Modifier.fillMaxSize(),
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = zoomScale
+                    scaleY = zoomScale
+                    translationX = panX
+                    translationY = panY
+                }
+                .pointerInput(Unit) {
+                    detectTransformGestures { _, pan, zoom, _ ->
+                        zoomScale = (zoomScale * zoom).coerceIn(1f, 3.5f)
+                        if (zoomScale > 1f) {
+                            panX += pan.x
+                            panY += pan.y
+                        } else {
+                            panX = 0f
+                            panY = 0f
+                        }
+                    }
+                },
+        ) {
+            MusicVideoSurface(
+                videoId = song.videoId,
+                fit = aspectFit,
+                onRenderedChanged = onRenderedChanged,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         AnimatedVisibility(
             visible = controlsShown,
@@ -168,7 +201,18 @@ internal fun FullscreenVideoPlayer(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    VideoCornerControls(fullscreen = true, onToggleFullscreen = onExitFullscreen, onOpenQuality = onOpenQuality)
+                    VideoCornerControls(
+                        fullscreen = true,
+                        onToggleFullscreen = onExitFullscreen,
+                        onOpenQuality = onOpenQuality,
+                        aspectFit = aspectFit,
+                        onToggleAspect = {
+                            aspectFit = !aspectFit
+                            zoomScale = 1f
+                            panX = 0f
+                            panY = 0f
+                        },
+                    )
                 }
                 Box(
                     Modifier
@@ -216,6 +260,8 @@ internal fun VideoCornerControls(
     fullscreen: Boolean,
     onToggleFullscreen: () -> Unit,
     onOpenQuality: () -> Unit,
+    aspectFit: Boolean = true,
+    onToggleAspect: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -223,6 +269,25 @@ internal fun VideoCornerControls(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (onToggleAspect != null) {
+            Box(
+                modifier = Modifier
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.38f))
+                    .clickable(onClick = onToggleAspect)
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = if (aspectFit) stringResource(Res.string.fit_screen) else stringResource(Res.string.fill_screen),
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.4.sp,
+                )
+            }
+        }
         VideoQualityBox(onClick = onOpenQuality)
         Box(
             modifier = Modifier

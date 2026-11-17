@@ -24,7 +24,7 @@ import androidx.wear.ambient.AmbientLifecycleObserver
 import com.music.thrynx.wear.ui.Ambient
 import com.music.thrynx.wear.ui.LocalAmbient
 import com.music.thrynx.wear.data.PhoneLink
-import com.music.thrynx.wear.ui.BitChordWearTheme
+import com.music.thrynx.wear.ui.ThrynxWearTheme
 import com.music.thrynx.wear.ui.WearApp
 
 class WearViewModel(app: Application) : AndroidViewModel(app) {
@@ -95,7 +95,7 @@ class WearActivity : ComponentActivity() {
             }
         }
         setContent {
-            BitChordWearTheme {
+            ThrynxWearTheme {
                 CompositionLocalProvider(LocalAmbient provides ambient.value) {
                     WearApp(model.link)
                 }

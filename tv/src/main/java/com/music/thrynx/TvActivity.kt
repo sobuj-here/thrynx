@@ -16,7 +16,7 @@ import com.music.thrynx.ui.MainViewModel
 import com.music.thrynx.ui.theme.ThrynxTheme
 import com.music.thrynx.ui.tv.TvApp
 import com.music.thrynx.ui.tv.display.TvRefreshRateController
-import com.music.thrynx.ui.tv.theme.BitChordTvTheme
+import com.music.thrynx.ui.tv.theme.ThrynxTvTheme
 
 /**
  * Dedicated TV Activity for Android TV, Google TV, and Fire TV devices.
@@ -37,7 +37,7 @@ class TvActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 
         setContent {
-            BitChordTvTheme {
+            ThrynxTvTheme {
                 // The phone's Material theme too, so the components shared with
                 // it (lyrics, mood sleeves) are set in SF Pro on its type scale.
                 ThrynxTheme(darkTheme = true) {

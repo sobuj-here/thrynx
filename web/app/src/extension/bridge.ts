@@ -1,4 +1,4 @@
-import type { Bridge, DetectedExtension } from '@bitchord/shared/bridge';
+import type { Bridge, DetectedExtension } from '@thrynx/shared/bridge';
 import { queryClient } from '@/lib/queryClient';
 import { extensionQueryKey } from './useExtension';
 

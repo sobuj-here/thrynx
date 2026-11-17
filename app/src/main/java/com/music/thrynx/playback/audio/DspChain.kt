@@ -8,7 +8,7 @@ import com.music.thrynx.playback.SpatialAudioProcessor
 import com.music.thrynx.playback.TransitionFilterProcessor
 
 /**
- * Composite DSP chain executing BitChord's custom audio processors in their canonical sequence:
+ * Composite DSP chain executing Thrynx's custom audio processors in their canonical sequence:
  *
  * AudioBlock(Float32) -> SpatialAudioProcessor -> EqualizerProcessor
  *   -> TransitionFilterProcessor -> LoudnessProcessor -> AudioBlock(Float32)
