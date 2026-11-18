@@ -20,6 +20,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -112,6 +113,12 @@ enum class VideoResizeMode(val labelRes: Int) {
     FIXED_16_9(R.string.zoom),
 }
 
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 @OptIn(UnstableApi::class)
 @Composable
 fun LocalVideoPlayerScreen(
@@ -121,7 +128,7 @@ fun LocalVideoPlayerScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = remember(context) { context.findActivity() }
     val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager }
 
     var currentIndex by remember { mutableIntStateOf(initialIndex.coerceIn(0, (videoList.size - 1).coerceAtLeast(0))) }
@@ -131,29 +138,46 @@ fun LocalVideoPlayerScreen(
     }
 
     // Fullscreen state
-    var isLandscape by remember { mutableStateOf(false) }
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    var isLandscape by remember {
+        mutableStateOf(configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+    }
+
+    LaunchedEffect(configuration.orientation) {
+        isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    }
 
     fun toggleOrientation() {
+        val act = activity ?: return
         val target = if (isLandscape) {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         } else {
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
-        activity?.requestedOrientation = target
+        act.requestedOrientation = target
         isLandscape = !isLandscape
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(activity) {
         val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        onDispose {
-            activity?.requestedOrientation = originalOrientation
-            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
-    }
+        val window = activity?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-    // Keep screen awake while player is open
-    LaunchedEffect(Unit) {
-        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Immersive full screen: hide status bar and navigation bar
+        if (window != null) {
+            val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+            insetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            insetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            if (window != null) {
+                val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+                insetsController.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            }
+        }
     }
 
     val exoPlayer = remember {
@@ -264,12 +288,22 @@ fun LocalVideoPlayerScreen(
         }
     }
 
-    // Periodic time tracking
-    LaunchedEffect(isPlaying) {
-        while (isPlaying) {
+    var isScrubbing by remember { mutableStateOf(false) }
+    var scrubPosition by remember { mutableFloatStateOf(0f) }
+
+    // Gesture drag state for horizontal seek and vertical gestures
+    var dragMode by remember { mutableIntStateOf(0) } // 0: None, 1: Vertical, 2: Horizontal
+    var dragStartX by remember { mutableFloatStateOf(0f) }
+    var dragStartPosMs by remember { mutableLongStateOf(0L) }
+    var seekTargetMs by remember { mutableLongStateOf(0L) }
+
+    // Periodic time tracking (paused during scrubbing)
+    LaunchedEffect(isPlaying, isScrubbing) {
+        while (isPlaying && !isScrubbing) {
             playbackPosition = exoPlayer.currentPosition.coerceAtLeast(0L)
             bufferPosition = exoPlayer.bufferedPosition.coerceAtLeast(0L)
-            videoDuration = exoPlayer.duration.coerceAtLeast(0L)
+            val d = exoPlayer.duration
+            if (d > 0L) videoDuration = d
             delay(250L)
         }
     }
@@ -386,45 +420,79 @@ fun LocalVideoPlayerScreen(
                 }
                 .pointerInput(isLocked) {
                     if (!isLocked) {
-                        detectVerticalDragGestures(
-                            onDragStart = { },
+                        detectDragGestures(
+                            onDragStart = { offset ->
+                                dragMode = 0
+                                dragStartX = offset.x
+                                dragStartPosMs = exoPlayer.currentPosition.coerceAtLeast(0L)
+                                seekTargetMs = dragStartPosMs
+                            },
                             onDragEnd = {
+                                if (dragMode == 2) {
+                                    exoPlayer.seekTo(seekTargetMs)
+                                    playbackPosition = seekTargetMs
+                                }
                                 hudText = null
                                 hudIcon = null
+                                dragMode = 0
                             },
                             onDragCancel = {
                                 hudText = null
                                 hudIcon = null
+                                dragMode = 0
                             },
-                            onVerticalDrag = { change, dragAmount ->
+                            onDrag = { change, dragAmount ->
                                 val pos = change.position
-                                val deltaY = -dragAmount
-                                if (kotlin.math.abs(deltaY) > 0.5f) {
-                                    val isLeft = pos.x < size.width * 0.5f
-                                    if (isLeft) {
-                                        val window = activity?.window
-                                        if (window != null) {
-                                            val lp = window.attributes
-                                            val currentBrightness = if (lp.screenBrightness < 0f) 0.5f else lp.screenBrightness
-                                            val newBrightness = (currentBrightness + (deltaY / 600f)).coerceIn(0.01f, 1.0f)
-                                            lp.screenBrightness = newBrightness
-                                            window.attributes = lp
-                                            hudText = "${(newBrightness * 100).roundToInt()}%"
-                                            hudIcon = Icons.Rounded.WbSunny
-                                        }
-                                    } else {
-                                        if (audioManager != null) {
-                                            val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                                            val curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                                            val step = if (deltaY > 0) 1 else -1
-                                            val newVol = (curVol + step).coerceIn(0, maxVol)
-                                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVol, 0)
-                                            val pct = ((newVol.toFloat() / maxVol) * 100).roundToInt()
-                                            hudText = "$pct%"
-                                            hudIcon = if (newVol > 0) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeDown
-                                        }
+                                val absX = kotlin.math.abs(dragAmount.x)
+                                val absY = kotlin.math.abs(dragAmount.y)
+                                if (dragMode == 0) {
+                                    if (absX > absY && absX > 3f) {
+                                        dragMode = 2 // Horizontal seek
+                                    } else if (absY > absX && absY > 3f) {
+                                        dragMode = 1 // Vertical brightness / volume
                                     }
+                                }
+
+                                if (dragMode == 2) {
+                                    val screenWidth = size.width.coerceAtLeast(1)
+                                    val seekRangeMs = (videoDuration.toFloat() * 0.25f).coerceIn(60_000f, 600_000f)
+                                    val deltaMs = ((pos.x - dragStartX) / screenWidth) * seekRangeMs
+                                    val target = (dragStartPosMs + deltaMs.toLong()).coerceIn(0L, videoDuration.coerceAtLeast(1L))
+                                    seekTargetMs = target
+                                    val diffSec = (target - dragStartPosMs) / 1000L
+                                    val sign = if (diffSec >= 0) "+" else ""
+                                    hudText = "${LocalVideoRepository.formatDuration(target)} ($sign${diffSec}s)"
+                                    hudIcon = if (diffSec >= 0) Icons.Rounded.FastForward else Icons.Rounded.FastRewind
                                     change.consume()
+                                } else if (dragMode == 1) {
+                                    val deltaY = -dragAmount.y
+                                    if (kotlin.math.abs(deltaY) > 0.5f) {
+                                        val isLeft = pos.x < size.width * 0.5f
+                                        if (isLeft) {
+                                            val window = activity?.window
+                                            if (window != null) {
+                                                val lp = window.attributes
+                                                val currentBrightness = if (lp.screenBrightness < 0f) 0.5f else lp.screenBrightness
+                                                val newBrightness = (currentBrightness + (deltaY / 600f)).coerceIn(0.01f, 1.0f)
+                                                lp.screenBrightness = newBrightness
+                                                window.attributes = lp
+                                                hudText = "${(newBrightness * 100).roundToInt()}%"
+                                                hudIcon = Icons.Rounded.WbSunny
+                                            }
+                                        } else {
+                                            if (audioManager != null) {
+                                                val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                                                val curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                                                val step = if (deltaY > 0) 1 else -1
+                                                val newVol = (curVol + step).coerceIn(0, maxVol)
+                                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVol, 0)
+                                                val pct = ((newVol.toFloat() / maxVol) * 100).roundToInt()
+                                                hudText = "$pct%"
+                                                hudIcon = if (newVol > 0) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeDown
+                                            }
+                                        }
+                                        change.consume()
+                                    }
                                 }
                             }
                         )
@@ -754,14 +822,20 @@ fun LocalVideoPlayerScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp, vertical = 12.dp),
                     ) {
+                        val currentSliderValue = if (isScrubbing) scrubPosition else playbackPosition.toFloat()
+
                         Slider(
-                            value = playbackPosition.toFloat(),
+                            value = currentSliderValue.coerceIn(0f, videoDuration.toFloat().coerceAtLeast(1f)),
                             onValueChange = { newPosition ->
-                                playbackPosition = newPosition.toLong()
+                                isScrubbing = true
+                                scrubPosition = newPosition
                                 lastInteraction = System.currentTimeMillis()
                             },
                             onValueChangeFinished = {
-                                exoPlayer.seekTo(playbackPosition)
+                                val targetPos = scrubPosition.toLong().coerceIn(0L, videoDuration.coerceAtLeast(1L))
+                                playbackPosition = targetPos
+                                exoPlayer.seekTo(targetPos)
+                                isScrubbing = false
                                 lastInteraction = System.currentTimeMillis()
                             },
                             valueRange = 0f..videoDuration.toFloat().coerceAtLeast(1f),
@@ -778,8 +852,9 @@ fun LocalVideoPlayerScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
+                            val displayTime = if (isScrubbing) scrubPosition.toLong() else playbackPosition
                             Text(
-                                text = "${LocalVideoRepository.formatDuration(playbackPosition)} / ${LocalVideoRepository.formatDuration(videoDuration)}",
+                                text = "${LocalVideoRepository.formatDuration(displayTime)} / ${LocalVideoRepository.formatDuration(videoDuration)}",
                                 color = Color.White.copy(alpha = 0.85f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,

@@ -4,9 +4,13 @@ import android.Manifest
 import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.LruCache
+import android.util.Size
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -190,5 +194,39 @@ object LocalVideoRepository {
             v > 0 -> "${v}p"
             else -> ""
         }
+    }
+
+    private val thumbnailCache = object : LruCache<Long, Bitmap>(150) {}
+
+    fun getCachedThumbnail(videoId: Long): Bitmap? {
+        return thumbnailCache.get(videoId)
+    }
+
+    suspend fun loadThumbnail(context: Context, video: LocalVideo): Bitmap? = withContext(Dispatchers.IO) {
+        thumbnailCache.get(video.id)?.let { return@withContext it }
+
+        val bitmap = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.contentResolver.loadThumbnail(video.contentUri, Size(360, 240), null)
+            } else {
+                @Suppress("DEPRECATION")
+                MediaStore.Video.Thumbnails.getThumbnail(
+                    context.contentResolver,
+                    video.id,
+                    MediaStore.Video.Thumbnails.MINI_KIND,
+                    null,
+                ) ?: if (video.path.isNotBlank()) {
+                    @Suppress("DEPRECATION")
+                    ThumbnailUtils.createVideoThumbnail(video.path, MediaStore.Images.Thumbnails.MINI_KIND)
+                } else null
+            }
+        } catch (_: Throwable) {
+            null
+        }
+
+        if (bitmap != null) {
+            thumbnailCache.put(video.id, bitmap)
+        }
+        bitmap
     }
 }

@@ -62,7 +62,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 import com.music.thrynx.R
 import com.music.thrynx.data.LocalVideo
 import com.music.thrynx.data.LocalVideoRepository
@@ -72,6 +74,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LocalVideosScreen(
     onBack: () -> Unit,
+    onPlayVideo: ((List<LocalVideo>, Int) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -302,8 +305,12 @@ fun LocalVideosScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            activePlayingList = displayVideos
-                                            activePlayingIndex = index
+                                            if (onPlayVideo != null) {
+                                                onPlayVideo(displayVideos, index)
+                                            } else {
+                                                activePlayingList = displayVideos
+                                                activePlayingIndex = index
+                                            }
                                         },
                                 ) {
                                     Row(
@@ -317,12 +324,37 @@ fun LocalVideosScreen(
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(Color.Black),
                                         ) {
-                                            AsyncImage(
-                                                model = video.contentUri,
-                                                contentDescription = null,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize(),
-                                            )
+                                            var thumbBitmap by remember(video.id) {
+                                                mutableStateOf(LocalVideoRepository.getCachedThumbnail(video.id))
+                                            }
+                                            LaunchedEffect(video.id) {
+                                                if (thumbBitmap == null) {
+                                                    thumbBitmap = LocalVideoRepository.loadThumbnail(context, video)
+                                                }
+                                            }
+
+                                            if (thumbBitmap != null) {
+                                                Image(
+                                                    bitmap = thumbBitmap!!.asImageBitmap(),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                )
+                                            } else {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                                    contentAlignment = Alignment.Center,
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.PlayCircle,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                        modifier = Modifier.size(28.dp),
+                                                    )
+                                                }
+                                            }
 
                                             // Resolution pill (e.g. 1080p, 4K)
                                             if (video.resolutionLabel.isNotBlank()) {

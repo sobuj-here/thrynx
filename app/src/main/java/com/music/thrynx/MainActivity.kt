@@ -346,6 +346,8 @@ import com.music.thrynx.data.settings.LocalMusicSort
 import com.music.thrynx.ui.screens.HomeScreen
 import com.music.thrynx.ui.screens.LibraryGridPage
 import com.music.thrynx.ui.screens.LibraryScreen
+import com.music.thrynx.data.LocalVideo
+import com.music.thrynx.ui.screens.LocalVideoPlayerScreen
 import com.music.thrynx.ui.screens.LocalVideosScreen
 import com.music.thrynx.ui.screens.MoodGenrePlaylistsScreen
 import com.music.thrynx.ui.screens.SearchScreen
@@ -635,6 +637,8 @@ private fun ThrynxApp(
     // category cards ask it to start at their matching ranked section.
     var replayLandingPage by rememberSaveable { mutableStateOf(ReplayStoryPage.INTRO) }
     var replayStory by rememberSaveable { mutableStateOf<ReplayStoryPage?>(null) }
+    var activeLocalVideoList by remember { mutableStateOf<List<LocalVideo>?>(null) }
+    var activeLocalVideoIndex by remember { mutableIntStateOf(0) }
     var showReplayShare by rememberSaveable { mutableStateOf(false) }
     /** Which story card the share sheet is for, or null for the whole Replay. */
     var replaySharePage by rememberSaveable { mutableStateOf<ReplayStoryPage?>(null) }
@@ -3037,6 +3041,13 @@ private fun ThrynxApp(
                         } else if (pageRoute == AppRoute.LocalVideos) {
                             LocalVideosScreen(
                                 onBack = { navigator.pop() },
+                                onPlayVideo = { list, index ->
+                                    if (player.isPlaying) {
+                                        controller?.pause()
+                                    }
+                                    activeLocalVideoList = list
+                                    activeLocalVideoIndex = index
+                                },
                             )
                         } else if (pageRoute == AppRoute.Discord) {
                             DiscordScreen(
@@ -4140,7 +4151,8 @@ private fun ThrynxApp(
                 )
 
                 // Drawn before the bars so their own glass reads on top of it.
-                BottomFadeScrim(
+                if (activeLocalVideoList == null) {
+                    BottomFadeScrim(
                     withMiniPlayer = player.song != null,
                     // Not the wash: by the foot of the screen the page has finished
                     // easing out of it and into this, so this is what is actually
@@ -4254,6 +4266,7 @@ private fun ThrynxApp(
                         hazeState = hazeState,
                         onTabSelected = onTabSelected,
                     )
+                }
                 }
             }
 
@@ -4840,6 +4853,15 @@ private fun ThrynxApp(
                     paused = showReplayShare,
                 )
             }
+        }
+
+        // ---- Local Video Fullscreen Player ----
+        activeLocalVideoList?.let { list ->
+            LocalVideoPlayerScreen(
+                videoList = list,
+                initialIndex = activeLocalVideoIndex,
+                onBack = { activeLocalVideoList = null },
+            )
         }
 
         // ---- Share the Replay ----
