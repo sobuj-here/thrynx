@@ -20,6 +20,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -156,8 +157,30 @@ fun LocalVideoPlayerScreen(
     }
 
     val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            playWhenReady = true
+        ExoPlayer.Builder(context)
+            .setAudioAttributes(
+                androidx.media3.common.AudioAttributes.Builder()
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build(),
+                true,
+            )
+            .build().apply {
+                playWhenReady = true
+            }
+    }
+
+    var textureView by remember { mutableStateOf<TextureView?>(null) }
+
+    DisposableEffect(textureView, exoPlayer) {
+        val tv = textureView
+        if (tv != null) {
+            exoPlayer.setVideoTextureView(tv)
+        }
+        onDispose {
+            if (tv != null) {
+                exoPlayer.clearVideoTextureView(tv)
+            }
         }
     }
 
@@ -188,7 +211,13 @@ fun LocalVideoPlayerScreen(
     // Load video on index change
     LaunchedEffect(currentIndex) {
         val video = videoList.getOrNull(currentIndex) ?: return@LaunchedEffect
-        val mediaItem = MediaItem.fromUri(video.contentUri)
+        val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            video.contentUri
+        } else {
+            val f = java.io.File(video.path)
+            if (f.canRead()) android.net.Uri.fromFile(f) else video.contentUri
+        }
+        val mediaItem = MediaItem.fromUri(uri)
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
         exoPlayer.play()
@@ -206,7 +235,20 @@ fun LocalVideoPlayerScreen(
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_READY) {
-                    videoDuration = exoPlayer.duration.coerceAtLeast(0L)
+                    val d = exoPlayer.duration
+                    videoDuration = if (d > 0L) d else currentVideo.durationMs
+                }
+            }
+
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                val f = java.io.File(currentVideo.path)
+                if (f.canRead()) {
+                    val fileUri = android.net.Uri.fromFile(f)
+                    if (exoPlayer.currentMediaItem?.localConfiguration?.uri != fileUri) {
+                        exoPlayer.setMediaItem(MediaItem.fromUri(fileUri))
+                        exoPlayer.prepare()
+                        exoPlayer.play()
+                    }
                 }
             }
 
@@ -289,11 +331,12 @@ fun LocalVideoPlayerScreen(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT,
                         )
-                        exoPlayer.setVideoTextureView(this)
+                        textureView = this
                     }
                 },
-                update = { view ->
-                    exoPlayer.setVideoTextureView(view)
+                update = { },
+                onRelease = {
+                    if (textureView === it) textureView = null
                 },
                 modifier = when (resizeMode) {
                     VideoResizeMode.FIT -> Modifier.fillMaxSize()
@@ -343,30 +386,33 @@ fun LocalVideoPlayerScreen(
                 }
                 .pointerInput(isLocked) {
                     if (!isLocked) {
-                        // Vertical swipe for Brightness & Volume
-                        awaitPointerEventScope {
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull() ?: continue
+                        detectVerticalDragGestures(
+                            onDragStart = { },
+                            onDragEnd = {
+                                hudText = null
+                                hudIcon = null
+                            },
+                            onDragCancel = {
+                                hudText = null
+                                hudIcon = null
+                            },
+                            onVerticalDrag = { change, dragAmount ->
                                 val pos = change.position
-                                val deltaY = change.previousPosition.y - pos.y
-
-                                if (change.pressed && kotlin.math.abs(deltaY) > 8f) {
+                                val deltaY = -dragAmount
+                                if (kotlin.math.abs(deltaY) > 0.5f) {
                                     val isLeft = pos.x < size.width * 0.5f
                                     if (isLeft) {
-                                        // Brightness adjustment
                                         val window = activity?.window
                                         if (window != null) {
                                             val lp = window.attributes
                                             val currentBrightness = if (lp.screenBrightness < 0f) 0.5f else lp.screenBrightness
-                                            val newBrightness = (currentBrightness + (deltaY / 1000f)).coerceIn(0.01f, 1.0f)
+                                            val newBrightness = (currentBrightness + (deltaY / 600f)).coerceIn(0.01f, 1.0f)
                                             lp.screenBrightness = newBrightness
                                             window.attributes = lp
                                             hudText = "${(newBrightness * 100).roundToInt()}%"
                                             hudIcon = Icons.Rounded.WbSunny
                                         }
                                     } else {
-                                        // Volume adjustment
                                         if (audioManager != null) {
                                             val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
                                             val curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -379,12 +425,9 @@ fun LocalVideoPlayerScreen(
                                         }
                                     }
                                     change.consume()
-                                } else if (!change.pressed && hudText != null) {
-                                    hudText = null
-                                    hudIcon = null
                                 }
                             }
-                        }
+                        )
                     }
                 },
         )

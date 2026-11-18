@@ -89,8 +89,9 @@ fun LocalVideosScreen(
     var activePlayingIndex by remember { mutableIntStateOf(0) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { perms ->
+        val granted = perms.values.any { it } || LocalVideoRepository.hasVideoPermission(context)
         hasPermission = granted
         if (granted) {
             scope.launch {
@@ -102,6 +103,20 @@ fun LocalVideosScreen(
         }
     }
 
+    fun requestVideoPermissions() {
+        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            arrayOf(
+                Manifest.permission.READ_MEDIA_VIDEO,
+                "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
+        } else {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        permissionLauncher.launch(permissions)
+    }
+
     LaunchedEffect(hasPermission) {
         if (hasPermission) {
             isLoading = true
@@ -109,12 +124,7 @@ fun LocalVideosScreen(
             folders = LocalVideoRepository.queryFolders(context)
             isLoading = false
         } else {
-            val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_VIDEO
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            }
-            permissionLauncher.launch(permission)
+            requestVideoPermissions()
         }
     }
 
@@ -186,14 +196,7 @@ fun LocalVideosScreen(
                     )
                     Spacer(Modifier.height(16.dp))
                     Button(
-                        onClick = {
-                            val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                Manifest.permission.READ_MEDIA_VIDEO
-                            } else {
-                                Manifest.permission.READ_EXTERNAL_STORAGE
-                            }
-                            permissionLauncher.launch(permission)
-                        },
+                        onClick = { requestVideoPermissions() },
                     ) {
                         Text(stringResource(R.string.retry))
                     }

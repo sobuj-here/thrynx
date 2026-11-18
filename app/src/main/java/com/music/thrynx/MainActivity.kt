@@ -2246,6 +2246,10 @@ private fun ThrynxApp(
                 navigator.push(AppRoute.Spotify)
                 return@let
             }
+            if (id == "local:videos") {
+                navigator.push(AppRoute.LocalVideos)
+                return@let
+            }
             if ((id == "local:all" || id == "local:downloads") && !LocalMediaRepository.hasStoragePermission(context)) {
                 mediaPermissionLauncher.launch(mediaPermission)
             }

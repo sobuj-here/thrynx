@@ -18,6 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -594,7 +598,33 @@ internal fun AndroidMusicVideo(
         label = "musicVideoAlpha",
     )
 
-    Box(modifier.clipToBounds(), contentAlignment = Alignment.Center) {
+    var zoomScale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier
+            .clipToBounds()
+            .graphicsLayer {
+                scaleX = zoomScale
+                scaleY = zoomScale
+                translationX = offsetX
+                translationY = offsetY
+            }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    zoomScale = (zoomScale * zoom).coerceIn(1.0f, 4.0f)
+                    if (zoomScale > 1.0f) {
+                        offsetX += pan.x
+                        offsetY += pan.y
+                    } else {
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
         AndroidView(
             factory = { context ->
                 TextureView(context).apply {
