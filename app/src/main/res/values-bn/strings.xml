@@ -1028,6 +1028,7 @@
     <string name="local_video">লোকাল ভিডিও</string>
     <string name="video_files_on_device">ডিভাইসের ভিডিও ফাইল</string>
     <string name="fit_screen">ফিট টু স্ক্রিন</string>
+    <string name="screen_rotation">স্ক্রিন রোটেশন</string>
     <string name="fill_screen">স্ক্রিন পূর্ণ</string>
     <string name="zoom">জুম</string>
     <string name="brightness">উজ্জ্বলতা</string>

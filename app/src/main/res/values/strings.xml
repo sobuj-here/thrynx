@@ -1061,6 +1061,7 @@
     <string name="local_video">Local Video</string>
     <string name="video_files_on_device">Video files on device</string>
     <string name="fit_screen">Fit to screen</string>
+    <string name="screen_rotation">Screen rotation</string>
     <string name="fill_screen">Fill screen</string>
     <string name="zoom">Zoom</string>
     <string name="brightness">Brightness</string>

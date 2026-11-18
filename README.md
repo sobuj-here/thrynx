@@ -33,7 +33,7 @@
 
 <br/><br/>
 
-### ⚡ Direct Download — Latest Release (`v1.1.0`)
+### ⚡ Direct Download — Latest Release (`v1.2.0`)
 
 [![Download ARM64 APK](https://img.shields.io/badge/⚡_Download_ARM64_APK-(Most_Phones)-2563eb?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-arm64-v8a-release.apk)
 &nbsp;
@@ -63,7 +63,7 @@
   <tr>
     <td width="50%" valign="top">
 
-### 🎬 Local Video Player `v1.1.0`
+### 🎬 Local Video Player `v1.2.0`
 - **Integrated Video Library**: Seamlessly browse and play local videos directly under **Library → Local Videos**.
 - **Pinch-to-Zoom**: Fluid two-finger pinch gesture with **1.0× to 4.0× smooth scaling and panning**.
 - **Aspect Ratio Control**: One-tap toggle through **Fit to Screen**, **Fill / Crop**, **16:9**, **4:3**, and **Original**.
@@ -236,7 +236,7 @@ The core music streaming architecture and baseline playback capabilities of THRY
 ### 🚀 Enhancements & Features Added in THRYNX
 Building upon the upstream foundations, THRYNX introduces new media capabilities, player controls, critical bug fixes, and customized multi-platform workflows:
 
-1. **🎬 Integrated Local Video Player (`v1.1.0`):**
+1. **🎬 Integrated Local Video Player (`v1.2.0`):**
    - Built-in video player directly accessible under **Library → Local Videos**.
    - Hardware-accelerated video thumbnail generation using Android MediaStore APIs paired with an in-memory `LruCache` for zero-lag 60fps scrolling.
    - Fluid **1.0× to 4.0× pinch-to-zoom and pan** gestures on video playback.

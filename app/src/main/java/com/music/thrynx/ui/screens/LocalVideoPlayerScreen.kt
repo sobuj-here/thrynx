@@ -18,6 +18,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -51,6 +53,7 @@ import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PictureInPicture
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Speed
@@ -76,6 +79,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,7 +108,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import com.music.thrynx.R
 import com.music.thrynx.data.LocalVideo
 import com.music.thrynx.data.LocalVideoRepository
+import androidx.compose.ui.geometry.Offset
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 enum class VideoResizeMode(val labelRes: Int) {
@@ -291,6 +298,11 @@ fun LocalVideoPlayerScreen(
     var isScrubbing by remember { mutableStateOf(false) }
     var scrubPosition by remember { mutableFloatStateOf(0f) }
 
+    val coroutineScope = rememberCoroutineScope()
+    var lastTapTimestamp by remember { mutableLongStateOf(0L) }
+    var lastTapPosition by remember { mutableStateOf(Offset.Zero) }
+    var singleTapJob by remember { mutableStateOf<Job?>(null) }
+
     // Gesture drag state for horizontal seek and vertical gestures
     var dragMode by remember { mutableIntStateOf(0) } // 0: None, 1: Vertical, 2: Horizontal
     var dragStartX by remember { mutableFloatStateOf(0f) }
@@ -341,20 +353,6 @@ fun LocalVideoPlayerScreen(
                     scaleY = zoomScale
                     translationX = offsetX
                     translationY = offsetY
-                }
-                .pointerInput(isLocked) {
-                    if (!isLocked) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            zoomScale = (zoomScale * zoom).coerceIn(1.0f, 4.0f)
-                            if (zoomScale > 1.0f) {
-                                offsetX += pan.x
-                                offsetY += pan.y
-                            } else {
-                                offsetX = 0f
-                                offsetY = 0f
-                            }
-                        }
-                    }
                 },
             contentAlignment = Alignment.Center,
         ) {
@@ -380,7 +378,7 @@ fun LocalVideoPlayerScreen(
             )
         }
 
-        // Touch & Gesture Interaction Surface
+        // Unified Touch & Gesture Interaction Surface (Multi-touch Zoom & Pan, Horizontal Seek, Vertical Brightness/Volume, Taps)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -390,90 +388,98 @@ fun LocalVideoPlayerScreen(
                             onTap = { controlsVisible = !controlsVisible },
                         )
                     } else {
-                        detectTapGestures(
-                            onTap = {
-                                controlsVisible = !controlsVisible
-                                lastInteraction = System.currentTimeMillis()
-                            },
-                            onDoubleTap = { offset ->
-                                val width = size.width
-                                if (offset.x < width * 0.4f) {
-                                    // Seek backward 10s
-                                    val newPos = (exoPlayer.currentPosition - 10_000L).coerceAtLeast(0L)
-                                    exoPlayer.seekTo(newPos)
-                                    playbackPosition = newPos
-                                    seekRippleSide = -1
-                                } else if (offset.x > width * 0.6f) {
-                                    // Seek forward 10s
-                                    val newPos = (exoPlayer.currentPosition + 10_000L).coerceAtMost(videoDuration)
-                                    exoPlayer.seekTo(newPos)
-                                    playbackPosition = newPos
-                                    seekRippleSide = 1
-                                } else {
-                                    // Toggle play/pause
-                                    if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
-                                }
-                                lastInteraction = System.currentTimeMillis()
-                            },
-                        )
-                    }
-                }
-                .pointerInput(isLocked) {
-                    if (!isLocked) {
-                        detectDragGestures(
-                            onDragStart = { offset ->
-                                dragMode = 0
-                                dragStartX = offset.x
-                                dragStartPosMs = exoPlayer.currentPosition.coerceAtLeast(0L)
-                                seekTargetMs = dragStartPosMs
-                            },
-                            onDragEnd = {
-                                if (dragMode == 2) {
-                                    exoPlayer.seekTo(seekTargetMs)
-                                    playbackPosition = seekTargetMs
-                                }
-                                hudText = null
-                                hudIcon = null
-                                dragMode = 0
-                            },
-                            onDragCancel = {
-                                hudText = null
-                                hudIcon = null
-                                dragMode = 0
-                            },
-                            onDrag = { change, dragAmount ->
-                                val pos = change.position
-                                val absX = kotlin.math.abs(dragAmount.x)
-                                val absY = kotlin.math.abs(dragAmount.y)
-                                if (dragMode == 0) {
-                                    if (absX > absY && absX > 3f) {
-                                        dragMode = 2 // Horizontal seek
-                                    } else if (absY > absX && absY > 3f) {
-                                        dragMode = 1 // Vertical brightness / volume
-                                    }
-                                }
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val startTime = System.currentTimeMillis()
+                            val startPos = down.position
 
-                                if (dragMode == 2) {
-                                    val screenWidth = size.width.coerceAtLeast(1)
-                                    val seekRangeMs = (videoDuration.toFloat() * 0.25f).coerceIn(60_000f, 600_000f)
-                                    val deltaMs = ((pos.x - dragStartX) / screenWidth) * seekRangeMs
-                                    val target = (dragStartPosMs + deltaMs.toLong()).coerceIn(0L, videoDuration.coerceAtLeast(1L))
-                                    seekTargetMs = target
-                                    val diffSec = (target - dragStartPosMs) / 1000L
-                                    val sign = if (diffSec >= 0) "+" else ""
-                                    hudText = "${LocalVideoRepository.formatDuration(target)} ($sign${diffSec}s)"
-                                    hudIcon = if (diffSec >= 0) Icons.Rounded.FastForward else Icons.Rounded.FastRewind
-                                    change.consume()
-                                } else if (dragMode == 1) {
-                                    val deltaY = -dragAmount.y
-                                    if (kotlin.math.abs(deltaY) > 0.5f) {
-                                        val isLeft = pos.x < size.width * 0.5f
-                                        if (isLeft) {
+                            var mode = 0 // 0: None, 1: Vertical, 2: Horizontal, 3: PinchZoom
+                            var prevDist = 0f
+                            var prevCentroid = startPos
+                            var dragAccumulatorY = 0f
+                            var currentSeekTargetMs = exoPlayer.currentPosition.coerceAtLeast(0L)
+                            val dragStartPosMs = currentSeekTargetMs
+                            val isLeftSide = startPos.x < size.width * 0.5f
+
+                            do {
+                                val event = awaitPointerEvent()
+                                val pressedChanges = event.changes.filter { it.pressed }
+                                val count = pressedChanges.size
+
+                                if (count >= 2) {
+                                    // Pinch to Zoom In / Zoom Out and Pan
+                                    val p0 = pressedChanges[0].position
+                                    val p1 = pressedChanges[1].position
+                                    val dist = (p0 - p1).getDistance()
+                                    val centroid = (p0 + p1) / 2f
+
+                                    if (mode != 3) {
+                                        mode = 3
+                                        prevDist = dist
+                                        prevCentroid = centroid
+                                        hudText = null
+                                        hudIcon = null
+                                    } else {
+                                        if (prevDist > 1f && dist > 1f) {
+                                            val scaleFactor = dist / prevDist
+                                            val newScale = (zoomScale * scaleFactor).coerceIn(1.0f, 4.5f)
+                                            zoomScale = newScale
+                                            if (newScale > 1.0f) {
+                                                val pan = centroid - prevCentroid
+                                                offsetX += pan.x
+                                                offsetY += pan.y
+                                            } else {
+                                                offsetX = 0f
+                                                offsetY = 0f
+                                            }
+                                            val pct = (newScale * 100).roundToInt()
+                                            hudText = "Zoom $pct%"
+                                            hudIcon = Icons.Rounded.FitScreen
+                                        }
+                                        prevDist = dist
+                                        prevCentroid = centroid
+                                    }
+                                    pressedChanges.forEach { it.consume() }
+                                } else if (count == 1 && mode != 3) {
+                                    val change = pressedChanges[0]
+                                    val currentPos = change.position
+                                    val totalDelta = currentPos - startPos
+
+                                    if (mode == 0) {
+                                        val absX = kotlin.math.abs(totalDelta.x)
+                                        val absY = kotlin.math.abs(totalDelta.y)
+                                        val dist = kotlin.math.sqrt(absX * absX + absY * absY)
+                                        if (dist > 18f) {
+                                            if (absX > absY * 1.2f) {
+                                                mode = 2 // Horizontal seek
+                                            } else if (absY > absX * 1.2f) {
+                                                mode = 1 // Vertical brightness / volume
+                                            }
+                                        }
+                                    }
+
+                                    if (mode == 2) {
+                                        val screenWidth = size.width.coerceAtLeast(1)
+                                        val seekRangeMs = (videoDuration.toFloat() * 0.25f).coerceIn(60_000f, 600_000f)
+                                        val deltaMs = (totalDelta.x / screenWidth) * seekRangeMs
+                                        val target = (dragStartPosMs + deltaMs.toLong()).coerceIn(0L, videoDuration.coerceAtLeast(1L))
+                                        currentSeekTargetMs = target
+                                        seekTargetMs = target
+                                        val diffSec = (target - dragStartPosMs) / 1000L
+                                        val sign = if (diffSec >= 0) "+" else ""
+                                        hudText = "${LocalVideoRepository.formatDuration(target)} ($sign${diffSec}s)"
+                                        hudIcon = if (diffSec >= 0) Icons.Rounded.FastForward else Icons.Rounded.FastRewind
+                                        change.consume()
+                                    } else if (mode == 1) {
+                                        val stepDeltaY = -(change.position.y - change.previousPosition.y)
+                                        dragAccumulatorY += stepDeltaY
+
+                                        if (isLeftSide) {
                                             val window = activity?.window
                                             if (window != null) {
                                                 val lp = window.attributes
                                                 val currentBrightness = if (lp.screenBrightness < 0f) 0.5f else lp.screenBrightness
-                                                val newBrightness = (currentBrightness + (deltaY / 600f)).coerceIn(0.01f, 1.0f)
+                                                val newBrightness = (currentBrightness + (stepDeltaY / 500f)).coerceIn(0.01f, 1.0f)
                                                 lp.screenBrightness = newBrightness
                                                 window.attributes = lp
                                                 hudText = "${(newBrightness * 100).roundToInt()}%"
@@ -483,19 +489,95 @@ fun LocalVideoPlayerScreen(
                                             if (audioManager != null) {
                                                 val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
                                                 val curVol = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                                                val step = if (deltaY > 0) 1 else -1
-                                                val newVol = (curVol + step).coerceIn(0, maxVol)
-                                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVol, 0)
-                                                val pct = ((newVol.toFloat() / maxVol) * 100).roundToInt()
-                                                hudText = "$pct%"
-                                                hudIcon = if (newVol > 0) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeDown
+                                                if (kotlin.math.abs(dragAccumulatorY) >= 20f) {
+                                                    val steps = (dragAccumulatorY / 20f).toInt()
+                                                    val newVol = (curVol + steps).coerceIn(0, maxVol)
+                                                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVol, 0)
+                                                    dragAccumulatorY -= steps * 20f
+                                                    val pct = ((newVol.toFloat() / maxVol) * 100).roundToInt()
+                                                    hudText = "$pct%"
+                                                    hudIcon = if (newVol > 0) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeDown
+                                                }
                                             }
                                         }
                                         change.consume()
                                     }
                                 }
+                            } while (pressedChanges.isNotEmpty())
+
+                            // Gesture ended
+                            if (mode == 3) {
+                                if (zoomScale <= 1.05f) {
+                                    zoomScale = 1.0f
+                                    offsetX = 0f
+                                    offsetY = 0f
+                                    hudText = "Fit screen"
+                                }
+                                coroutineScope.launch {
+                                    delay(1200L)
+                                    if (hudText?.startsWith("Zoom") == true || hudText == "Fit screen") {
+                                        hudText = null
+                                        hudIcon = null
+                                    }
+                                }
+                            } else if (mode == 2) {
+                                exoPlayer.seekTo(currentSeekTargetMs)
+                                playbackPosition = currentSeekTargetMs
+                                hudText = null
+                                hudIcon = null
+                            } else if (mode == 1) {
+                                hudText = null
+                                hudIcon = null
+                            } else {
+                                // Tap handling
+                                val now = System.currentTimeMillis()
+                                val isDoubleTap = (now - lastTapTimestamp < 320L) &&
+                                    ((startPos - lastTapPosition).getDistance() < 120f)
+
+                                if (isDoubleTap) {
+                                    singleTapJob?.cancel()
+                                    val width = size.width
+                                    if (startPos.x < width * 0.35f) {
+                                        val newPos = (exoPlayer.currentPosition - 10_000L).coerceAtLeast(0L)
+                                        exoPlayer.seekTo(newPos)
+                                        playbackPosition = newPos
+                                        seekRippleSide = -1
+                                    } else if (startPos.x > width * 0.65f) {
+                                        val newPos = (exoPlayer.currentPosition + 10_000L).coerceAtMost(videoDuration)
+                                        exoPlayer.seekTo(newPos)
+                                        playbackPosition = newPos
+                                        seekRippleSide = 1
+                                    } else {
+                                        if (zoomScale > 1.05f) {
+                                            zoomScale = 1.0f
+                                            offsetX = 0f
+                                            offsetY = 0f
+                                            hudText = "Fit screen"
+                                            hudIcon = Icons.Rounded.FitScreen
+                                            coroutineScope.launch {
+                                                delay(1000L)
+                                                if (hudText == "Fit screen") {
+                                                    hudText = null
+                                                    hudIcon = null
+                                                }
+                                            }
+                                        } else {
+                                            if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+                                        }
+                                    }
+                                    lastTapTimestamp = 0L
+                                } else {
+                                    lastTapTimestamp = now
+                                    lastTapPosition = startPos
+                                    singleTapJob?.cancel()
+                                    singleTapJob = coroutineScope.launch {
+                                        delay(300L)
+                                        controlsVisible = !controlsVisible
+                                        lastInteraction = System.currentTimeMillis()
+                                    }
+                                }
                             }
-                        )
+                        }
                     }
                 },
         )
@@ -886,8 +968,9 @@ fun LocalVideoPlayerScreen(
                                 // Fullscreen / Orientation Toggle
                                 IconButton(onClick = { toggleOrientation() }) {
                                     Icon(
-                                        imageVector = if (isLandscape) Icons.Rounded.FullscreenExit else Icons.Rounded.Fullscreen,
-                                        contentDescription = null,
+                                        imageVector = Icons.Rounded.ScreenRotation,
+                                        contentDescription = stringResource(R.string.screen_rotation),
+                                        modifier = Modifier.graphicsLayer { rotationZ = if (isLandscape) 90f else 0f },
                                         tint = Color.White,
                                     )
                                 }
