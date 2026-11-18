@@ -544,6 +544,16 @@ private fun DownloadRow(song: Song, palette: ArtworkPalette, isOffline: Boolean,
                 accent = palette.accent,
                 onClick = onDownload,
             )
+        } else if (song.localUri != null) {
+            ActionRow(
+                icon = SfIcons.Trash,
+                label = stringResource(R.string.delete),
+                tint = MaterialTheme.colorScheme.error,
+                accent = MaterialTheme.colorScheme.error,
+            ) {
+                val uri = android.net.Uri.parse(song.localUri)
+                com.music.thrynx.data.MediaDeletionHelper.deleteMediaUris(context, listOf(uri))
+            }
         }
     }
 }

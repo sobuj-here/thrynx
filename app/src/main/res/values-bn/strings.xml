@@ -141,6 +141,7 @@
     <string name="now_playing">এখন বাজছে</string>
     <string name="selected">নির্বাচিত</string>
     <string name="select_all">সব নির্বাচন করুন</string>
+    <string name="deselect_all">সব নির্বাচন বাতিল করুন</string>
     <string name="password">পাসওয়ার্ড</string>
     <string name="username">ব্যবহারকারীর নাম</string>
     <string name="login_failed">লগইন ব্যর্থ হয়েছে</string>

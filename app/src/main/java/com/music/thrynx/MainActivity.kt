@@ -2229,6 +2229,15 @@ private fun ThrynxApp(
             Toast.makeText(context, context.getString(R.string.storage_required_read), Toast.LENGTH_SHORT).show()
         }
     }
+    val localMediaDeleteLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            viewModel.reloadLocalDetail("local:all")
+            viewModel.reloadLocalDetail("local:downloads")
+            viewModel.loadLibrarySongs()
+        }
+    }
     val mediaPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
     } else {
@@ -3173,6 +3182,7 @@ private fun ThrynxApp(
                                 // player in its own right, with playlists of its own
                                 // and the directories the files are kept in.
                                 val isDevice = page.browseId == "local:all"
+                                val isLocalMusic = page.browseId.startsWith("local:") && !isDownloads && !isCache
                                 val folderSongs = (page.songs as? UiState.Success)?.data.orEmpty()
                                 // Only the Downloads folder has releases behind it: Local
                                 // Music is files this app never asked for, so there is
@@ -3188,7 +3198,7 @@ private fun ThrynxApp(
                                     sort = folderSortOf(page.browseId),
                                     viewType = folderViewTypeOf(page.browseId),
                                     collections = downloadCollections,
-                                    selectable = isDownloads || isCache,
+                                    selectable = isDownloads || isCache || isLocalMusic || isDevice,
                                     onOpenGroup = viewModel::openLocalGroup,
                                     onGroupLongPress = { group ->
                                         openBrowseMenu(
@@ -3207,6 +3217,21 @@ private fun ThrynxApp(
                                         { selected ->
                                             scope.launch {
                                                 selected.forEach { song -> Downloads.delete(context, song.videoId) }
+                                            }
+                                        }
+                                    } else if (isLocalMusic || isDevice) {
+                                        { selected ->
+                                            val uris = selected.mapNotNull { it.localUri?.let { u -> android.net.Uri.parse(u) } }
+                                            when (val res = com.music.thrynx.data.MediaDeletionHelper.deleteMediaUris(context, uris)) {
+                                                is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.RequiresConsent -> {
+                                                    val req = androidx.activity.result.IntentSenderRequest.Builder(res.intentSender).build()
+                                                    localMediaDeleteLauncher.launch(req)
+                                                }
+                                                is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.Success -> {
+                                                    viewModel.reloadLocalDetail(page.browseId)
+                                                    viewModel.loadLibrarySongs()
+                                                }
+                                                is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.Error -> {}
                                             }
                                         }
                                     } else {

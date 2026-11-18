@@ -229,4 +229,19 @@ object LocalVideoRepository {
         }
         bitmap
     }
+
+    fun getResumePosition(context: Context, videoId: Long): Long {
+        val prefs = context.getSharedPreferences("local_video_resume", Context.MODE_PRIVATE)
+        return prefs.getLong("pos_$videoId", 0L)
+    }
+
+    fun saveResumePosition(context: Context, videoId: Long, positionMs: Long, durationMs: Long) {
+        val prefs = context.getSharedPreferences("local_video_resume", Context.MODE_PRIVATE)
+        if (durationMs > 0 && (positionMs >= durationMs - 5000L || positionMs < 3000L)) {
+            prefs.edit().remove("pos_$videoId").apply()
+        } else {
+            prefs.edit().putLong("pos_$videoId", positionMs).apply()
+        }
+    }
+    }
 }

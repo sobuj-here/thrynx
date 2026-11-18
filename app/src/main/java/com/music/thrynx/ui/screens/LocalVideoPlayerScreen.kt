@@ -41,6 +41,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.BatteryChargingFull
+import androidx.compose.material.icons.rounded.BatteryStd
+import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material.icons.rounded.Crop
 import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
@@ -238,6 +241,52 @@ fun LocalVideoPlayerScreen(
     var showTrackDialog by remember { mutableStateOf(false) }
     var showSpeedDialog by remember { mutableStateOf(false) }
     var availableTracks by remember { mutableStateOf<Tracks?>(null) }
+    var showRemainingTime by remember { mutableStateOf(false) }
+
+    // Battery & Clock tracking
+    var currentTimeStr by remember { mutableStateOf("") }
+    var batteryLevel by remember { mutableIntStateOf(-1) }
+    var isCharging by remember { mutableStateOf(false) }
+
+    LaunchedEffect(controlsVisible) {
+        while (controlsVisible) {
+            val now = java.util.Date()
+            currentTimeStr = android.text.format.DateFormat.getTimeFormat(context).format(now)
+            delay(1000L)
+        }
+    }
+
+    DisposableEffect(context) {
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: Context?, intent: android.content.Intent?) {
+                if (intent?.action == android.content.Intent.ACTION_BATTERY_CHANGED) {
+                    val level = intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1)
+                    val scale = intent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1)
+                    val status = intent.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1)
+                    isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == android.os.BatteryManager.BATTERY_STATUS_FULL
+                    if (level >= 0 && scale > 0) {
+                        batteryLevel = (level * 100) / scale
+                    }
+                }
+            }
+        }
+        val filter = android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED)
+        val sticky = context.registerReceiver(receiver, filter)
+        if (sticky != null) {
+            val level = sticky.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1)
+            val scale = sticky.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1)
+            val status = sticky.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1)
+            isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == android.os.BatteryManager.BATTERY_STATUS_FULL
+            if (level >= 0 && scale > 0) {
+                batteryLevel = (level * 100) / scale
+            }
+        }
+        onDispose {
+            try { context.unregisterReceiver(receiver) } catch (_: Exception) {}
+        }
+    }
 
     // Load video on index change
     LaunchedEffect(currentIndex) {
@@ -251,6 +300,20 @@ fun LocalVideoPlayerScreen(
         val mediaItem = MediaItem.fromUri(uri)
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
+        val resumePos = LocalVideoRepository.getResumePosition(context, video.id)
+        if (resumePos > 3000L) {
+            exoPlayer.seekTo(resumePos)
+            playbackPosition = resumePos
+            hudText = "Resumed: ${LocalVideoRepository.formatDuration(resumePos)}"
+            hudIcon = Icons.Rounded.PlayCircle
+            coroutineScope.launch {
+                delay(2500L)
+                if (hudText?.startsWith("Resumed") == true) {
+                    hudText = null
+                    hudIcon = null
+                }
+            }
+        }
         exoPlayer.play()
         zoomScale = 1f
         offsetX = 0f
@@ -268,6 +331,8 @@ fun LocalVideoPlayerScreen(
                 if (playbackState == Player.STATE_READY) {
                     val d = exoPlayer.duration
                     videoDuration = if (d > 0L) d else currentVideo.durationMs
+                } else if (playbackState == Player.STATE_ENDED) {
+                    LocalVideoRepository.saveResumePosition(context, currentVideo.id, 0L, videoDuration)
                 }
             }
 
@@ -290,6 +355,7 @@ fun LocalVideoPlayerScreen(
         exoPlayer.addListener(listener)
 
         onDispose {
+            LocalVideoRepository.saveResumePosition(context, currentVideo.id, exoPlayer.currentPosition, exoPlayer.duration)
             exoPlayer.removeListener(listener)
             exoPlayer.release()
         }
@@ -309,13 +375,18 @@ fun LocalVideoPlayerScreen(
     var dragStartPosMs by remember { mutableLongStateOf(0L) }
     var seekTargetMs by remember { mutableLongStateOf(0L) }
 
-    // Periodic time tracking (paused during scrubbing)
-    LaunchedEffect(isPlaying, isScrubbing) {
+    // Periodic time tracking (paused during scrubbing) & periodic resume saving
+    LaunchedEffect(isPlaying, isScrubbing, currentIndex) {
+        var tickCount = 0
         while (isPlaying && !isScrubbing) {
             playbackPosition = exoPlayer.currentPosition.coerceAtLeast(0L)
             bufferPosition = exoPlayer.bufferedPosition.coerceAtLeast(0L)
             val d = exoPlayer.duration
             if (d > 0L) videoDuration = d
+            tickCount++
+            if (tickCount % 4 == 0 && playbackPosition > 0L) {
+                LocalVideoRepository.saveResumePosition(context, currentVideo.id, playbackPosition, videoDuration)
+            }
             delay(250L)
         }
     }
@@ -753,6 +824,37 @@ fun LocalVideoPlayerScreen(
                             }
                         }
 
+                        // Battery & Clock Display (MX Player style)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                        ) {
+                            if (batteryLevel >= 0) {
+                                Icon(
+                                    imageVector = if (isCharging) Icons.Rounded.BatteryChargingFull else Icons.Rounded.BatteryStd,
+                                    contentDescription = null,
+                                    tint = if (batteryLevel <= 15 && !isCharging) Color.Red else Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(16.dp),
+                                )
+                                Text(
+                                    text = "$batteryLevel%",
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                                Spacer(Modifier.width(4.dp))
+                            }
+                            if (currentTimeStr.isNotBlank()) {
+                                Text(
+                                    text = currentTimeStr,
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                        }
+
                         // Aspect Ratio Cycle Button (Fit / Fill / 16:9)
                         IconButton(
                             onClick = {
@@ -935,11 +1037,25 @@ fun LocalVideoPlayerScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             val displayTime = if (isScrubbing) scrubPosition.toLong() else playbackPosition
+                            val currentStr = LocalVideoRepository.formatDuration(displayTime)
+                            val durationOrRemaining = if (showRemainingTime) {
+                                val rem = (videoDuration - displayTime).coerceAtLeast(0L)
+                                "-${LocalVideoRepository.formatDuration(rem)}"
+                            } else {
+                                LocalVideoRepository.formatDuration(videoDuration)
+                            }
                             Text(
-                                text = "${LocalVideoRepository.formatDuration(displayTime)} / ${LocalVideoRepository.formatDuration(videoDuration)}",
+                                text = "$currentStr / $durationOrRemaining",
                                 color = Color.White.copy(alpha = 0.85f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .clickable {
+                                        showRemainingTime = !showRemainingTime
+                                        lastInteraction = System.currentTimeMillis()
+                                    }
+                                    .padding(horizontal = 4.dp, vertical = 2.dp),
                             )
 
                             Row(

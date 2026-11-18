@@ -4,7 +4,21 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import android.app.Activity
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Deselect
+import androidx.compose.material.icons.rounded.SelectAll
+import com.music.thrynx.data.MediaDeletionHelper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -70,7 +84,7 @@ import com.music.thrynx.data.LocalVideo
 import com.music.thrynx.data.LocalVideoRepository
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LocalVideosScreen(
     onBack: () -> Unit,
@@ -86,6 +100,25 @@ fun LocalVideosScreen(
     var isLoading by remember { mutableStateOf(true) }
     var selectedTab by remember { mutableIntStateOf(0) } // 0: All, 1: Folders
     var selectedFolder by remember { mutableStateOf<String?>(null) }
+
+    // Multi-selection & Deletion state
+    var selectedVideoIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    val isSelectionMode = selectedVideoIds.isNotEmpty()
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+    val deleteIntentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            selectedVideoIds = emptySet()
+            scope.launch {
+                isLoading = true
+                videos = LocalVideoRepository.queryVideos(context)
+                folders = LocalVideoRepository.queryFolders(context)
+                isLoading = false
+            }
+        }
+    }
 
     // Playing state
     var activePlayingList by remember { mutableStateOf<List<LocalVideo>?>(null) }
@@ -143,30 +176,89 @@ fun LocalVideosScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (selectedFolder != null) selectedFolder!! else stringResource(R.string.local_video),
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            if (selectedFolder != null) {
-                                selectedFolder = null
-                            } else {
-                                onBack()
+            val displayVideos = if (selectedFolder != null) {
+                folders[selectedFolder].orEmpty()
+            } else if (selectedTab == 0) {
+                videos
+            } else {
+                emptyList()
+            }
+
+            if (isSelectionMode) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "${selectedVideoIds.size} ${stringResource(R.string.selected)}",
+                            fontWeight = FontWeight.Bold,
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { selectedVideoIds = emptySet() }) {
+                            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.cancel))
+                        }
+                    },
+                    actions = {
+                        val allSelected = displayVideos.isNotEmpty() && displayVideos.all { it.id in selectedVideoIds }
+                        IconButton(
+                            onClick = {
+                                selectedVideoIds = if (allSelected) emptySet() else displayVideos.map { it.id }.toSet()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (allSelected) Icons.Rounded.Deselect else Icons.Rounded.SelectAll,
+                                contentDescription = stringResource(if (allSelected) R.string.deselect_all else R.string.select_all),
+                            )
+                        }
+                        IconButton(
+                            onClick = { showDeleteConfirmDialog = true },
+                            enabled = selectedVideoIds.isNotEmpty(),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = if (selectedVideoIds.isNotEmpty()) MaterialTheme.colorScheme.error else Color.Gray,
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                )
+            } else {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = if (selectedFolder != null) selectedFolder!! else stringResource(R.string.local_video),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                if (selectedFolder != null) {
+                                    selectedFolder = null
+                                } else {
+                                    onBack()
+                                }
+                            },
+                        ) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
+                        }
+                    },
+                    actions = {
+                        if (displayVideos.isNotEmpty() && (selectedTab == 0 || selectedFolder != null)) {
+                            IconButton(onClick = {
+                                selectedVideoIds = setOf(displayVideos.first().id)
+                            }) {
+                                Icon(Icons.Rounded.Checklist, contentDescription = stringResource(R.string.select_all))
                             }
-                        },
-                    ) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ),
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize(),
@@ -299,19 +391,34 @@ fun LocalVideosScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             itemsIndexed(displayVideos) { index, video ->
+                                val isSelected = video.id in selectedVideoIds
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                    color = if (isSelected) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    },
+                                    border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable {
-                                            if (onPlayVideo != null) {
-                                                onPlayVideo(displayVideos, index)
-                                            } else {
-                                                activePlayingList = displayVideos
-                                                activePlayingIndex = index
-                                            }
-                                        },
+                                        .combinedClickable(
+                                            onClick = {
+                                                if (isSelectionMode) {
+                                                    selectedVideoIds = if (isSelected) selectedVideoIds - video.id else selectedVideoIds + video.id
+                                                } else {
+                                                    if (onPlayVideo != null) {
+                                                        onPlayVideo(displayVideos, index)
+                                                    } else {
+                                                        activePlayingList = displayVideos
+                                                        activePlayingIndex = index
+                                                    }
+                                                }
+                                            },
+                                            onLongClick = {
+                                                selectedVideoIds = if (isSelected) selectedVideoIds - video.id else selectedVideoIds + video.id
+                                            },
+                                        ),
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(10.dp),
@@ -391,6 +498,47 @@ fun LocalVideosScreen(
                                                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
                                                 )
                                             }
+
+                                            // Watch progress bar (if resumed)
+                                            val resumePos = remember(video.id) { LocalVideoRepository.getResumePosition(context, video.id) }
+                                            if (resumePos > 3000L && video.durationMs > 0L) {
+                                                val progress = (resumePos.toFloat() / video.durationMs.toFloat()).coerceIn(0f, 1f)
+                                                Box(
+                                                    modifier = Modifier
+                                                        .align(Alignment.BottomStart)
+                                                        .fillMaxWidth()
+                                                        .height(3.dp)
+                                                        .background(Color.White.copy(alpha = 0.35f)),
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth(progress)
+                                                            .height(3.dp)
+                                                            .background(MaterialTheme.colorScheme.primary),
+                                                    )
+                                                }
+                                            }
+
+                                            // Selection checkmark
+                                            if (isSelectionMode) {
+                                                Surface(
+                                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.55f),
+                                                    shape = CircleShape,
+                                                    modifier = Modifier
+                                                        .align(Alignment.TopEnd)
+                                                        .padding(5.dp)
+                                                        .size(22.dp),
+                                                ) {
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            Icons.Rounded.Check,
+                                                            contentDescription = null,
+                                                            tint = Color.White,
+                                                            modifier = Modifier.padding(3.dp),
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
 
                                         Spacer(Modifier.width(12.dp))
@@ -419,6 +567,48 @@ fun LocalVideosScreen(
                     }
                 }
             }
+
+        // Delete Confirmation Dialog
+        if (showDeleteConfirmDialog && selectedVideoIds.isNotEmpty()) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showDeleteConfirmDialog = false },
+                title = { Text(stringResource(R.string.delete)) },
+                text = {
+                    Text("Delete ${selectedVideoIds.size} video(s) permanently from your device?")
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            showDeleteConfirmDialog = false
+                            val toDelete = videos.filter { it.id in selectedVideoIds }
+                            val uris = toDelete.map { it.contentUri }
+                            when (val res = MediaDeletionHelper.deleteMediaUris(context, uris)) {
+                                is MediaDeletionHelper.DeleteResult.RequiresConsent -> {
+                                    val req = IntentSenderRequest.Builder(res.intentSender).build()
+                                    deleteIntentLauncher.launch(req)
+                                }
+                                is MediaDeletionHelper.DeleteResult.Success -> {
+                                    selectedVideoIds = emptySet()
+                                    scope.launch {
+                                        isLoading = true
+                                        videos = LocalVideoRepository.queryVideos(context)
+                                        folders = LocalVideoRepository.queryFolders(context)
+                                        isLoading = false
+                                    }
+                                }
+                                is MediaDeletionHelper.DeleteResult.Error -> {}
+                            }
+                        },
+                    ) {
+                        Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                },
+            )
         }
     }
 }
