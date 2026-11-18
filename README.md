@@ -1,129 +1,231 @@
 <div align="center">
 
 <br/>
-<br/>
 
-<img src="Logo.png" alt="THRYNX app icon" width="200" />
+<img src="Logo.png" alt="THRYNX Logo" width="160" />
 
 # THRYNX
 
-### Aesthetic Modern Music Client
+### Aesthetic, High-Performance Cross-Platform Media Client
 
 <br/>
 
-[![Latest release](https://img.shields.io/github/v/release/sobuj-here/thrynx?style=for-the-badge&labelColor=0d1117)](https://github.com/sobuj-here/thrynx/releases)
-[![License](https://img.shields.io/github/license/sobuj-here/thrynx?style=for-the-badge&labelColor=0d1117)](https://github.com/sobuj-here/thrynx/blob/main/LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/sobuj-here/thrynx/total?style=for-the-badge&labelColor=0d1117)](https://github.com/sobuj-here/thrynx/releases)
+[![Latest Release](https://img.shields.io/github/v/release/sobuj-here/thrynx?style=for-the-badge&color=2563eb&labelColor=0d1117)](https://github.com/sobuj-here/thrynx/releases)
+[![License](https://img.shields.io/github/license/sobuj-here/thrynx?style=for-the-badge&color=10b981&labelColor=0d1117)](https://github.com/sobuj-here/thrynx/blob/main/LICENSE)
+[![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20PC%2FWeb%20%7C%20TV%20%7C%20WearOS-f59e0b?style=for-the-badge&labelColor=0d1117)](#platforms--downloads)
+[![Downloads](https://img.shields.io/github/downloads/sobuj-here/thrynx/total?style=for-the-badge&color=8b5cf6&labelColor=0d1117)](https://github.com/sobuj-here/thrynx/releases)
 
 <br/>
 
-[**Download**](#download) · [**Features**](#features) · [**Contributing**](#contributing) · [**Disclaimer**](#disclaimer)
+[**Overview**](#overview) · [**Features**](#features) · [**Platforms & Downloads**](#platforms--downloads) · [**Android Architecture Guide**](#which-android-apk-should-i-download) · [**PC & Web Client**](#using-thrynx-on-pc--desktop) · [**Installation**](#installation--sideloading) · [**Building**](#building-from-source) · [**Contributing**](#contributing) · [**License**](#license)
 
 <br/>
 
 </div>
 
 > [!IMPORTANT]
-> THRYNX is not affiliated with, endorsed by, or connected to YouTube or Google in any way. Use it at your own discretion.
+> **THRYNX** is an independent, community-driven media player. It is not affiliated with, endorsed by, or connected to Google LLC, YouTube, Deezer, Spotify, or any of their subsidiaries.
 
 ---
 
 <div align="center">
+  <img src="Banner.png" alt="THRYNX Banner" width="100%" />
+</div>
 
-<img src="Banner.png" alt="THRYNX banner" width="100%" />
+<br/>
 
-<h1><a id="features"></a>Features</h1>
+## <a id="overview"></a>Overview
+
+**THRYNX** is an aesthetic, modern media client designed for audiophiles, media enthusiasts, and everyday listeners. Built with **Jetpack Compose** and **Kotlin Multiplatform**, THRYNX brings together seamless streaming, local music, an integrated local video player with gesture and zoom controls, dynamic Material You theming, synchronized animated lyrics, and rich ecosystem connectivity across mobile, desktop, TV, and smartwatches.
+
+---
+
+## <a id="features"></a>Features
 
 <table>
   <tr>
     <td width="50%" valign="top">
 
-#### Playback
-- **Search, browse and play** anything available on YouTube Music.
-- **Hi-Res lossless audio** — FLAC/ALAC from a configured module source, with YouTube Music as fallback.
-- **Gapless playback with true crossfade**, adjustable 0–12s.
-- **Automix [Beta]** — DJ-style transitions with beat-matching and tempo-stretching.
-- **Offline downloads** — save tracks with embedded metadata.
-- **Local music library** integration.
-- **Background playback** via a proper foreground media session.
-- **Apple-like lyrics animation** — credit to [binimum](https://github.com/binimum/am-lyrics).
+### 🎬 Local Video Player `v1.1.0`
+- **Integrated Video Library**: Seamlessly browse and play local videos directly under **Library → Local Videos**.
+- **Pinch-to-Zoom**: Fluid two-finger pinch gesture with **1.0× to 4.0× smooth scaling and panning**.
+- **Aspect Ratio Control**: One-tap toggle through **Fit to Screen**, **Fill / Crop**, **16:9**, **4:3**, and **Original**.
+- **Gesture Controls**:
+  - Vertical swipe on the **left side** adjusts screen brightness.
+  - Vertical swipe on the **right side** adjusts audio volume.
+  - **Double-tap** left or right edge to skip 10 seconds backward or forward.
+- **Controls & Lock**: Screen orientation lock, full player touch-lock, and seek bar with live timestamps.
 
-#### Connectivity & Accounts
-- **Sign in with your Google account** for personalized content.
-- **Spotify integration** — connect your account to play your playlists and Liked Songs.
-- **Discord Rich Presence** — in-app login, live track/artist/album and progress.
-- **Scrobbling** to Last.fm and ListenBrainz.
-- **Pluggable sources** — add, edit, test and health-check module sources.
+### 🎵 Audiophile Playback Engine
+- **Streaming & Fallback**: Search, browse, and stream media with YouTube Music integration.
+- **Hi-Res Lossless Audio**: Support for FLAC/ALAC lossless audio sources.
+- **Gapless Playback & Crossfade**: Smooth track transitions with customizable crossfade (0–12s).
+- **Automix [Beta]**: DJ-style intelligent transitions featuring tempo matching and beat alignment.
+- **Offline Library**: Download tracks with embedded high-resolution artwork and metadata.
+- **Background Media Playback**: Persistent foreground media session ensuring uninterrupted listening with screen locked or app minimized.
+- **Bit-Perfect USB Exclusive Output**: Directly streams bit-perfect audio to external USB DACs without Android system resampling.
+- **Fine Audio Controls**: Playback speed (0.5×–2.0×), skip silence, sleep timer, and system equalizer integration.
 
     </td>
     <td width="50%" valign="top">
 
-#### Experience
-- **Animated album canvas** — motion artwork on the now-playing screen.
-- **Word-synced lyrics** — word/syllable-level highlighting from multiple sources.
-- **Lyrics providers** — credit to [lrc.red](https://lrc.red), [BiniLyrics](https://github.com/binimum), [BetterLyrics](https://github.com/better-lyrics/better-lyrics), [PaxSenix](https://lyrics.paxsenix.org), [LyricsPlus](https://github.com/ibratabian17/YouLyPlus), [SimpMusic](https://github.com/maxrave-dev/SimpMusic), [Unison](https://unison.boidu.dev), [Megalobiz](https://www.megalobiz.com), [KuGou](https://www.kugou.com), [LRCLIB](https://lrclib.net), [Musixmatch](https://www.musixmatch.com) and [Genius](https://genius.com).
-- **Dynamic, artwork-driven theming** — Material palette extracted from album art.
-- **Frosted-glass UI** — Telegram-style translucent bars via Haze, Material 3 theming.
+### 🎤 Synchronized Lyrics & Visuals
+- **Apple Music-Style Lyrics**: Fluid, word/syllable-level synchronized lyrics with kinetic animations.
+- **Multi-Source Lyrics Providers**: Automated lookup across LRCLIB, Musixmatch, Genius, KuGou, Megalobiz, SimpMusic, and more.
+- **Dynamic Theming**: Fluid Material You / Material 3 gradients generated dynamically from album art palettes.
+- **Frosted-Glass UI**: Telegram-inspired translucent navigation bars and player controls powered by Haze.
+- **Stats for Nerds**: Inspect codec, bit depth, sample rate, buffer health, and audio track details.
 
-#### Controls & Tweaks
-- **Per-network audio quality** — separate quality ceilings for Wi-Fi and mobile data.
-- **Playback speed control** (0.5×–2.0×) and **skip silence**.
-- **Sleep timer** — fixed presets or "stop after this track".
-- **System equalizer** integration.
-- **Bit-perfect USB exclusive output** — sends lossless tracks to a USB DAC unchanged, at each track's own rate and bit depth. Thanks to [Mornye](https://github.com/mornyeapp/Mornye) for the reference.
-- **Stats for nerds** — codec, bit depth, sample rate, and more on the now-playing screen.
+### 🌐 Ecosystem & Connectivity
+- **Google Account Sign-In**: Synchronize your personalized playlists, subscriptions, and recommendations.
+- **Spotify Integration**: Import and play your Spotify playlists and Liked Songs.
+- **Discord Rich Presence**: Live playback status, album art, artist, and track timeline shown on your Discord profile.
+- **Scrobbling Support**: Automatic scrobbling to **Last.fm** and **ListenBrainz**.
+- **Cross-Device Availability**:
+  - **Android Phones & Tablets** (Native Compose app).
+  - **PC / Desktop & Web** (Vite + React 19 web player & companion browser extension).
+  - **Android TV** (Leanback 10-foot living room UI).
+  - **Wear OS** (Smartwatch companion for wrist control).
 
     </td>
   </tr>
 </table>
 
-</div>
+---
+
+## <a id="platforms--downloads"></a>Platforms & Downloads
+
+THRYNX is designed for multi-platform flexibility. Check the table below to choose the right installation package for your device:
+
+| Platform | Format / Type | Compatibility | Recommended Package |
+|:---|:---|:---|:---|
+| 📱 **Android Phone & Tablet** | Signed `.apk` | Android 8.0 (Oreo) or higher | [**`app-prod-arm64-v8a-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
+| 🌐 **Android Universal** | Signed `.apk` | All Android 8.0+ devices | [**`app-prod-universal-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
+| 📱 **Android Legacy (32-bit)** | Signed `.apk` | Older 32-bit Android phones | [**`app-prod-armeabi-v7a-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
+| 💻 **PC Android Emulators / Intel** | Signed `.apk` | BlueStacks, LDPlayer, WSA, ChromeOS | [**`app-prod-x86_64-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
+| 💻 **PC / Desktop & Web** | Web App + Extension | Windows, macOS, Linux (Chrome, Edge, Firefox, Brave) | [**Run Web Player / PWA**](#using-thrynx-on-pc--desktop) |
+| 📺 **Android TV** | Android TV `.apk` | Google TV, Android TV boxes & sticks | Built from `:tv` target |
+| ⌚ **Wear OS** | Wear OS Companion | Galaxy Watch, Pixel Watch, Wear OS 3+ | Integrated with phone app |
+
+> 📥 **Ready to download?** Visit the [**GitHub Releases**](https://github.com/sobuj-here/thrynx/releases) page to grab the latest release.
 
 ---
 
-<div align="center">
+## <a id="which-android-apk-should-i-download"></a>Which Android APK Should I Download?
 
-<h1><a id="download"></a>Download</h1>
+When opening the Releases page, you will see multiple `.apk` assets. Use this guide to pick the best file for your device:
 
-<a href="https://github.com/sobuj-here/thrynx/releases" target="_blank" rel="noopener noreferrer"><img src="https://cdn.jsdelivr.net/gh/JMcrafter26/badges@main/src/assets/supported/android/cozy.svg" alt="Download for Android" height="55"/></a>
+### 🟢 1. Modern Android Phones & Tablets (`arm64-v8a`) — Recommended
+- **File:** `app-prod-arm64-v8a-release.apk`
+- **Who is this for:** **~95% of all Android users.** Any smartphone or tablet released in the last 7–8 years (including Samsung Galaxy, Google Pixel, Xiaomi, Redmi, OnePlus, Motorola, Nothing Phone, Vivo, OPPO, Realme, etc.).
+- **Why choose it:** Smallest file size, fastest CPU execution, and best battery efficiency.
 
-Grab the latest signed APK from the [Releases](https://github.com/sobuj-here/thrynx/releases) page. Sideloading requires enabling "Install unknown apps" for whichever app you download it with.
+### 🌐 2. Universal Package (`universal`) — When in Doubt
+- **File:** `app-prod-universal-release.apk`
+- **Who is this for:** Users who are unsure of their device's processor architecture or experiencing compatibility issues.
+- **Why choose it:** Contains native libraries for all CPU architectures bundled together. It installs and runs on any compatible Android device.
 
-</div>
+### 📱 3. Older 32-bit Android Devices (`armeabi-v7a`)
+- **File:** `app-prod-armeabi-v7a-release.apk`
+- **Who is this for:** Older Android phones, entry-level budget smartphones, or legacy devices running 32-bit ARM processors.
 
----
-
-<div align="center">
-
-<h1><a id="contributing"></a>Contributing</h1>
-
-We welcome contributions to THRYNX! Please review our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
-
-[**Contributing Guide**](CONTRIBUTING.md) · [**Code of Conduct**](CODE_OF_CONDUCT.md) · [**Maintainers**](MAINTAINERS.md) · [**Additional Docs**](ADDITIONAL.md)
-
-</div>
-
----
-
-<div align="center">
-
-<h1><a id="disclaimer"></a>Disclaimer & Legal Notice</h1>
-
-THRYNX is an independent, community-driven third-party audio player and client. It is **not** associated with Google LLC, YouTube Music, Deezer, Telegram, or any of their parent companies.
-
-* **No Media Hosting:** THRYNX does not host, upload, or store copyrighted music files. It operates strictly as an interface to scan local device storage or stream media directly from public, public-facing, or user-authenticated APIs.
-* **Fair Use & API Usage:** This software is created solely for personal research, educational, and fair-use purposes. The user is entirely responsible for ensuring their usage aligns with their local copyright laws and YouTube Terms of Service.
-* **No Ad-Blocking Guarantee:** While THRYNX focuses on providing a clean listening environment, it does not guarantee permanent bypasses or modifications to commercial third-party platform conditions.
-* **Copyleft:** THRYNX is free software under the GPLv3. The license does not let anyone forbid others from selling or redistributing copies, but any distribution must come with the Corresponding Source under the same license.
-
-</div>
+### 💻 4. PC Android Emulators & Intel Tablets (`x86_64`)
+- **File:** `app-prod-x86_64-release.apk`
+- **Who is this for:** Android emulators running on PC (e.g., **BlueStacks**, **LDPlayer**, **NoxPlayer**, **Windows Subsystem for Android**), or Chromebooks and tablets with Intel/AMD processors.
 
 ---
 
+## <a id="using-thrynx-on-pc--desktop"></a>Using THRYNX on PC / Desktop
+
+THRYNX offers two distinct methods for PC users (Windows, macOS, Linux):
+
+### Option A: THRYNX Web Player & Browser Extension (Native Desktop Experience)
+The repository includes a dedicated, lightweight modern Web client located in `web/app` built with **Vite**, **React 19**, **TypeScript**, and **Tailwind CSS v4**, complemented by a companion browser extension for Chromium (Chrome, Edge, Brave) and Firefox.
+
+1. **Prerequisites**: Node.js 22 or newer (pnpm is bundled via Corepack).
+2. **Install & Start**:
+   ```bash
+   corepack pnpm --dir web install
+   corepack pnpm --dir web/app dev
+   ```
+3. Open `http://localhost:5173` in your browser.
+4. **Companion Browser Extension**:
+   Build the extension to enable background playback and external media key integration:
+   ```bash
+   corepack pnpm --dir web/extension build
+   ```
+   - In Chrome / Edge / Brave: Navigate to `chrome://extensions` → Enable **Developer mode** → Click **Load unpacked** → Select `web/extension/.output/chrome-mv3`.
+   - In Firefox: Navigate to `about:debugging#/runtime/this-firefox` → Click **Load Temporary Add-on** → Select `web/extension/.output/firefox-mv3/manifest.json`.
+
+### Option B: Android Emulator on Windows / macOS / Linux
+If you prefer the mobile app interface on your desktop:
+1. Install an Android emulator such as **BlueStacks**, **LDPlayer**, or **Windows Subsystem for Android (WSA)**.
+2. Download the **`app-prod-x86_64-release.apk`** (or `app-prod-universal-release.apk`) from [Releases](https://github.com/sobuj-here/thrynx/releases).
+3. Drag and drop the `.apk` file into your emulator to install and launch.
+
+---
+
+## <a id="installation--sideloading"></a>Installation & Sideloading
+
+1. **Download the APK**: Download the appropriate APK (typically `app-prod-arm64-v8a-release.apk`) from [GitHub Releases](https://github.com/sobuj-here/thrynx/releases).
+2. **Allow Installation**: Tap on the downloaded APK. If prompted by Android, grant **"Install unknown apps"** permission for your browser or file manager.
+3. **Install**: Follow the on-screen prompts to complete the installation.
+4. **Updating**: Future releases can be installed directly over your existing installation. Your settings, local cached tracks, and library preferences will be completely preserved.
+
+---
+
+## <a id="building-from-source"></a>Building from Source
+
+### Prerequisites
+- **JDK 17** or newer.
+- **Android SDK** (API Level 35, Build-Tools 35.0.0).
+- **Node.js 22+** (for web client).
+
+### Build Android APKs
+Clone the repository and compile the release binaries:
+```bash
+git clone https://github.com/sobuj-here/thrynx.git
+cd thrynx
+
+# Build production release APKs
+./gradlew assembleProdRelease
+```
+The compiled APKs will be located in:
+`app/build/outputs/apk/prod/release/`
+
+### Build Web Client
+```bash
+corepack pnpm --dir web install
+corepack pnpm --dir web/app build
+```
+
+---
+
+## <a id="contributing"></a>Contributing
+
+Contributions, bug reports, and feature suggestions are warmly welcomed! Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
+
+- [**Contributing Guidelines**](CONTRIBUTING.md)
+- [**Code of Conduct**](CODE_OF_CONDUCT.md)
+- [**Maintainers**](MAINTAINERS.md)
+- [**Technical Architecture & Notes**](ADDITIONAL.md)
+
+---
+
+## <a id="disclaimer"></a>Disclaimer & Legal Notice
+
+THRYNX is an independent, community-driven third-party media client. It is **not** affiliated with Google LLC, YouTube Music, Deezer, Spotify, Telegram, or any of their parent entities.
+
+- **No Media Hosting**: THRYNX does not host, store, or distribute copyrighted media files. It functions strictly as a client interface to access local device storage or stream media directly through user-authenticated or publicly accessible endpoints.
+- **Fair Use**: This software is intended strictly for personal research, educational, and fair-use purposes. Users remain entirely responsible for ensuring their usage complies with their jurisdiction's applicable laws and relevant platform terms of service.
+- **Copyleft**: THRYNX is distributed as free software under the **GNU General Public License v3.0 (GPLv3)**. Any redistributed binaries or forks must be accompanied by corresponding source code under the same license terms.
+
+---
+
+## <a id="license"></a>License
+
+Distributed under the **GNU General Public License v3.0 (GPLv3)**. See [LICENSE](LICENSE) for full legal text.
+
 <div align="center">
-
-<h1><a id="license"></a>License</h1>
-
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the [LICENSE](LICENSE) file for details.
-
+  <sub>Crafted for modern music & video playback.</sub>
 </div>
