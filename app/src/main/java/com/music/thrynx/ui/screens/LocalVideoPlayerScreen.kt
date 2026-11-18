@@ -140,6 +140,7 @@ fun LocalVideoPlayerScreen(
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager }
+    val coroutineScope = rememberCoroutineScope()
 
     var currentIndex by remember { mutableIntStateOf(initialIndex.coerceIn(0, (videoList.size - 1).coerceAtLeast(0))) }
     val currentVideo = videoList.getOrNull(currentIndex) ?: run {
@@ -363,8 +364,6 @@ fun LocalVideoPlayerScreen(
 
     var isScrubbing by remember { mutableStateOf(false) }
     var scrubPosition by remember { mutableFloatStateOf(0f) }
-
-    val coroutineScope = rememberCoroutineScope()
     var lastTapTimestamp by remember { mutableLongStateOf(0L) }
     var lastTapPosition by remember { mutableStateOf(Offset.Zero) }
     var singleTapJob by remember { mutableStateOf<Job?>(null) }

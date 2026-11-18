@@ -243,5 +243,5 @@ object LocalVideoRepository {
             prefs.edit().putLong("pos_$videoId", positionMs).apply()
         }
     }
-    }
+
 }
