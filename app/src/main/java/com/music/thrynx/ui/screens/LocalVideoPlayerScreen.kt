@@ -97,18 +97,18 @@ import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
+import android.view.TextureView
+import androidx.compose.foundation.layout.aspectRatio
 import com.music.thrynx.R
 import com.music.thrynx.data.LocalVideo
 import com.music.thrynx.data.LocalVideoRepository
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
-enum class VideoResizeMode(val mode: Int, val labelRes: Int) {
-    FIT(AspectRatioFrameLayout.RESIZE_MODE_FIT, R.string.fit_screen),
-    FILL(AspectRatioFrameLayout.RESIZE_MODE_ZOOM, R.string.fill_screen),
-    FIXED_16_9(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH, R.string.zoom),
+enum class VideoResizeMode(val labelRes: Int) {
+    FIT(R.string.fit_screen),
+    FILL(R.string.fill_screen),
+    FIXED_16_9(R.string.zoom),
 }
 
 @OptIn(UnstableApi::class)
@@ -257,21 +257,7 @@ fun LocalVideoPlayerScreen(
             .background(Color.Black),
     ) {
         // Main Video View with Pinch to Zoom
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    player = exoPlayer
-                    useController = false
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    )
-                    this.resizeMode = resizeMode.mode
-                }
-            },
-            update = { playerView ->
-                playerView.resizeMode = resizeMode.mode
-            },
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
@@ -294,7 +280,28 @@ fun LocalVideoPlayerScreen(
                         }
                     }
                 },
-        )
+            contentAlignment = Alignment.Center,
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    TextureView(ctx).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                        )
+                        exoPlayer.setVideoTextureView(this)
+                    }
+                },
+                update = { view ->
+                    exoPlayer.setVideoTextureView(view)
+                },
+                modifier = when (resizeMode) {
+                    VideoResizeMode.FIT -> Modifier.fillMaxSize()
+                    VideoResizeMode.FILL -> Modifier.fillMaxSize()
+                    VideoResizeMode.FIXED_16_9 -> Modifier.fillMaxWidth().aspectRatio(16f / 9f)
+                },
+            )
+        }
 
         // Touch & Gesture Interaction Surface
         Box(
