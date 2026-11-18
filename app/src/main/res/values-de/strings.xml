@@ -1457,4 +1457,25 @@
     <string name="bit_perfect_status_inexact">%1$s · nicht exakt: Diese Quelle ist kein verlustfreies PCM</string>
     <string name="bit_perfect_status_waiting">Warte auf einen verlustfreien Titel an einem unterstützten Ausgang</string>
     <string name="bit_perfect_status_unavailable">Für diesen Titel nicht verfügbar (%1$s)</string>
+
+    <string name="all_videos">All Videos</string>
+    <string name="audio_tracks">Audio Tracks</string>
+    <string name="automix_overview">Automix overview</string>
+    <string name="bengali">Bengali</string>
+    <string name="brightness">Brightness</string>
+    <string name="diwali_cta">Let\'s Celebrate</string>
+    <string name="diwali_subtitle">May this festival of lights fill your home with joy and your days with music.</string>
+    <string name="diwali_title">Thrynx wishes you a Happy Diwali</string>
+    <string name="fill_screen">Fill screen</string>
+    <string name="fit_screen">Fit to screen</string>
+    <string name="local_video">Local Video</string>
+    <string name="locked">Screen locked</string>
+    <string name="no_videos_found">No videos found on this device</string>
+    <string name="pip_mode">Picture in picture</string>
+    <string name="playback_speed">Playback speed</string>
+    <string name="subtitles">Subtitles</string>
+    <string name="unlocked">Screen unlocked</string>
+    <string name="video_files_on_device">Video files on device</string>
+    <string name="volume">Volume</string>
+    <string name="zoom">Zoom</string>
 </resources>

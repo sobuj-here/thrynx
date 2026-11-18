@@ -1071,6 +1071,8 @@
     <string name="all_videos">All Videos</string>
     <string name="audio_tracks">Audio Tracks</string>
     <string name="subtitles">Subtitles</string>
+    <string name="playback_speed">Playback speed</string>
+    <string name="pip_mode">Picture in picture</string>
 
     <string name="miscellaneous_footer">When enabled, closing the app from the recent apps screen will also stop music playback.</string>
 
