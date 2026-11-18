@@ -17,7 +17,7 @@
 
 <br/>
 
-[**Overview**](#overview) · [**Features**](#features) · [**Platforms & Downloads**](#platforms--downloads) · [**Android Architecture Guide**](#which-android-apk-should-i-download) · [**PC & Web Client**](#using-thrynx-on-pc--desktop) · [**Installation**](#installation--sideloading) · [**Building**](#building-from-source) · [**Contributing**](#contributing) · [**License**](#license)
+[**Overview**](#overview) · [**Features**](#features) · [**Platforms & Downloads**](#platforms--downloads) · [**Android Architecture Guide**](#which-android-apk-should-i-download) · [**PC & Web Client**](#using-thrynx-on-pc--desktop) · [**Installation**](#installation--sideloading) · [**Building**](#building-from-source) · [**Credits & Upstream**](#credits-and-acknowledgments) · [**License**](#license)
 
 <br/>
 
@@ -218,14 +218,46 @@ corepack pnpm --dir web/app build
 
 ---
 
-## <a id="contributing"></a>Contributing
+## <a id="credits-and-acknowledgments"></a>Credits & Upstream Lineage
 
-Contributions, bug reports, and feature suggestions are warmly welcomed! Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
+> [!NOTE]
+> **THRYNX** is proudly built upon the open-source foundations of [**BitChord**](https://github.com/kushagrasinghx) (and its upstream project [**RiMusic**](https://github.com/fast4x/RiMusic)). We express our deepest gratitude and full credit to the original creators and contributors whose dedication and engineering made this incredible media player possible.
 
-- [**Contributing Guidelines**](CONTRIBUTING.md)
-- [**Code of Conduct**](CODE_OF_CONDUCT.md)
-- [**Maintainers**](MAINTAINERS.md)
-- [**Technical Architecture & Notes**](ADDITIONAL.md)
+### 🌟 Upstream Foundations (BitChord & RiMusic)
+The core music streaming architecture and baseline playback capabilities of THRYNX are inherited from the **BitChord** and **RiMusic** open-source codebases, including:
+- **Audio Playback Engine:** YouTube Music integration, audio stream parsing, search and recommendation endpoints.
+- **Audiophile DSP & Pipeline:** Hi-Res audio playback, smooth gapless transitions, customizable crossfade, and bit-perfect USB DAC support.
+- **Synchronized Lyrics:** Word-by-word kinetic lyrics rendering inspired by Apple Music, with automated scraping across multiple lyric providers.
+- **Ecosystem Connectivity:** Google account synchronization, Spotify playlist imports, Discord Rich Presence, and Last.fm / ListenBrainz scrobbling.
+- **Glassmorphic UI Design:** Translucent frosted-glass bottom sheets and floating navigation bars powered by Haze and Jetpack Compose.
+
+---
+
+### 🚀 Enhancements & Features Added in THRYNX
+Building upon the upstream foundations, THRYNX introduces new media capabilities, player controls, critical bug fixes, and customized multi-platform workflows:
+
+1. **🎬 Integrated Local Video Player (`v1.1.0`):**
+   - Built-in video player directly accessible under **Library → Local Videos**.
+   - Hardware-accelerated video thumbnail generation using Android MediaStore APIs paired with an in-memory `LruCache` for zero-lag 60fps scrolling.
+   - Fluid **1.0× to 4.0× pinch-to-zoom and pan** gestures on video playback.
+   - Screen **orientation toggle (Portrait ↔ Landscape)** with recursive `ContextWrapper` unwrapping and device sensor auto-rotation.
+   - **Horizontal Drag Seeking:** Swipe left or right across the screen to smoothly scrub through videos with a live timestamp and delta HUD (`+0:45` / `-0:20`).
+   - **Vertical Swipe Gestures:** Left-half vertical drag controls screen brightness; right-half vertical drag controls system audio volume.
+   - **Double-Tap Skip:** Double-tap on the left or right edge to skip 10 seconds backward or forward.
+   - Aspect ratio cycling (Fit to Screen, Fill / Crop, 16:9, Original) and one-tap player touch-lock.
+
+2. **🛠️ Playback, Audio Focus & Fullscreen Improvements:**
+   - **Audio Focus Management:** Background music automatically pauses when a local video is launched and resumes cleanly when closed.
+   - **True Immersive Fullscreen:** Automatically hides Android system bars (Status & Navigation) and cleanly suppresses the music `MiniPlayer` and bottom tabs while playing video.
+   - **Slider Scrubbing Fix:** Decoupled the periodic playback position update during touch interactions, ensuring the seek bar never snaps back or fights the user's finger.
+
+3. **🎨 Visual Branding & Theme Overhaul:**
+   - Custom **THRYNX** logo and complete suite of adaptive icons generated across all 5 mipmap densities (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) for all 11 theme variants (Liquid Glass, Samsung Glass, Pixel Glass, Neon Silver/Cyan/Violet, and Monochrome).
+   - Clean UI without residual naming conflicts.
+
+4. **⚡ DevOps, Distribution & Direct Downloads:**
+   - Automated GitHub Actions release pipeline building signed production APKs (`arm64-v8a`, `universal`, `armeabi-v7a`, `x86_64`) and multi-platform artifacts.
+   - 1-click direct download infrastructure right from the README.
 
 ---
 
@@ -241,7 +273,13 @@ THRYNX is an independent, community-driven third-party media client. It is **not
 
 ## <a id="license"></a>License
 
-Distributed under the **GNU General Public License v3.0 (GPLv3)**. See [LICENSE](LICENSE) for full legal text.
+THRYNX is distributed as free and open-source software under the **GNU General Public License v3.0 (GPLv3)**.
+
+- **Freedom to Inspect & Modify:** You are free to run, inspect, modify, and redistribute this software.
+- **Copyleft Guarantee:** Any derivative works or distributions must remain open source under the same GPLv3 license terms.
+- **Attribution & Upstream Credit:** Preserves all original copyright notices and credits to the creators and contributors of BitChord, RiMusic, and THRYNX.
+
+See the complete legal text in the [LICENSE](LICENSE) file.
 
 <div align="center">
   <sub>Crafted for modern music & video playback.</sub>
