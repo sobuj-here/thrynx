@@ -1328,4 +1328,6 @@
     <string name="video_files_on_device">Video files on device</string>
     <string name="volume">Volume</string>
     <string name="zoom">Zoom</string>
+    <string name="screen_rotation">화면 회전</string>
+    <string name="deselect_all">모두 선택 해제</string>
 </resources>

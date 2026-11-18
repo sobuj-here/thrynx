@@ -1456,4 +1456,6 @@
     <string name="video_files_on_device">Video files on device</string>
     <string name="volume">Volume</string>
     <string name="zoom">Zoom</string>
+    <string name="screen_rotation">画面の回転</string>
+    <string name="deselect_all">すべて選択解除</string>
 </resources>

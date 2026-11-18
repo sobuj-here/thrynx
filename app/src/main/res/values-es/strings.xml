@@ -1450,4 +1450,6 @@
     <string name="video_files_on_device">Video files on device</string>
     <string name="volume">Volume</string>
     <string name="zoom">Zoom</string>
+    <string name="screen_rotation">Rotación de pantalla</string>
+    <string name="deselect_all">Deseleccionar todo</string>
 </resources>

@@ -1455,4 +1455,6 @@
     <string name="video_files_on_device">Video files on device</string>
     <string name="volume">Volume</string>
     <string name="zoom">Zoom</string>
+    <string name="screen_rotation">螢幕旋轉</string>
+    <string name="deselect_all">取消全選</string>
 </resources>
