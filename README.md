@@ -30,6 +30,23 @@
 
 <div align="center">
   <img src="Banner.png" alt="THRYNX Banner" width="100%" />
+
+<br/><br/>
+
+### ⚡ Direct Download — Latest Release (`v1.1.0`)
+
+[![Download ARM64 APK](https://img.shields.io/badge/⚡_Download_ARM64_APK-(Most_Phones)-2563eb?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-arm64-v8a-release.apk)
+&nbsp;
+[![Download Universal APK](https://img.shields.io/badge/🌐_Download_Universal_APK-(All_Devices)-10b981?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-universal-release.apk)
+<br/>
+[![Download ARMv7 APK](https://img.shields.io/badge/📱_Download_ARMv7_APK-(Older_Phones)-f59e0b?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-armeabi-v7a-release.apk)
+&nbsp;
+[![Download x86_64 APK](https://img.shields.io/badge/💻_Download_x86__64_APK-(PC_Emulators)-8b5cf6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-x86_64-release.apk)
+
+<br/>
+
+<sub>One-click direct download. All files are digitally signed and verified production builds.</sub>
+
 </div>
 
 <br/>
@@ -97,17 +114,17 @@
 
 THRYNX is designed for multi-platform flexibility. Check the table below to choose the right installation package for your device:
 
-| Platform | Format / Type | Compatibility | Recommended Package |
+| Platform | Format / Type | Compatibility | Direct Download Link |
 |:---|:---|:---|:---|
-| 📱 **Android Phone & Tablet** | Signed `.apk` | Android 8.0 (Oreo) or higher | [**`app-prod-arm64-v8a-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
-| 🌐 **Android Universal** | Signed `.apk` | All Android 8.0+ devices | [**`app-prod-universal-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
-| 📱 **Android Legacy (32-bit)** | Signed `.apk` | Older 32-bit Android phones | [**`app-prod-armeabi-v7a-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
-| 💻 **PC Android Emulators / Intel** | Signed `.apk` | BlueStacks, LDPlayer, WSA, ChromeOS | [**`app-prod-x86_64-release.apk`**](https://github.com/sobuj-here/thrynx/releases) |
-| 💻 **PC / Desktop & Web** | Web App + Extension | Windows, macOS, Linux (Chrome, Edge, Firefox, Brave) | [**Run Web Player / PWA**](#using-thrynx-on-pc--desktop) |
+| 📱 **Android Phone & Tablet** | Signed `.apk` | Android 8.0 (Oreo) or higher | [⬇️ **Download ARM64 APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-arm64-v8a-release.apk) |
+| 🌐 **Android Universal** | Signed `.apk` | All Android 8.0+ devices | [⬇️ **Download Universal APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-universal-release.apk) |
+| 📱 **Android Legacy (32-bit)** | Signed `.apk` | Older 32-bit Android phones | [⬇️ **Download ARMv7 APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-armeabi-v7a-release.apk) |
+| 💻 **PC Android Emulators / Intel** | Signed `.apk` | BlueStacks, LDPlayer, WSA, ChromeOS | [⬇️ **Download x86_64 APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-x86_64-release.apk) |
+| 💻 **PC / Desktop & Web** | Web App + Extension | Windows, macOS, Linux (Chrome, Edge, Firefox, Brave) | [🚀 **Open Web Client Guide**](#using-thrynx-on-pc--desktop) |
 | 📺 **Android TV** | Android TV `.apk` | Google TV, Android TV boxes & sticks | Built from `:tv` target |
 | ⌚ **Wear OS** | Wear OS Companion | Galaxy Watch, Pixel Watch, Wear OS 3+ | Integrated with phone app |
 
-> 📥 **Ready to download?** Visit the [**GitHub Releases**](https://github.com/sobuj-here/thrynx/releases) page to grab the latest release.
+> 📥 **Need full changelog or older versions?** Visit the [**GitHub Releases**](https://github.com/sobuj-here/thrynx/releases) page.
 
 ---
 
@@ -116,21 +133,21 @@ THRYNX is designed for multi-platform flexibility. Check the table below to choo
 When opening the Releases page, you will see multiple `.apk` assets. Use this guide to pick the best file for your device:
 
 ### 🟢 1. Modern Android Phones & Tablets (`arm64-v8a`) — Recommended
-- **File:** `app-prod-arm64-v8a-release.apk`
+- **Direct Download:** [⬇️ **`app-prod-arm64-v8a-release.apk`**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-arm64-v8a-release.apk)
 - **Who is this for:** **~95% of all Android users.** Any smartphone or tablet released in the last 7–8 years (including Samsung Galaxy, Google Pixel, Xiaomi, Redmi, OnePlus, Motorola, Nothing Phone, Vivo, OPPO, Realme, etc.).
 - **Why choose it:** Smallest file size, fastest CPU execution, and best battery efficiency.
 
 ### 🌐 2. Universal Package (`universal`) — When in Doubt
-- **File:** `app-prod-universal-release.apk`
+- **Direct Download:** [⬇️ **`app-prod-universal-release.apk`**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-universal-release.apk)
 - **Who is this for:** Users who are unsure of their device's processor architecture or experiencing compatibility issues.
 - **Why choose it:** Contains native libraries for all CPU architectures bundled together. It installs and runs on any compatible Android device.
 
 ### 📱 3. Older 32-bit Android Devices (`armeabi-v7a`)
-- **File:** `app-prod-armeabi-v7a-release.apk`
+- **Direct Download:** [⬇️ **`app-prod-armeabi-v7a-release.apk`**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-armeabi-v7a-release.apk)
 - **Who is this for:** Older Android phones, entry-level budget smartphones, or legacy devices running 32-bit ARM processors.
 
 ### 💻 4. PC Android Emulators & Intel Tablets (`x86_64`)
-- **File:** `app-prod-x86_64-release.apk`
+- **Direct Download:** [⬇️ **`app-prod-x86_64-release.apk`**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-x86_64-release.apk)
 - **Who is this for:** Android emulators running on PC (e.g., **BlueStacks**, **LDPlayer**, **NoxPlayer**, **Windows Subsystem for Android**), or Chromebooks and tablets with Intel/AMD processors.
 
 ---

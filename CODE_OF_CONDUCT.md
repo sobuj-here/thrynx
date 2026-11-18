@@ -16,7 +16,7 @@ The following behaviors are unacceptable within the project:
 
 ## Reporting
 If you experience or witness unacceptable behavior, report it privately to the project maintainer:
-- Email: `kushagrasinghx@gmail.com`
+- Email: `sobuj.here.420@gmail.com` or open a private issue on GitHub.
 
 Reports will be handled privately and with appropriate discretion.
 
