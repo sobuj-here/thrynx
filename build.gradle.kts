@@ -41,8 +41,8 @@ buildscript {
  * No "v" in the name — the in-app updater reads it as a number; the "v" is the
  * release tag's alone.
  */
-extra["thrynxVersionCode"] = 3
-extra["thrynxVersionName"] = "1.2.0"
+extra["thrynxVersionCode"] = 4
+extra["thrynxVersionName"] = "1.2.1"
 
 /*
  * Bump this by hand before cutting each sideloaded test build ("beta2",

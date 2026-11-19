@@ -87,14 +87,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -104,6 +107,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import android.view.TextureView
@@ -156,6 +160,10 @@ fun LocalVideoPlayerScreen(
 
     LaunchedEffect(configuration.orientation) {
         isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        // Reset zoom and pan on orientation changes to prevent unwanted cropping
+        zoomScale = 1.0f
+        offsetX = 0f
+        offsetY = 0f
     }
 
     fun toggleOrientation() {
@@ -166,13 +174,15 @@ fun LocalVideoPlayerScreen(
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
         act.requestedOrientation = target
-        isLandscape = !isLandscape
     }
 
     DisposableEffect(activity) {
         val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         val window = activity?.window
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Allow sensor orientation so device can auto-rotate smoothly
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
 
         // Immersive full screen: hide status bar and navigation bar
         if (window != null) {
@@ -182,7 +192,7 @@ fun LocalVideoPlayerScreen(
         }
 
         onDispose {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            activity?.requestedOrientation = originalOrientation
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             if (window != null) {
                 val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
@@ -227,6 +237,16 @@ fun LocalVideoPlayerScreen(
     var isLocked by remember { mutableStateOf(false) }
     var resizeMode by remember { mutableStateOf(VideoResizeMode.FIT) }
     var playbackSpeed by remember { mutableFloatStateOf(1.0f) }
+
+    // Video aspect ratio tracking
+    val initialAspect = remember(currentVideo.id) {
+        if (currentVideo.width > 0 && currentVideo.height > 0) {
+            currentVideo.width.toFloat() / currentVideo.height.toFloat()
+        } else {
+            16f / 9f
+        }
+    }
+    var videoAspectRatio by remember(currentVideo.id) { mutableFloatStateOf(initialAspect) }
 
     // Zoom & pan
     var zoomScale by remember { mutableFloatStateOf(1f) }
@@ -320,6 +340,10 @@ fun LocalVideoPlayerScreen(
         zoomScale = 1f
         offsetX = 0f
         offsetY = 0f
+        resizeMode = VideoResizeMode.FIT
+        if (video.width > 0 && video.height > 0) {
+            videoAspectRatio = video.width.toFloat() / video.height.toFloat()
+        }
     }
 
     // Listener for state updates
@@ -335,6 +359,18 @@ fun LocalVideoPlayerScreen(
                     videoDuration = if (d > 0L) d else currentVideo.durationMs
                 } else if (playbackState == Player.STATE_ENDED) {
                     LocalVideoRepository.saveResumePosition(context, currentVideo.id, 0L, videoDuration)
+                }
+            }
+
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    val isRotated = videoSize.unappliedRotationDegrees == 90 || videoSize.unappliedRotationDegrees == 270
+                    val pixelRatio = if (videoSize.pixelWidthHeightRatio > 0f) videoSize.pixelWidthHeightRatio else 1.0f
+                    val displayWidth = if (isRotated) videoSize.height.toFloat() else (videoSize.width * pixelRatio)
+                    val displayHeight = if (isRotated) (videoSize.width * pixelRatio) else videoSize.height.toFloat()
+                    if (displayWidth > 0f && displayHeight > 0f) {
+                        videoAspectRatio = displayWidth / displayHeight
+                    }
                 }
             }
 
@@ -410,6 +446,10 @@ fun LocalVideoPlayerScreen(
         }
     }
 
+    val safeAspect = remember(videoAspectRatio) {
+        if (videoAspectRatio.isFinite() && videoAspectRatio > 0.05f) videoAspectRatio else (16f / 9f)
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -419,6 +459,7 @@ fun LocalVideoPlayerScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .clipToBounds()
                 .graphicsLayer {
                     scaleX = zoomScale
                     scaleY = zoomScale
@@ -441,11 +482,57 @@ fun LocalVideoPlayerScreen(
                 onRelease = {
                     if (textureView === it) textureView = null
                 },
-                modifier = when (resizeMode) {
-                    VideoResizeMode.FIT -> Modifier.fillMaxSize()
-                    VideoResizeMode.FILL -> Modifier.fillMaxSize()
-                    VideoResizeMode.FIXED_16_9 -> Modifier.fillMaxWidth().aspectRatio(16f / 9f)
-                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .layout { measurable, constraints ->
+                        val width = constraints.maxWidth
+                        val height = if (constraints.hasBoundedHeight) {
+                            constraints.maxHeight
+                        } else {
+                            (width / safeAspect).roundToInt()
+                        }
+                        val boundsAspect = width.toFloat() / height.coerceAtLeast(1)
+                        val wider = boundsAspect > safeAspect
+
+                        val (w, h) = when (resizeMode) {
+                            VideoResizeMode.FIT -> {
+                                // Fit-to-screen: letterbox / pillarbox, preserve exact aspect ratio without stretching or cropping
+                                if (wider) {
+                                    (height * safeAspect).roundToInt() to height
+                                } else {
+                                    width to (width / safeAspect).roundToInt()
+                                }
+                            }
+                            VideoResizeMode.FILL -> {
+                                // Proportional fill: crop overflow without distortion
+                                if (wider) {
+                                    width to (width / safeAspect).roundToInt()
+                                } else {
+                                    (height * safeAspect).roundToInt() to height
+                                }
+                            }
+                            VideoResizeMode.FIXED_16_9 -> {
+                                // 16:9 fit-to-screen
+                                val targetRatio = 16f / 9f
+                                val wider16_9 = boundsAspect > targetRatio
+                                if (wider16_9) {
+                                    (height * targetRatio).roundToInt() to height
+                                } else {
+                                    width to (width / targetRatio).roundToInt()
+                                }
+                            }
+                        }
+
+                        val placeable = measurable.measure(
+                            Constraints.fixed(
+                                w.coerceAtLeast(1),
+                                h.coerceAtLeast(1),
+                            ),
+                        )
+                        layout(width, height) {
+                            placeable.place((width - w) / 2, (height - h) / 2)
+                        }
+                    },
             )
         }
 
@@ -858,14 +945,28 @@ fun LocalVideoPlayerScreen(
                         // Aspect Ratio Cycle Button (Fit / Fill / 16:9)
                         IconButton(
                             onClick = {
-                                resizeMode = when (resizeMode) {
+                                val nextMode = when (resizeMode) {
                                     VideoResizeMode.FIT -> VideoResizeMode.FILL
                                     VideoResizeMode.FILL -> VideoResizeMode.FIXED_16_9
                                     VideoResizeMode.FIXED_16_9 -> VideoResizeMode.FIT
                                 }
+                                resizeMode = nextMode
                                 zoomScale = 1f
                                 offsetX = 0f
                                 offsetY = 0f
+                                hudText = context.getString(nextMode.labelRes)
+                                hudIcon = when (nextMode) {
+                                    VideoResizeMode.FIT -> Icons.Rounded.FitScreen
+                                    VideoResizeMode.FILL -> Icons.Rounded.Crop
+                                    VideoResizeMode.FIXED_16_9 -> Icons.Rounded.Fullscreen
+                                }
+                                coroutineScope.launch {
+                                    delay(1200L)
+                                    if (hudText == context.getString(nextMode.labelRes)) {
+                                        hudText = null
+                                        hudIcon = null
+                                    }
+                                }
                                 lastInteraction = System.currentTimeMillis()
                             },
                         ) {
@@ -1067,8 +1168,15 @@ fun LocalVideoPlayerScreen(
                                     IconButton(
                                         onClick = {
                                             controlsVisible = false
+                                            val rationalAspect = try {
+                                                val safePipAspect = safeAspect.coerceIn(0.42f, 2.38f)
+                                                val num = (safePipAspect * 1000).roundToInt()
+                                                Rational(num, 1000)
+                                            } catch (_: Exception) {
+                                                Rational(16, 9)
+                                            }
                                             val params = PictureInPictureParams.Builder()
-                                                .setAspectRatio(Rational(16, 9))
+                                                .setAspectRatio(rationalAspect)
                                                 .build()
                                             activity?.enterPictureInPictureMode(params)
                                         },
