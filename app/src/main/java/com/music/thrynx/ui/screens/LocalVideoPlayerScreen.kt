@@ -158,13 +158,7 @@ fun LocalVideoPlayerScreen(
         mutableStateOf(configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
     }
 
-    LaunchedEffect(configuration.orientation) {
-        isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-        // Reset zoom and pan on orientation changes to prevent unwanted cropping
-        zoomScale = 1.0f
-        offsetX = 0f
-        offsetY = 0f
-    }
+
 
     fun toggleOrientation() {
         val act = activity ?: return
@@ -252,6 +246,14 @@ fun LocalVideoPlayerScreen(
     var zoomScale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(configuration.orientation) {
+        isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        // Reset zoom and pan on orientation changes to prevent unwanted cropping
+        zoomScale = 1.0f
+        offsetX = 0f
+        offsetY = 0f
+    }
 
     // HUD overlays
     var hudText by remember { mutableStateOf<String?>(null) }
