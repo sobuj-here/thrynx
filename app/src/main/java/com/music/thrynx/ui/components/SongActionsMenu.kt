@@ -132,6 +132,7 @@ fun SongActionsMenu(
      * row — the History screen passes one only when the menu is opened there.
      */
     onRemoveFromHistory: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
     showSleepTimer: Boolean = false,
     /**
      * Sends the playing track back to YouTube's own upload, and keeps it there.
@@ -536,7 +537,15 @@ private fun DownloadRow(song: Song, palette: ArtworkPalette, isOffline: Boolean,
                 value = stringResource(R.string.delete),
                 tint = palette.accent,
                 accent = palette.accent,
-            ) { scope.launch { Downloads.delete(context, song.videoId) } }
+            ) {
+                if (onDelete != null) {
+                    onDelete()
+                } else {
+                    scope.launch {
+                        Downloads.delete(context, song.videoId)
+                    }
+                }
+            }
         } else if (!isOffline) {
             ActionRow(
                 icon = SfIcons.Download,
@@ -551,8 +560,24 @@ private fun DownloadRow(song: Song, palette: ArtworkPalette, isOffline: Boolean,
                 tint = MaterialTheme.colorScheme.error,
                 accent = MaterialTheme.colorScheme.error,
             ) {
-                val uri = android.net.Uri.parse(song.localUri)
-                com.music.thrynx.data.MediaDeletionHelper.deleteMediaUris(context, listOf(uri))
+                if (onDelete != null) {
+                    onDelete()
+                } else {
+                    val uri = android.net.Uri.parse(song.localUri)
+                    val path = if (uri.scheme == "file") uri.path ?: "" else ""
+                    val res = com.music.thrynx.data.MediaDeletionHelper.deleteMediaUris(
+                        context,
+                        listOf(uri),
+                        listOfNotNull(path.takeIf { it.isNotEmpty() }),
+                    )
+                    if (res is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.RequiresConsent) {
+                        try {
+                            val act = (context as? android.app.Activity)
+                                ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
+                            act?.startIntentSenderForResult(res.intentSender, 9921, null, 0, 0, 0)
+                        } catch (_: Exception) {}
+                    }
+                }
             }
         }
     }

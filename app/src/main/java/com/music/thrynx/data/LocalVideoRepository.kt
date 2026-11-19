@@ -244,4 +244,14 @@ object LocalVideoRepository {
         }
     }
 
+
+    fun getLastPlayedVideoId(context: Context): Long {
+        val prefs = context.getSharedPreferences("local_video_resume", Context.MODE_PRIVATE)
+        return prefs.getLong("last_played_video_id", -1L)
+    }
+
+    fun setLastPlayedVideoId(context: Context, videoId: Long) {
+        val prefs = context.getSharedPreferences("local_video_resume", Context.MODE_PRIVATE)
+        prefs.edit().putLong("last_played_video_id", videoId).apply()
+    }
 }

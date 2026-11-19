@@ -3054,6 +3054,9 @@ private fun ThrynxApp(
                                     if (player.isPlaying) {
                                         controller?.pause()
                                     }
+                                    list.getOrNull(index)?.let { vid ->
+                                        com.music.thrynx.data.LocalVideoRepository.setLastPlayedVideoId(context, vid.id)
+                                    }
                                     activeLocalVideoList = list
                                     activeLocalVideoIndex = index
                                 },
@@ -4547,6 +4550,35 @@ private fun ThrynxApp(
                     } else {
                         viewModel.loadPlaylists()
                         playlistTarget = song
+                    }
+                },
+                onDelete = {
+                    songActions = null
+                    scope.launch {
+                        Downloads.delete(context, song.videoId)
+                        viewModel.reloadLocalDetail("local:downloads")
+                    }
+                    if (song.localUri != null) {
+                        val uri = android.net.Uri.parse(song.localUri)
+                        val path = if (uri.scheme == "file") uri.path ?: "" else ""
+                        when (val res = com.music.thrynx.data.MediaDeletionHelper.deleteMediaUris(
+                            context,
+                            listOf(uri),
+                            listOfNotNull(path.takeIf { it.isNotEmpty() }),
+                        )) {
+                            is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.RequiresConsent -> {
+                                val req = androidx.activity.result.IntentSenderRequest.Builder(res.intentSender).build()
+                                localMediaDeleteLauncher.launch(req)
+                            }
+                            is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.Success -> {
+                                viewModel.reloadLocalDetail("local:all")
+                                viewModel.reloadLocalDetail("local:downloads")
+                                viewModel.loadLibrarySongs()
+                            }
+                            is com.music.thrynx.data.MediaDeletionHelper.DeleteResult.Error -> {}
+                        }
+                    } else {
+                        viewModel.loadLibrarySongs()
                     }
                 },
                 onRemoveFromPlaylist = editable?.let {

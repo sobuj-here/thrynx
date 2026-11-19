@@ -301,6 +301,7 @@ fun LocalVideoPlayerScreen(
         val mediaItem = MediaItem.fromUri(uri)
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
+        LocalVideoRepository.setLastPlayedVideoId(context, video.id)
         val resumePos = LocalVideoRepository.getResumePosition(context, video.id)
         if (resumePos > 3000L) {
             exoPlayer.seekTo(resumePos)
