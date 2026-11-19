@@ -329,7 +329,7 @@ fun SongActionsMenu(
             accent = palette.accent,
             onClick = onAddToQueue,
         )
-        DownloadRow(song, palette, isOffline, onDownload)
+        DownloadRow(song, palette, isOffline, onDownload, onDelete)
         onRemoveFromCache?.let {
             ActionRow(
                 icon = SfIcons.Trash,
@@ -475,7 +475,13 @@ private fun neutralMenuPalette(): ArtworkPalette {
  * arrangement the sleep timer row already uses.
  */
 @Composable
-private fun DownloadRow(song: Song, palette: ArtworkPalette, isOffline: Boolean, onDownload: () -> Unit) {
+private fun DownloadRow(
+    song: Song,
+    palette: ArtworkPalette,
+    isOffline: Boolean,
+    onDownload: () -> Unit,
+    onDelete: (() -> Unit)? = null,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val active by Downloads.active.collectAsStateWithLifecycle()

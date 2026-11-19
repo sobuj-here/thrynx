@@ -313,35 +313,31 @@ fun LocalVideosScreen(
                 .padding(paddingValues),
         ) {
             if (!hasPermission) {
-                // Permission rationale / request view
+                // Permission Request State
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterVertically,
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.VideoLibrary,
                         contentDescription = null,
-                        modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(64.dp),
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        text = stringResource(R.string.local_video),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        text = stringResource(R.string.storage_required_read),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                     )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.video_files_on_device),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(24.dp))
-                    Button(onClick = { requestVideoPermissions() }) {
-                        Text(stringResource(R.string.grant_permission))
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = { requestVideoPermissions() },
+                    ) {
+                        Text(stringResource(R.string.retry))
                     }
                 }
             } else if (isLoading) {
