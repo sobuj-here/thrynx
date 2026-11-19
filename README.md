@@ -33,7 +33,7 @@
 
 <br/><br/>
 
-### ⚡ Direct Download — Latest Release (`v1.2.0`)
+### ⚡ Direct Download — Latest Release (`v1.2.1`)
 
 [![Download ARM64 APK](https://img.shields.io/badge/⚡_Download_ARM64_APK-(Most_Phones)-2563eb?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-arm64-v8a-release.apk)
 &nbsp;
@@ -63,15 +63,20 @@
   <tr>
     <td width="50%" valign="top">
 
-### 🎬 Local Video Player `v1.2.0`
-- **Integrated Video Library**: Seamlessly browse and play local videos directly under **Library → Local Videos**.
-- **Pinch-to-Zoom**: Fluid two-finger pinch gesture with **1.0× to 4.0× smooth scaling and panning**.
-- **Aspect Ratio Control**: One-tap toggle through **Fit to Screen**, **Fill / Crop**, **16:9**, **4:3**, and **Original**.
-- **Gesture Controls**:
+### 🎬 Local Video Player `v1.2.1`
+- **Fit-to-Screen Aspect Ratio Engine**: Zero stretching in portrait mode and zero unwanted cropping/zoom in landscape mode; pristine letterbox/pillarbox alignment.
+- **Dual Audio & Multi-Audio Tracks**: Seamless in-player language switching for multi-track videos (Hindi, English, Bengali, 5.1 surround, etc.).
+- **Subtitles & Captions Selection**: Real-time internal subtitle chooser with quick toggle.
+- **In-App File & Folder Deletion**: Permanently delete single or multiple videos and entire folders directly from device storage (Android 10–15+ Scoped Storage compliant).
+- **Resume Playback & Progress Indicators**: Remembers exact watch positions across restarts, with visual progress bars on video thumbnails.
+- **Recently Played Highlight**: The last played video is highlighted in vibrant blue for instant recognition.
+- **Pinch-to-Zoom & Pan**: Fluid two-finger pinch gesture with **1.0× to 4.5× smooth scaling and panning**.
+- **MX Player-Style Gestures**:
   - Vertical swipe on the **left side** adjusts screen brightness.
   - Vertical swipe on the **right side** adjusts audio volume.
+  - Horizontal drag to scrub with timestamps (`+0:45` / `-0:20`).
   - **Double-tap** left or right edge to skip 10 seconds backward or forward.
-- **Controls & Lock**: Screen orientation lock, full player touch-lock, and seek bar with live timestamps.
+- **Fullscreen HUD & Controls**: Live device battery percentage, charging state, system clock, orientation lock, touch-lock, and dynamic Picture-in-Picture (PiP).
 
 ### 🎵 Audiophile Playback Engine
 - **Streaming & Fallback**: Search, browse, and stream media with YouTube Music integration.
@@ -236,15 +241,16 @@ The core music streaming architecture and baseline playback capabilities of THRY
 ### 🚀 Enhancements & Features Added in THRYNX
 Building upon the upstream foundations, THRYNX introduces new media capabilities, player controls, critical bug fixes, and customized multi-platform workflows:
 
-1. **🎬 Integrated Local Video Player (`v1.2.0`):**
-   - Built-in video player directly accessible under **Library → Local Videos**.
-   - Hardware-accelerated video thumbnail generation using Android MediaStore APIs paired with an in-memory `LruCache` for zero-lag 60fps scrolling.
-   - Fluid **1.0× to 4.0× pinch-to-zoom and pan** gestures on video playback.
-   - Screen **orientation toggle (Portrait ↔ Landscape)** with recursive `ContextWrapper` unwrapping and device sensor auto-rotation.
-   - **Horizontal Drag Seeking:** Swipe left or right across the screen to smoothly scrub through videos with a live timestamp and delta HUD (`+0:45` / `-0:20`).
-   - **Vertical Swipe Gestures:** Left-half vertical drag controls screen brightness; right-half vertical drag controls system audio volume.
-   - **Double-Tap Skip:** Double-tap on the left or right edge to skip 10 seconds backward or forward.
-   - Aspect ratio cycling (Fit to Screen, Fill / Crop, 16:9, Original) and one-tap player touch-lock.
+1. **🎬 Integrated Local Video Player & Media Management (`v1.2.1`):**
+   - **Fit-to-Screen & Aspect Ratio Engine (`v1.2.1`):** Precision video layout measurement preventing vertical stretching, squishing, or unwanted zoom in both portrait and landscape orientations.
+   - **Dual Audio & Multi-Language Switching:** Full support for multi-audio MKV/MP4 files with one-tap language selection in the top control bar.
+   - **In-App Storage File & Folder Deletion:** Complete media management allowing users to multi-select and permanently delete videos and folders from device storage using Android's `MediaStore.createDeleteRequest`.
+   - **Playback Resume & Progress Bars:** Remembers exact watch positions across app restarts, with visual watch progress bars rendered on thumbnail cards.
+   - **Hardware-Accelerated Thumbnails:** Fast asynchronous thumbnail loading paired with an in-memory `LruCache` for zero-lag 60fps scrolling.
+   - **Fluid Pinch-to-Zoom & Pan:** 1.0× to 4.5× zoom gestures with automatic fit-to-screen reset on double tap or orientation change.
+   - **MX Player-Style Touch Gestures:** Horizontal drag to seek, left-side vertical swipe for brightness, right-side vertical swipe for volume.
+   - **Live HUD Display:** On-screen real-time battery indicator with charging status and system clock.
+   - **Dynamic Picture-in-Picture (PiP):** Window aspect ratio dynamically matches the active video's portrait or landscape proportions.
 
 2. **🛠️ Playback, Audio Focus & Fullscreen Improvements:**
    - **Audio Focus Management:** Background music automatically pauses when a local video is launched and resumes cleanly when closed.
