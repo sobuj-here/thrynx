@@ -1,0 +1,896 @@
+Downloading https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
+
+Welcome to Gradle 8.11.1!
+
+Here are the highlights of this release:
+ - Parallel load and store for Configuration Cache
+ - Java compilation errors at the end of the build output
+ - Consolidated report for warnings and deprecations
+
+For more details see https://docs.gradle.org/8.11.1/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Configure project :app
+Checking the license for package NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/licenses
+License for package NDK (Side by side) 27.0.12077973 accepted.
+Preparing "Install NDK (Side by side) 27.0.12077973 v.27.0.12077973".
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" ready.
+Installing NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/ndk/27.0.12077973
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" complete.
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" finished.
+Configuration 'newPipeExtractorRaw' was resolved during configuration time.
+This is a build performance and scalability issue.
+See https://github.com/gradle/gradle/issues/2298
+Run with --info for a stacktrace.
+WARNING: We recommend using a newer Android Gradle plugin to use compile SDK version 37.0
+
+This Android Gradle plugin (8.10.1) was tested up to compile SDK version 36.
+
+You are strongly encouraged to update your project to use a newer
+Android Gradle plugin that has been tested with compile SDK version 37.0.
+
+If you are already using the latest version of the Android Gradle plugin,
+you may need to wait until a newer version with support for compile SDK version 37.0 is available.
+
+For more information refer to the compatibility table:
+https://d.android.com/r/tools/api-level-support
+
+To suppress this warning, add/update
+    android.suppressUnsupportedCompileSdk=36,37,37.0
+to this project's gradle.properties.
+Configuration 'newPipeExtractorRaw' was resolved during configuration time.
+This is a build performance and scalability issue.
+See https://github.com/gradle/gradle/issues/2298
+Run with --info for a stacktrace.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preProdBenchmarkBuild UP-TO-DATE
+> Task :app:stripNewPipeExtractorUtils
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+Checking the license for package CMake 3.22.1 in /usr/local/lib/android/sdk/licenses
+License for package CMake 3.22.1 accepted.
+Preparing "Install CMake 3.22.1 v.3.22.1".
+"Install CMake 3.22.1 v.3.22.1" ready.
+Installing CMake 3.22.1 in /usr/local/lib/android/sdk/cmake/3.22.1
+"Install CMake 3.22.1 v.3.22.1" complete.
+"Install CMake 3.22.1 v.3.22.1" finished.
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :app:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:configureCMakeRelWithDebInfo[x86_64]
+> Task :app:buildCMakeRelWithDebInfo[x86_64]
+> Task :app:preProdReleaseBuild UP-TO-DATE
+> Task :app:mergeProdReleaseJniLibFolders
+> Task :shared:preBuild UP-TO-DATE
+> Task :shared:preReleaseBuild UP-TO-DATE
+> Task :shared:mergeReleaseJniLibFolders
+> Task :shared:mergeReleaseNativeLibs NO-SOURCE
+> Task :sharedUi:preBuild UP-TO-DATE
+> Task :shared:copyReleaseJniLibsProjectOnly
+> Task :sharedUi:preReleaseBuild UP-TO-DATE
+> Task :sharedUi:mergeReleaseJniLibFolders
+> Task :sharedUi:mergeReleaseNativeLibs NO-SOURCE
+> Task :sharedUi:copyReleaseJniLibsProjectOnly
+> Task :shared:kmpPartiallyResolvedDependenciesChecker
+> Task :shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :shared:generateReleaseResValues
+> Task :shared:generateReleaseResources
+> Task :shared:packageReleaseResources
+> Task :app:mergeProdReleaseNativeLibs
+> Task :shared:javaPreCompileRelease
+> Task :shared:parseReleaseLocalResources
+> Task :app:stripProdReleaseDebugSymbols
+> Task :sharedUi:kmpPartiallyResolvedDependenciesChecker
+> Task :sharedUi:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :sharedUi:convertXmlValueResourcesForAndroidMain NO-SOURCE
+> Task :sharedUi:copyNonXmlValueResourcesForAndroidMain NO-SOURCE
+> Task :sharedUi:prepareComposeResourcesTaskForAndroidMain NO-SOURCE
+> Task :sharedUi:generateResourceAccessorsForAndroidMain NO-SOURCE
+> Task :shared:generateReleaseRFile
+> Task :sharedUi:convertXmlValueResourcesForCommonMain
+> Task :app:extractProdReleaseNativeSymbolTables
+> Task :sharedUi:copyNonXmlValueResourcesForCommonMain
+> Task :sharedUi:prepareComposeResourcesTaskForCommonMain
+> Task :sharedUi:generateResourceAccessorsForCommonMain
+> Task :sharedUi:convertXmlValueResourcesForJvmSharedMain NO-SOURCE
+> Task :sharedUi:copyNonXmlValueResourcesForJvmSharedMain NO-SOURCE
+> Task :sharedUi:prepareComposeResourcesTaskForJvmSharedMain NO-SOURCE
+> Task :sharedUi:generateResourceAccessorsForJvmSharedMain NO-SOURCE
+> Task :sharedUi:generateActualResourceCollectorsForAndroidMain
+> Task :sharedUi:generateComposeResClass
+> Task :sharedUi:generateExpectResourceCollectorsForCommonMain
+> Task :sharedUi:convertXmlValueResourcesForAndroidRelease NO-SOURCE
+> Task :sharedUi:copyNonXmlValueResourcesForAndroidRelease NO-SOURCE
+> Task :sharedUi:prepareComposeResourcesTaskForAndroidRelease NO-SOURCE
+> Task :sharedUi:copyReleaseComposeResourcesToAndroidAssets
+> Task :sharedUi:generateReleaseResValues
+> Task :sharedUi:generateReleaseResources
+> Task :sharedUi:packageReleaseResources
+> Task :sharedUi:generateResourceAccessorsForAndroidRelease NO-SOURCE
+> Task :sharedUi:parseReleaseLocalResources
+> Task :sharedUi:javaPreCompileRelease
+> Task :sharedUi:generateReleaseRFile
+> Task :app:buildKotlinToolingMetadata
+> Task :app:mergeProdReleaseNativeDebugMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateProdReleaseBuildConfig
+> Task :shared:writeReleaseAarMetadata
+> Task :sharedUi:writeReleaseAarMetadata
+> Task :app:generateProdReleaseResValues
+> Task :app:checkProdReleaseDuplicateClasses
+> Task :app:checkProdReleaseAarMetadata
+> Task :app:mapProdReleaseSourceSetPaths
+> Task :app:generateProdReleaseResources
+> Task :app:packageProdReleaseResources
+> Task :app:createProdReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksProdRelease
+> Task :shared:extractDeepLinksRelease
+> Task :app:parseProdReleaseLocalResources
+> Task :sharedUi:extractDeepLinksRelease
+> Task :shared:processReleaseManifest
+> Task :sharedUi:processReleaseManifest
+> Task :app:javaPreCompileProdRelease
+> Task :app:processProdReleaseMainManifest
+> Task :app:processProdReleaseManifest
+> Task :shared:prepareReleaseArtProfile
+> Task :sharedUi:prepareReleaseArtProfile
+> Task :app:processProdReleaseManifestForPackage
+> Task :app:extractProguardFiles
+> Task :app:mergeProdReleaseStartupProfile
+> Task :app:mergeProdReleaseShaders
+> Task :app:compileProdReleaseShaders NO-SOURCE
+> Task :app:generateProdReleaseAssets UP-TO-DATE
+> Task :app:mergeProdReleaseArtProfile
+> Task :shared:mergeReleaseShaders
+> Task :shared:compileReleaseShaders NO-SOURCE
+> Task :shared:generateReleaseAssets UP-TO-DATE
+> Task :shared:releaseAssetsCopyForAGP NO-SOURCE
+> Task :shared:mergeReleaseAssets
+> Task :sharedUi:mergeReleaseShaders
+> Task :sharedUi:compileReleaseShaders NO-SOURCE
+> Task :sharedUi:generateReleaseAssets UP-TO-DATE
+> Task :sharedUi:releaseAssetsCopyForAGP NO-SOURCE
+> Task :sharedUi:mergeReleaseAssets
+> Task :app:mergeProdReleaseAssets
+> Task :app:extractProdReleaseVersionControlInfo
+> Task :shared:extractProguardFiles
+> Task :shared:prepareLintJarForPublish
+> Task :sharedUi:extractProguardFiles
+> Task :sharedUi:prepareLintJarForPublish
+> Task :sharedUi:stripReleaseDebugSymbols NO-SOURCE
+> Task :sharedUi:copyReleaseJniLibsProjectAndLocalJars
+> Task :sharedUi:extractDeepLinksForAarRelease
+> Task :shared:stripReleaseDebugSymbols NO-SOURCE
+> Task :shared:copyReleaseJniLibsProjectAndLocalJars
+> Task :shared:extractDeepLinksForAarRelease
+> Task :shared:writeReleaseLintModelMetadata
+> Task :sharedUi:writeReleaseLintModelMetadata
+> Task :app:compressProdReleaseAssets
+> Task :app:collectProdReleaseDependencies
+> Task :app:sdkProdReleaseDependencyData
+> Task :app:mergeProdReleaseResources
+> Task :app:validateSigningProdRelease
+> Task :app:writeProdReleaseAppMetadata
+> Task :app:writeProdReleaseSigningConfigVersions
+> Task :tv:preBuild UP-TO-DATE
+> Task :tv:preProdBenchmarkBuild UP-TO-DATE
+> Task :tv:stripNewPipeExtractorUtils
+> Task :tv:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :shared:compileReleaseKotlinAndroid
+> Task :app:processProdReleaseResources
+> Task :tv:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :tv:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :tv:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :tv:configureCMakeRelWithDebInfo[x86_64]
+> Task :tv:buildCMakeRelWithDebInfo[x86_64]
+> Task :tv:preProdReleaseBuild UP-TO-DATE
+> Task :tv:mergeProdReleaseJniLibFolders
+> Task :tv:buildKotlinToolingMetadata
+> Task :tv:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :tv:generateProdReleaseBuildConfig
+> Task :tv:checkProdReleaseAarMetadata
+> Task :tv:checkProdReleaseDuplicateClasses
+> Task :tv:generateProdReleaseResValues
+> Task :tv:mapProdReleaseSourceSetPaths
+> Task :tv:generateProdReleaseResources
+> Task :tv:mergeProdReleaseNativeLibs
+
+> Task :shared:compileReleaseKotlinAndroid
+w: file:///home/runner/work/thrynx/thrynx/shared/src/commonMain/kotlin/com/music/thrynx/playback/smart/LoopMix.kt:460:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Long'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/AppleArtistPhotos.kt:120:58 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/AppleArtistPhotos.kt:145:39 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/AppleCatalogue.kt:63:48 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/Http.kt:92:13 Condition is always 'false'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/TopPicks.kt:476:67 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/innertube/StreamResolver.kt:173:30 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/innertube/StreamResolver.kt:871:34 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/Genius.kt:335:53 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/LrcLib.kt:80:33 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/LyricsHttp.kt:50:49 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/LyricsHttp.kt:63:49 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/LyricsHttp.kt:81:49 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/LyricsTranslation.kt:494:48 The corresponding parameter in the supertype 'Callback' is named 'e'. This may cause problems when calling this function with named arguments.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/LyricsTranslation.kt:500:60 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/lyrics/Musixmatch.kt:291:53 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/presence/Presence.kt:106:41 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/spotify/SpotifyImporter.kt:89:41 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/spotify/SpotifyImporter.kt:211:30 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/music/thrynx/data/spotify/SpotifyLibrary.kt:207:40 Unnecessary safe call on a non-null receiver of type 'ResponseBody'.
+w: file:///home/runner/work/thrynx/thrynx/shared/src/jvmSharedMain/kotlin/com/my/kizzy/rpc/KizzyRPC.kt:178:24 Redundant creation of Json format. Creating instances for each usage can be slow.
+
+> Task :tv:packageProdReleaseResources
+> Task :shared:compileReleaseJavaWithJavac NO-SOURCE
+> Task :tv:parseProdReleaseLocalResources
+> Task :shared:mergeReleaseGeneratedProguardFiles
+> Task :tv:stripProdReleaseDebugSymbols
+> Task :shared:bundleLibCompileToJarRelease
+> Task :shared:bundleLibRuntimeToJarRelease
+> Task :shared:exportReleaseConsumerProguardFiles
+> Task :tv:mergeProdReleaseResources
+> Task :shared:processReleaseJavaRes
+> Task :shared:createFullJarRelease
+> Task :shared:generateReleaseLintModel
+> Task :shared:extractReleaseAnnotations
+> Task :shared:mergeReleaseConsumerProguardFiles
+> Task :shared:mergeReleaseJavaResource
+> Task :shared:generateReleaseLintVitalModel
+> Task :shared:syncReleaseLibJars
+> Task :shared:bundleReleaseLocalLintAar
+> Task :tv:createProdReleaseCompatibleScreenManifests
+> Task :tv:extractDeepLinksProdRelease
+> Task :tv:processProdReleaseMainManifest
+> Task :tv:processProdReleaseManifest
+> Task :tv:processProdReleaseManifestForPackage
+> Task :tv:extractProdReleaseNativeSymbolTables
+
+> Task :shared:lintVitalAnalyzeRelease
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-serialization-kotlinx-json-jvm/3.5.2/4b7181c709337dcbdda1106f0227a599944e6559/ktor-serialization-kotlinx-json-jvm-3.5.2.jar!/META-INF/ktor-serialization-kotlinx-json.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/8.11.1/transforms/cf062d54421ed0a3dec111e832eb965b/transformed/innertubex-android-v0.7.0/jars/classes.jar!/META-INF/com.github.MetrolistGroup_innertubex.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-okhttp-jvm/3.5.2/f1e6da982f67aa909001c53b61d46ad02ef91ec9/ktor-client-okhttp-jvm-3.5.2.jar!/META-INF/ktor-client-okhttp.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-websockets-jvm/3.5.2/97ce2ea2da8b321a598d1bdf3eb5561e41b4e860/ktor-client-websockets-jvm-3.5.2.jar!/META-INF/ktor-client-websockets.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-content-negotiation-jvm/3.5.2/f30c44701a3d4d392a33a41293c2b1c29cfa5d0/ktor-client-content-negotiation-jvm-3.5.2.jar!/META-INF/ktor-client-content-negotiation.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-core-jvm/3.5.2/d6525cc26aa12e341b14a37dea698fcb4eca54cb/ktor-client-core-jvm-3.5.2.jar!/META-INF/ktor-client-core.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-http-cio-jvm/3.5.2/4d8f22cce83a2c865e0d3e64d4abfd4ea13a8e6c/ktor-http-cio-jvm-3.5.2.jar!/META-INF/ktor-http-cio.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-websocket-serialization-jvm/3.5.2/d391929e7082af2e6f0cddcf7df4b8f934b0a297/ktor-websocket-serialization-jvm-3.5.2.jar!/META-INF/ktor-websocket-serialization.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-serialization-kotlinx-jvm/3.5.2/10c0b34ab34b3eef9d81a5632a0f9bbf9eb54bc9/ktor-serialization-kotlinx-jvm-3.5.2.jar!/META-INF/ktor-serialization-kotlinx.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-serialization-jvm/3.5.2/beed828bb6d5388782ee3d7ab9e17f19888a60a9/ktor-serialization-jvm-3.5.2.jar!/META-INF/ktor-serialization.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-websockets-jvm/3.5.2/9906c60d014018f83dd0f4f6eff306956dc1fe09/ktor-websockets-jvm-3.5.2.jar!/META-INF/ktor-websockets.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-http-jvm/3.5.2/d28bf8120efdc33354d91d99c0842187759e3c70/ktor-http-jvm-3.5.2.jar!/META-INF/ktor-http.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-io-jvm/1.11.0/645ed54ca9128fc217b30b3686a083141ebe635c/kotlinx-serialization-json-io-jvm-1.11.0.jar!/META-INF/kotlinx-serialization-json-io.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-events-jvm/3.5.2/5e64959ec6f91dff8ea281cfa102ae73bce000f7/ktor-events-jvm-3.5.2.jar!/META-INF/ktor-events.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-sse-jvm/3.5.2/84a9273210b25e32403252149f7bcd16b7ab9fbb/ktor-sse-jvm-3.5.2.jar!/META-INF/ktor-sse.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-network-jvm/3.5.2/1d4a6deadcc3a30de665ea26f98eea3fc52750bb/ktor-network-jvm-3.5.2.jar!/META-INF/ktor-network.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-utils-jvm/3.5.2/dc58dadecf1646d013ba0dda5dffab0b71a3fefd/ktor-utils-jvm-3.5.2.jar!/META-INF/ktor-utils.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm/1.11.0/c1905c9bf7452b045d5af9248835abe64ddad6bf/kotlinx-serialization-core-jvm-1.11.0.jar!/META-INF/kotlinx-serialization-core.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.11.0/e7e045e99e56f07599bb9ccb708c2190e2af0606/kotlinx-serialization-json-jvm-1.11.0.jar!/META-INF/kotlinx-serialization-json.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-io-jvm/3.5.2/b27620278e10b206310a22b9303c5274f239872d/ktor-io-jvm-3.5.2.jar!/META-INF/ktor-io.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-io-core-jvm/0.9.1/8c926478f17f8109e01e68adee93795c68dcad3c/kotlinx-io-core-jvm-0.9.1.jar!/META-INF/kotlinx-io-core.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-io-bytestring-jvm/0.9.1/7a28d93fce9fc8b663a6fe19cb2ae14a6ade7e8a/kotlinx-io-bytestring-jvm-0.9.1.jar!/META-INF/kotlinx-io-bytestring.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib-jdk8.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib-jdk7.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/work/thrynx/thrynx/shared/build/tmp/kotlin-classes/release/META-INF/shared_release.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+
+> Task :tv:mergeProdReleaseNativeDebugMetadata
+> Task :tv:javaPreCompileProdRelease
+> Task :tv:mergeProdReleaseArtProfile
+> Task :tv:extractProguardFiles
+> Task :tv:mergeProdReleaseStartupProfile
+> Task :tv:mergeProdReleaseShaders
+> Task :tv:processProdReleaseResources
+> Task :tv:compileProdReleaseShaders NO-SOURCE
+> Task :tv:generateProdReleaseAssets UP-TO-DATE
+> Task :tv:mergeProdReleaseAssets
+> Task :tv:extractProdReleaseVersionControlInfo
+> Task :tv:collectProdReleaseDependencies
+> Task :tv:sdkProdReleaseDependencyData
+> Task :tv:validateSigningProdRelease
+> Task :tv:writeProdReleaseAppMetadata
+> Task :tv:writeProdReleaseSigningConfigVersions
+> Task :wearos:preBuild UP-TO-DATE
+> Task :wearos:preProdReleaseBuild UP-TO-DATE
+> Task :wearos:mergeProdReleaseJniLibFolders
+> Task :tv:compressProdReleaseAssets
+> Task :sharedUi:compileReleaseKotlinAndroid
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/Common.kt:387:60 Condition is always 'true'.
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/Common.kt:392:42 Unnecessary safe call on a non-null receiver of type '() -> Unit'.
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/Common.kt:467:41 'val Icons.Rounded.PlaylistPlay: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Rounded.PlaylistPlay.
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/Common.kt:467:73 'val Icons.Rounded.PlaylistAdd: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Rounded.PlaylistAdd.
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/OptimizedHaze.kt:63:9 Experimental Haze API
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/OptimizedHaze.kt:63:22 Experimental Haze API
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/components/OptimizedHaze.kt:63:37 Experimental Haze API
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/player/ThinSlider.kt:378:42 Condition is always 'true'.
+w: file:///home/runner/work/thrynx/thrynx/sharedUi/src/jvmSharedMain/kotlin/com/music/thrynx/ui/screens/SearchScreen.kt:329:29 'when' is exhaustive so 'else' is redundant here.
+
+> Task :wearos:mergeProdReleaseNativeLibs
+> Task :wearos:buildKotlinToolingMetadata
+> Task :wearos:stripProdReleaseDebugSymbols
+> Task :wearos:checkProdReleaseDuplicateClasses
+> Task :wearos:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :wearos:extractProdReleaseNativeSymbolTables
+> Task :sharedUi:compileReleaseJavaWithJavac NO-SOURCE
+> Task :wearos:checkProdReleaseAarMetadata
+> Task :sharedUi:mergeReleaseGeneratedProguardFiles
+> Task :sharedUi:exportReleaseConsumerProguardFiles
+> Task :sharedUi:processReleaseJavaRes
+> Task :sharedUi:bundleLibCompileToJarRelease
+> Task :sharedUi:bundleLibRuntimeToJarRelease
+> Task :sharedUi:generateReleaseLintModel
+> Task :sharedUi:createFullJarRelease
+> Task :sharedUi:extractReleaseAnnotations
+> Task :sharedUi:mergeReleaseConsumerProguardFiles
+> Task :sharedUi:mergeReleaseJavaResource
+> Task :sharedUi:syncReleaseLibJars
+> Task :sharedUi:bundleReleaseLocalLintAar
+> Task :sharedUi:generateReleaseLintVitalModel
+> Task :wearos:mergeProdReleaseNativeDebugMetadata NO-SOURCE
+> Task :wearos:generateProdReleaseResValues
+> Task :wearos:mapProdReleaseSourceSetPaths
+> Task :wearos:generateProdReleaseResources
+
+> Task :sharedUi:lintVitalAnalyzeRelease
+e: file:///home/runner/.gradle/caches/8.11.1/transforms/2774213900f62075c1028f833d9347e4/transformed/out/jars/classes.jar!/META-INF/shared_release.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-okhttp-jvm/3.5.2/f1e6da982f67aa909001c53b61d46ad02ef91ec9/ktor-client-okhttp-jvm-3.5.2.jar!/META-INF/ktor-client-okhttp.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-websockets-jvm/3.5.2/97ce2ea2da8b321a598d1bdf3eb5561e41b4e860/ktor-client-websockets-jvm-3.5.2.jar!/META-INF/ktor-client-websockets.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-content-negotiation-jvm/3.5.2/f30c44701a3d4d392a33a41293c2b1c29cfa5d0/ktor-client-content-negotiation-jvm-3.5.2.jar!/META-INF/ktor-client-content-negotiation.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/8.11.1/transforms/cf062d54421ed0a3dec111e832eb965b/transformed/innertubex-android-v0.7.0/jars/classes.jar!/META-INF/com.github.MetrolistGroup_innertubex.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-client-core-jvm/3.5.2/d6525cc26aa12e341b14a37dea698fcb4eca54cb/ktor-client-core-jvm-3.5.2.jar!/META-INF/ktor-client-core.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-serialization-kotlinx-json-jvm/3.5.2/4b7181c709337dcbdda1106f0227a599944e6559/ktor-serialization-kotlinx-json-jvm-3.5.2.jar!/META-INF/ktor-serialization-kotlinx-json.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-http-cio-jvm/3.5.2/4d8f22cce83a2c865e0d3e64d4abfd4ea13a8e6c/ktor-http-cio-jvm-3.5.2.jar!/META-INF/ktor-http-cio.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-websocket-serialization-jvm/3.5.2/d391929e7082af2e6f0cddcf7df4b8f934b0a297/ktor-websocket-serialization-jvm-3.5.2.jar!/META-INF/ktor-websocket-serialization.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-serialization-kotlinx-jvm/3.5.2/10c0b34ab34b3eef9d81a5632a0f9bbf9eb54bc9/ktor-serialization-kotlinx-jvm-3.5.2.jar!/META-INF/ktor-serialization-kotlinx.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-serialization-jvm/3.5.2/beed828bb6d5388782ee3d7ab9e17f19888a60a9/ktor-serialization-jvm-3.5.2.jar!/META-INF/ktor-serialization.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-websockets-jvm/3.5.2/9906c60d014018f83dd0f4f6eff306956dc1fe09/ktor-websockets-jvm-3.5.2.jar!/META-INF/ktor-websockets.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-http-jvm/3.5.2/d28bf8120efdc33354d91d99c0842187759e3c70/ktor-http-jvm-3.5.2.jar!/META-INF/ktor-http.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-events-jvm/3.5.2/5e64959ec6f91dff8ea281cfa102ae73bce000f7/ktor-events-jvm-3.5.2.jar!/META-INF/ktor-events.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-sse-jvm/3.5.2/84a9273210b25e32403252149f7bcd16b7ab9fbb/ktor-sse-jvm-3.5.2.jar!/META-INF/ktor-sse.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-network-jvm/3.5.2/1d4a6deadcc3a30de665ea26f98eea3fc52750bb/ktor-network-jvm-3.5.2.jar!/META-INF/ktor-network.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-utils-jvm/3.5.2/dc58dadecf1646d013ba0dda5dffab0b71a3fefd/ktor-utils-jvm-3.5.2.jar!/META-INF/ktor-utils.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/io.ktor/ktor-io-jvm/3.5.2/b27620278e10b206310a22b9303c5274f239872d/ktor-io-jvm-3.5.2.jar!/META-INF/ktor-io.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-io-jvm/1.11.0/645ed54ca9128fc217b30b3686a083141ebe635c/kotlinx-serialization-json-io-jvm-1.11.0.jar!/META-INF/kotlinx-serialization-json-io.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm/1.11.0/c1905c9bf7452b045d5af9248835abe64ddad6bf/kotlinx-serialization-core-jvm-1.11.0.jar!/META-INF/kotlinx-serialization-core.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.11.0/e7e045e99e56f07599bb9ccb708c2190e2af0606/kotlinx-serialization-json-jvm-1.11.0.jar!/META-INF/kotlinx-serialization-json.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-io-core-jvm/0.9.1/8c926478f17f8109e01e68adee93795c68dcad3c/kotlinx-io-core-jvm-0.9.1.jar!/META-INF/kotlinx-io-core.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-io-bytestring-jvm/0.9.1/7a28d93fce9fc8b663a6fe19cb2ae14a6ade7e8a/kotlinx-io-bytestring-jvm-0.9.1.jar!/META-INF/kotlinx-io-bytestring.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib-jdk8.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.10/8943c84ddc6d5cc00a10dbc3736c397066eeaab5/kotlin-stdlib-2.4.10.jar!/META-INF/kotlin-stdlib-jdk7.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.1.0.
+e: file:///home/runner/work/thrynx/thrynx/sharedUi/build/tmp/kotlin-classes/release/META-INF/sharedUi_release.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+
+> Task :wearos:mergeProdReleaseResources
+> Task :wearos:packageProdReleaseResources
+> Task :wearos:parseProdReleaseLocalResources
+> Task :wearos:createProdReleaseCompatibleScreenManifests
+> Task :wearos:extractDeepLinksProdRelease
+> Task :wearos:processProdReleaseMainManifest
+> Task :wearos:processProdReleaseManifest
+> Task :wearos:processProdReleaseManifestForPackage
+> Task :wearos:processProdReleaseResources
+> Task :wearos:javaPreCompileProdRelease
+> Task :wearos:mergeProdReleaseArtProfile
+> Task :wearos:extractProguardFiles
+> Task :wearos:mergeProdReleaseStartupProfile
+> Task :wearos:mergeProdReleaseShaders
+> Task :wearos:compileProdReleaseShaders NO-SOURCE
+> Task :wearos:generateProdReleaseAssets UP-TO-DATE
+> Task :wearos:mergeProdReleaseAssets
+> Task :wearos:compressProdReleaseAssets
+> Task :wearos:extractProdReleaseVersionControlInfo
+> Task :wearos:collectProdReleaseDependencies
+> Task :wearos:sdkProdReleaseDependencyData
+> Task :wearos:validateSigningProdRelease
+> Task :wearos:writeProdReleaseAppMetadata
+> Task :wearos:writeProdReleaseSigningConfigVersions
+
+> Task :wearos:compileProdReleaseKotlin
+w: Class 'androidx.media3.common.util.UnstableApi' is not an opt-in requirement marker.
+w: file:///home/runner/work/thrynx/thrynx/wearos/src/main/java/com/music/thrynx/wear/data/NowPlayingListener.kt:38:31 Elvis operator (?:) always returns the left operand of non-nullable type 'String'.
+
+> Task :wearos:compileProdReleaseJavaWithJavac NO-SOURCE
+> Task :wearos:mergeProdReleaseGeneratedProguardFiles
+> Task :wearos:processProdReleaseJavaRes
+> Task :wearos:expandProdReleaseArtProfileWildcards
+> Task :wearos:mergeProdReleaseJavaResource
+> Task :wearos:produceProdReleaseComposeMapping
+> Task :wearos:reportProdReleaseComposeMappingErrors
+> Task :app:compileProdReleaseKotlin
+> Task :wearos:generateProdReleaseLintVitalReportModel
+> Task :tv:compileProdReleaseKotlin
+> Task :wearos:minifyProdReleaseWithR8
+> Task :wearos:lintVitalAnalyzeProdRelease
+
+> Task :app:compileProdReleaseKotlin FAILED
+e: file:///home/runner/work/thrynx/thrynx/app/src/main/java/com/music/thrynx/ui/screens/LocalVideoPlayerScreen.kt:164:9 Unresolved reference 'zoomScale'.
+e: file:///home/runner/work/thrynx/thrynx/app/src/main/java/com/music/thrynx/ui/screens/LocalVideoPlayerScreen.kt:165:9 Unresolved reference 'offsetX'.
+e: file:///home/runner/work/thrynx/thrynx/app/src/main/java/com/music/thrynx/ui/screens/LocalVideoPlayerScreen.kt:166:9 Unresolved reference 'offsetY'.
+
+> Task :tv:compileProdReleaseKotlin
+e: file:///home/runner/work/thrynx/thrynx/app/src/main/java/com/music/thrynx/ui/screens/LocalVideoPlayerScreen.kt:164:9 Unresolved reference 'zoomScale'.
+e: file:///home/runner/work/thrynx/thrynx/app/src/main/java/com/music/thrynx/ui/screens/LocalVideoPlayerScreen.kt:165:9 Unresolved reference 'offsetX'.
+e: file:///home/runner/work/thrynx/thrynx/app/src/main/java/com/music/thrynx/ui/screens/LocalVideoPlayerScreen.kt:166:9 Unresolved reference 'offsetY'.
+
+> Task :tv:compileProdReleaseKotlin FAILED
+
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileProdReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileProdReleaseKotlin'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:287)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:335)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:318)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:323)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:252)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
+	at org.gradle.internal.Either$Right.fold(Either.java:175)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:61)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
+	at org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork.execute(BuildToolsApiCompilationWork.kt:295)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	... 2 more
+
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':tv:compileProdReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':tv:compileProdReleaseKotlin'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:138)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:123)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
+	at org.gradle.execution.DryRunBuildExecutionAction.execute(DryRunBuildExecutionAction.java:51)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$10(DefaultBuildLifecycleController.java:313)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$8(StateTransitionController.java:177)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:46)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:177)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:304)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:181)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:50)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.lambda$run$0(DefaultBuildController.java:198)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:287)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:335)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:318)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:323)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:252)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
+	at org.gradle.internal.Either$Right.fold(Either.java:175)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:61)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:138)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:123)
+	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
+	at org.gradle.execution.DryRunBuildExecutionAction.execute(DryRunBuildExecutionAction.java:51)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$10(DefaultBuildLifecycleController.java:313)
+	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
+	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$8(StateTransitionController.java:177)
+	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:46)
+	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:177)
+	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:304)
+	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:181)
+	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:50)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.lambda$run$0(DefaultBuildController.java:198)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
+	at org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork.execute(BuildToolsApiCompilationWork.kt:295)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	... 7 more
+
+==============================================================================
+
+BUILD FAILED in 6m 19s
+204 actionable tasks: 204 executed
