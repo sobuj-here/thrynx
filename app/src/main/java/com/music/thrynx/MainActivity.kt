@@ -3813,7 +3813,8 @@ private fun ThrynxApp(
                             (header * fadeRamp)).coerceIn(0f, 1f)
                     }
                 }
-                if (reduceDynamicBlur || !glassActive || !progressiveBlur) {
+                if (activeLocalVideoList == null && route != AppRoute.LocalVideos) {
+                    if (reduceDynamicBlur || !glassActive || !progressiveBlur) {
                     BottomFadeScrim(
                         pageColor = chromePageColor,
                         modifier = Modifier
@@ -4177,6 +4178,7 @@ private fun ThrynxApp(
                         }
                     },
                 )
+                }
 
                 // Drawn before the bars so their own glass reads on top of it.
                 if (activeLocalVideoList == null) {

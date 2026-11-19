@@ -2,29 +2,24 @@ package com.music.thrynx.ui.screens
 
 import android.Manifest
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import android.app.Activity
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Checklist
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Deselect
-import androidx.compose.material.icons.rounded.SelectAll
-import com.music.thrynx.data.MediaDeletionHelper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,14 +34,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Deselect
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material.icons.rounded.SelectAll
 import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,6 +79,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -78,12 +87,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.graphics.Bitmap
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.asImageBitmap
 import com.music.thrynx.R
 import com.music.thrynx.data.LocalVideo
 import com.music.thrynx.data.LocalVideoRepository
+import com.music.thrynx.data.MediaDeletionHelper
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -305,6 +312,7 @@ fun LocalVideosScreen(
                 )
             }
         },
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize(),
     ) { paddingValues ->
         Box(
@@ -386,7 +394,7 @@ fun LocalVideosScreen(
                         // Folders list
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 120.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             itemsIndexed(folders.keys.toList()) { _, folderName ->
@@ -416,7 +424,7 @@ fun LocalVideosScreen(
                                         ),
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(16.dp),
+                                        modifier = Modifier.padding(14.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Icon(
@@ -440,6 +448,7 @@ fun LocalVideosScreen(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
+
                                         if (isSelectionMode) {
                                             Surface(
                                                 color = if (isFolderSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.45f),
@@ -455,6 +464,43 @@ fun LocalVideosScreen(
                                                     )
                                                 }
                                             }
+                                        } else {
+                                            var showFolderMenu by remember { mutableStateOf(false) }
+                                            Box {
+                                                IconButton(onClick = { showFolderMenu = true }) {
+                                                    Icon(
+                                                        Icons.Rounded.MoreVert,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    )
+                                                }
+                                                DropdownMenu(
+                                                    expanded = showFolderMenu,
+                                                    onDismissRequest = { showFolderMenu = false },
+                                                ) {
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                stringResource(R.string.delete),
+                                                                color = MaterialTheme.colorScheme.error,
+                                                            )
+                                                        },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                Icons.Rounded.Delete,
+                                                                contentDescription = null,
+                                                                tint = MaterialTheme.colorScheme.error,
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            showFolderMenu = false
+                                                            selectedFolderNames = setOf(folderName)
+                                                            selectedVideoIds = emptySet()
+                                                            showDeleteConfirmDialog = true
+                                                        },
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -464,7 +510,7 @@ fun LocalVideosScreen(
                         // Videos list
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 120.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             itemsIndexed(displayVideos) { index, video ->
@@ -589,7 +635,7 @@ fun LocalVideosScreen(
                                                 }
                                             }
 
-                                            // Selection checkmark
+                                            // Selection checkmark on thumbnail
                                             if (isSelectionMode) {
                                                 Surface(
                                                     color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.55f),
@@ -632,9 +678,127 @@ fun LocalVideosScreen(
                                                 maxLines = 1,
                                             )
                                         }
+
+                                        // 3-dot Menu when not in selection mode
+                                        if (!isSelectionMode) {
+                                            var showVideoMenu by remember { mutableStateOf(false) }
+                                            Box {
+                                                IconButton(onClick = { showVideoMenu = true }) {
+                                                    Icon(
+                                                        Icons.Rounded.MoreVert,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    )
+                                                }
+                                                DropdownMenu(
+                                                    expanded = showVideoMenu,
+                                                    onDismissRequest = { showVideoMenu = false },
+                                                ) {
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(R.string.play)) },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                Icons.Rounded.PlayArrow,
+                                                                contentDescription = null,
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            showVideoMenu = false
+                                                            LocalVideoRepository.setLastPlayedVideoId(context, video.id)
+                                                            lastPlayedId = video.id
+                                                            if (onPlayVideo != null) {
+                                                                onPlayVideo(displayVideos, index)
+                                                            } else {
+                                                                activePlayingList = displayVideos
+                                                                activePlayingIndex = index
+                                                            }
+                                                        },
+                                                    )
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                stringResource(R.string.delete),
+                                                                color = MaterialTheme.colorScheme.error,
+                                                            )
+                                                        },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                Icons.Rounded.Delete,
+                                                                contentDescription = null,
+                                                                tint = MaterialTheme.colorScheme.error,
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            showVideoMenu = false
+                                                            selectedVideoIds = setOf(video.id)
+                                                            selectedFolderNames = emptySet()
+                                                            showDeleteConfirmDialog = true
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // Floating Bottom Selection Bar (Highly visible Delete option)
+            AnimatedVisibility(
+                visible = isSelectionMode,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+            ) {
+                val isFolderTab = selectedFolder == null && selectedTab == 1
+                val selectionCount = if (isFolderTab) selectedFolderNames.size else selectedVideoIds.size
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shadowElevation = 10.dp,
+                    tonalElevation = 6.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = "$selectionCount ${stringResource(R.string.selected)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Button(
+                            onClick = { showDeleteConfirmDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.delete),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
                     }
                 }
@@ -656,7 +820,13 @@ fun LocalVideosScreen(
             }
 
             androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showDeleteConfirmDialog = false },
+                onDismissRequest = {
+                    showDeleteConfirmDialog = false
+                    if (!isSelectionMode) {
+                        selectedVideoIds = emptySet()
+                        selectedFolderNames = emptySet()
+                    }
+                },
                 title = { Text(stringResource(R.string.delete)) },
                 text = { Text(deleteMessage) },
                 confirmButton = {
@@ -689,7 +859,13 @@ fun LocalVideosScreen(
                     }
                 },
                 dismissButton = {
-                    androidx.compose.material3.TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    androidx.compose.material3.TextButton(onClick = {
+                        showDeleteConfirmDialog = false
+                        if (!isSelectionMode) {
+                            selectedVideoIds = emptySet()
+                            selectedFolderNames = emptySet()
+                        }
+                    }) {
                         Text(stringResource(R.string.cancel))
                     }
                 },
