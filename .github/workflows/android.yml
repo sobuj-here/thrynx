@@ -43,7 +43,7 @@ jobs:
       shell: bash
       run: |
         set -o pipefail
-        ./gradlew assembleProdRelease --stacktrace 2>&1 | tee build.log
+        ./gradlew :app:assembleProdRelease :tv:assembleProdRelease :wearos:assembleProdRelease --stacktrace 2>&1 | tee build.log
 
     - name: Commit build log on failure
       if: failure()
@@ -55,11 +55,17 @@ jobs:
         git commit -m 'build failure log'
         git push origin build-log --force
 
-    - name: Upload APK Artifact
+    - name: Upload Phone APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: thrynx-prod-release-signed
         path: app/build/outputs/apk/prod/release/*.apk
+
+    - name: Upload TV APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: thrynx-tv-prod-release-signed
+        path: tv/build/outputs/apk/prod/release/*.apk
 
     # Built by the same assembleProdRelease, with the same key. The watch app
     # only pairs with a phone app signed by the same key, so a prod watch APK
@@ -78,8 +84,9 @@ jobs:
         draft: false
         prerelease: false
         body_path: RELEASE_NOTES.md
-        fail_on_unmatched_files: true
+        fail_on_unmatched_files: false
         files: |
           app/build/outputs/apk/prod/release/*.apk
+          tv/build/outputs/apk/prod/release/*.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

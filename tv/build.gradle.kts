@@ -82,8 +82,8 @@ android {
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
-        versionCode = 39
-        versionName = "1.9.1"
+        versionCode = (rootProject.extra["thrynxVersionCode"] as Int) + 40
+        versionName = rootProject.extra["thrynxVersionName"] as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -102,7 +102,7 @@ android {
         // apart by name (THRYNX_TV-v1.8.apk, THRYNX_TV-v1.8_x86_64.apk), so
         // the updater installs the TV app here, never the phone app. See
         // AppUpdateChecker.apkAssetUrl.
-        buildConfigField("String", "UPDATE_APK_PREFIX", "\"THRYNX_TV-\"")
+        buildConfigField("String", "UPDATE_APK_PREFIX", "\"tv-prod-\"")
     }
 
     splits {

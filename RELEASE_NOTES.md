@@ -21,6 +21,7 @@ Welcome to **THRYNX v1.2.1**! This update delivers a major fix and precision cal
 
 | APK File | Best For | Description |
 |---|---|---|
+| **`tv-prod-universal-release.apk`** | 📺 **Android TV / Google TV (Recommended)** | For all Android TVs, Google TV streaming sticks (Chromecast, Mi Box, Fire TV, Nvidia Shield). |
 | **`app-prod-arm64-v8a-release.apk`** | 📱 **Modern Android Phones (Recommended)** | For 99% of Android smartphones (Samsung, Xiaomi, OnePlus, Vivo, Oppo, Realme, Pixel, etc.). Fast & optimized. |
 | **`app-prod-x86_64-release.apk`** | 💻 **PC Emulators & ChromeOS** | For BlueStacks, LDPlayer, NoxPlayer, Windows Subsystem for Android (WSA), and x86_64 PCs. |
 | **`app-prod-armeabi-v7a-release.apk`** | 📱 **Older 32-bit Android Devices** | For older budget or legacy smartphones. |

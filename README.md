@@ -37,6 +37,8 @@
 
 [![Download ARM64 APK](https://img.shields.io/badge/⚡_Download_ARM64_APK-(Most_Phones)-2563eb?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-arm64-v8a-release.apk)
 &nbsp;
+[![Download TV APK](https://img.shields.io/badge/📺_Download_TV_APK-(Android_TV)-ef4444?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/tv-prod-universal-release.apk)
+&nbsp;
 [![Download Universal APK](https://img.shields.io/badge/🌐_Download_Universal_APK-(All_Devices)-10b981?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-universal-release.apk)
 <br/>
 [![Download ARMv7 APK](https://img.shields.io/badge/📱_Download_ARMv7_APK-(Older_Phones)-f59e0b?style=for-the-badge&logo=android&logoColor=white)](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-armeabi-v7a-release.apk)
@@ -126,7 +128,7 @@ THRYNX is designed for multi-platform flexibility. Check the table below to choo
 | 📱 **Android Legacy (32-bit)** | Signed `.apk` | Older 32-bit Android phones | [⬇️ **Download ARMv7 APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-armeabi-v7a-release.apk) |
 | 💻 **PC Android Emulators / Intel** | Signed `.apk` | BlueStacks, LDPlayer, WSA, ChromeOS | [⬇️ **Download x86_64 APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/app-prod-x86_64-release.apk) |
 | 💻 **PC / Desktop & Web** | Web App + Extension | Windows, macOS, Linux (Chrome, Edge, Firefox, Brave) | [🚀 **Open Web Client Guide**](#using-thrynx-on-pc--desktop) |
-| 📺 **Android TV** | Android TV `.apk` | Google TV, Android TV boxes & sticks | Built from `:tv` target |
+| 📺 **Android TV** | Signed `.apk` | Google TV, Android TV boxes & sticks | [⬇️ **Download TV APK**](https://github.com/sobuj-here/thrynx/releases/latest/download/tv-prod-universal-release.apk) |
 | ⌚ **Wear OS** | Wear OS Companion | Galaxy Watch, Pixel Watch, Wear OS 3+ | Integrated with phone app |
 
 > 📥 **Need full changelog or older versions?** Visit the [**GitHub Releases**](https://github.com/sobuj-here/thrynx/releases) page.
